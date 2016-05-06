@@ -19,7 +19,7 @@ Command line interface to manipulate ProtonLights projects.
     - Use patch to copy changes.
   - Use git --find-renames=100%?
 
-## Dependencies (Ubuntu 16.04)
+## Native Dependencies
 
 - cmake
 - libssl-dev
