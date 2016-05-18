@@ -37,7 +37,7 @@ fn main2() {
 	let root = Path::new(&root_arg);
 	match proton_cli::initialize_project(root) {
 		Ok(_) => println!("Worked!"),
-		Err(e) => println!("{:?}", e),
+		Err(e) => println!("{:?}", e.to_string()),
 	}
 }
 

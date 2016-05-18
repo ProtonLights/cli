@@ -11,15 +11,15 @@ use Error;
 pub fn user_new<P: AsRef<Path>>(project: String, public: P, name: String) -> Result<(), Error> {
 
 	// Get public key from file
-	let pub_key = file_as_string(public).expect("Error reading public key");
+	let pub_key = try!(file_as_string(public));
 
 	// Get existing Protonfile
     let mut path = PathBuf::from(Path::new(&project));
     path.push("Protonfile.json");
-    let protonfile = file_as_string(&path).expect("Error reading protonfile");
+    let protonfile = try!(file_as_string(&path));
 
     // Load Project from existing file
-   	let mut project: Project = json::decode(&protonfile).expect("Error loading project");
+   	let mut project: Project = try!(json::decode(&protonfile).map_err(Error::JsonDecode));
 
    	// Add user
    	project.add_user(name, pub_key);
