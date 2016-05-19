@@ -8,7 +8,7 @@ use project_types::Project;
 use Error;
 
 
-pub fn user_new<P: AsRef<Path>>(project: String, public: P, name: String) -> Result<(), Error> {
+pub fn new_user<P: AsRef<Path>>(project: String, public: P, name: String) -> Result<(), Error> {
 
 	// Get public key from file
 	let pub_key = try!(file_as_string(public));
