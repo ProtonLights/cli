@@ -1,3 +1,5 @@
+//! This module manages project users
+
 use std::path::Path;
 
 use Error;
