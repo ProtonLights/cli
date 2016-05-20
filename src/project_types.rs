@@ -2,15 +2,15 @@
 /// This is what will be written to a Protonfile at the project root.
 
 #[derive(Clone, Debug, RustcEncodable, RustcDecodable)]
-pub struct User {
-    pub name: String,
-    pub public_key: String,
-}
-
-#[derive(Clone, Debug, RustcEncodable, RustcDecodable)]
 pub struct Project {
     pub name: String,
     pub users: Vec<User>,
+}
+
+#[derive(Clone, Debug, RustcEncodable, RustcDecodable)]
+pub struct User {
+    pub name: String,
+    pub public_key: String,
 }
 
 impl Project {
