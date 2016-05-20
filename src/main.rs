@@ -32,15 +32,6 @@ struct Args {
 	arg_name: Option<String>,
 }
 
-fn main2() {
-	let root_arg = env::args().nth(2).unwrap();
-	let root = Path::new(&root_arg);
-	match proton_cli::initialize_project(root) {
-		Ok(_) => println!("Worked!"),
-		Err(e) => println!("{:?}", e.to_string()),
-	}
-}
-
 fn main() {
 	let args: Args = Docopt::new(USAGE)
 		.and_then(|d| d.decode())
