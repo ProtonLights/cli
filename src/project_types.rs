@@ -1,6 +1,6 @@
+
 /// Structure to represent a Proton Project.
 /// This is what will be written to a Protonfile at the project root.
-
 #[derive(Clone, Debug, RustcEncodable, RustcDecodable)]
 pub struct Project {
     pub name: String,

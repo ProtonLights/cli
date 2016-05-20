@@ -14,18 +14,9 @@ use utils;
 ///
 /// Impure.
 pub fn new_user<P: AsRef<Path>>(public_key_path: P, name: String) -> Result<(), Error> {
-
-    // Get public key from file
     let pub_key = try!(utils::file_as_string(public_key_path));
-
-    // Load Project from existing file
-    let project = try!(utils::read_protonfile());
-
-    // Add user
+    let project = try!(utils::read_protonfile(None::<P>));
     let new_project = project.add_user(name, pub_key);
-
-    // Save updated project
-    utils::write_protonfile(&new_project)    
-
+    utils::write_protonfile(&new_project, None::<P>)
 }
 
