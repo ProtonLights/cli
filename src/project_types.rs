@@ -22,7 +22,7 @@ impl Project {
         }
     }
 
-    // Adds a user to the project
+    /// Adds a user to the project
     pub fn add_user(&self, name: String, pub_key: String) -> Project {
         let user = User {
             name: name,
