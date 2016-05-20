@@ -9,7 +9,7 @@ use rustc_serialize::json;
 use git2::{Oid, Repository, Signature};
 
 use Error;
-use project_types::Project;
+use Project;
 
 /// Initializes a new project at root. The root must either not exist, or must
 /// be an empty directory. This will

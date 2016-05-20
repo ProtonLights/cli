@@ -1,46 +1,29 @@
-use std::fs::File;
-use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use rustc_serialize::json;
-
-use project_types::Project;
 use Error;
+use utils;
 
 
-pub fn new_user<P: AsRef<Path>>(project: String, public: P, name: String) -> Result<(), Error> {
+/// Creates a new user for the project in the current directory.
+/// Assumes the current directory contains a Protonfile.json file.
+///
+/// 1. Read the new user's public key from the file path given
+/// 2. Add the user's name and public key to the protonfile
+///
+/// Impure.
+pub fn new_user<P: AsRef<Path>>(public_key_path: P, name: String) -> Result<(), Error> {
 
-	// Get public key from file
-	let pub_key = try!(file_as_string(public));
-
-	// Get existing Protonfile
-    let mut path = PathBuf::from(Path::new(&project));
-    path.push("Protonfile.json");
-    let protonfile = try!(file_as_string(&path));
+    // Get public key from file
+    let pub_key = try!(utils::file_as_string(public_key_path));
 
     // Load Project from existing file
-   	let mut project: Project = try!(json::decode(&protonfile).map_err(Error::JsonDecode));
+    let project = try!(utils::read_protonfile());
 
-   	// Add user
-   	project.add_user(name, pub_key);
+    // Add user
+    let new_project = project.add_user(name, pub_key);
 
-   	// Save file
-   	let pretty_json = json::as_pretty_json(&project);
-   	File::create(&path)
-   		.and_then(|mut protonfile| write!(protonfile, "{}\n", pretty_json))
-   		.map_err(Error::Io)
-   		.and_then(|_| Ok(()))
+    // Save updated project
+    utils::write_protonfile(&new_project)    
 
 }
 
-// Reads a file as a string
-fn file_as_string<P: AsRef<Path>>(path: P) -> Result<String, Error> {
-	File::open(path)
-		.map_err(Error::Io)
-		.and_then(|mut file| {
-			let mut string = String::new();
-			file.read_to_string(&mut string)
-				.map_err(Error::Io)
-				.and_then(|_| Ok(string))			
-		})
-}

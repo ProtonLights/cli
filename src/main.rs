@@ -16,7 +16,7 @@ Command-line interface for Proton
 
 Usage:
   ./proton init <folder>
-  ./proton new-user <folder> <public-key> <name>
+  ./proton new-user <name> <public-key>
   ./proton (-h | --help)
 
 Options:
@@ -60,11 +60,8 @@ fn run_init(args: Args) -> Result<(), Error> {
 }
 
 fn run_new_user(args: Args) -> Result<(), Error> {
-	let folder = args.arg_folder.unwrap();
 	let public_key = args.arg_public_key.unwrap();
 	let public_key_path = Path::new(&public_key);
 	let name = args.arg_name.unwrap();
-	println!("{}, {}, {}", folder, public_key, name);
-	Ok(())
-	//proton_cli::add_user(folder, public_key_path, name)
+	proton_cli::new_user(&public_key_path, name)
 }
