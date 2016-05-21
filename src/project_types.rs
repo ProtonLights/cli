@@ -22,6 +22,19 @@ impl Project {
         }
     }
 
+    /// Finds a user in the users vector
+    /// Returns true if found, else false
+    pub fn find_user(&self, user: &User) -> bool {
+        let myself = self.clone();
+        println!("{:?}", myself);
+        for u in myself.users {
+            if user == &u {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// Adds a user to the project
     pub fn add_user(&self, name: String, pub_key: String) -> Project {
         let user = User {
@@ -42,4 +55,14 @@ impl PartialEq for Project {
 }
 
 impl Eq for Project {
+}
+
+impl PartialEq for User {
+    fn eq(&self, other: &User) -> bool {
+        self.name == other.name &&
+        self.public_key == other.public_key
+    }
+}
+
+impl Eq for User {
 }
