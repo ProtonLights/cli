@@ -12,12 +12,17 @@ use proton_cli::{Error, Project, User, utils};
 
 
 /// Warning: This test changes env::current_directory
-/// to better model new_user's expected use case
+/// to better model new_user's expected use case.
+/// Running tests with RUST_TEST_THREADS=1 runs tests
+/// in serial, which avoids occasional false negatives
 #[test]
 fn works_with_new_and_existing_protonfile() {
     // Make temp directory to work out of
     let root_dir = setup();
     let root = root_dir.path();
+
+    // Make new project in temp directory
+    let _ = proton_cli::initialize_project(&root).expect("Error initializing project");
 
     // Make key files for users
     let key_path_a = make_key_file(root, "a.pub", "123");
@@ -44,9 +49,18 @@ fn works_with_new_and_existing_protonfile() {
 }
 
 #[test]
-#[should_panic(expected = "")]
+#[should_panic(expected = "Error adding users")]
 fn fails_with_a_nonexistent_protonfile() {
-    panic!("")
+    let root_dir = setup();
+    let root = root_dir.path();
+
+    // Make key file, but don't initialize project
+    let key_path = make_key_file(root, "a.pub", "123");
+
+    match proton_cli::new_user(&key_path.as_path(), String::from("Username")) {
+        Ok(_) => (),
+        Err(_) => panic!("Error adding users"),
+    };
 }
 
 fn assert_exists<P: AsRef<Path>>(public_key_path: P, name: &str, key_content: &str) {
@@ -78,16 +92,5 @@ fn make_key_file<P: AsRef<Path>>(root_dir: P, file_name: &str, file_content: &st
 /// Creates a temporary directory to run a test out of
 /// and initializes a new project inside this directory
 fn setup() -> TempDir {
-    let temp_dir = TempDir::new("proton_cli_tests").unwrap();
-    
-    {
-        let temp_dir_path = temp_dir.path();
-        println!("{}", temp_dir_path.display());
-
-        // Make new project in temp directory
-        let _ = proton_cli::initialize_project(&temp_dir_path).expect("Error initializing project");
-     
-    }
-
-    temp_dir
+    TempDir::new("proton_cli_tests").unwrap()
 }
