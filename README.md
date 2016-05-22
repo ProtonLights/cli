@@ -5,7 +5,7 @@ Command line interface to manipulate ProtonLights projects.
 
 - `init <folder>`: Init empty project
 - `new-user <public> <name>`: Add user from public key
-- `id <private>`: Identify user by ssh key (public key in repo)
+- `id-user <private>`: Identify user by ssh key (public key in repo)
 - `list-editable`: Get list of editable files for a given user
 - `allow [TODO]`: Give permission to user to
   - edit sequence/section
