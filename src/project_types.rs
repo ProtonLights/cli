@@ -24,6 +24,28 @@ impl Project {
         }
     }
 
+    /// Finds a user with the given public key
+    /// Returns the user if found, else None
+    fn find_user_by_public_key(&self, pub_key: &str) -> Option<&User> {
+        for u in &self.users {
+            if u.public_key == pub_key {
+                return Some(u);
+            }
+        }
+        None::<&User>
+    }
+
+    /// Finds a user with the given name
+    /// Returns the user if found, else None
+    fn find_user_by_name(&self, name: &str) -> Option<&User> {
+        for u in &self.users {
+            if u.name == name {
+                return Some(u);
+            }
+        }
+        None::<&User>
+    }
+
     /// Finds a user in the users vector
     /// Returns true if found, else false
     pub fn user_exists(&self, user: &User) -> bool {
@@ -43,7 +65,9 @@ impl Project {
             public_key: pub_key.to_string(),
         };
 
-        if self.user_exists(&user) {
+        if self.find_user_by_name(name).is_some() ||
+           self.find_user_by_public_key(pub_key).is_some() {
+           
             Err(self.duplicate_user(pub_key, name))
         } else {
             let mut new_project = self.clone();
