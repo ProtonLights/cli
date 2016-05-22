@@ -25,10 +25,8 @@ impl Project {
     /// Finds a user in the users vector
     /// Returns true if found, else false
     pub fn find_user(&self, user: &User) -> bool {
-        let myself = self.clone();
-        println!("{:?}", myself);
-        for u in myself.users {
-            if user == &u {
+        for u in &self.users {
+            if user == u {
                 return true;
             }
         }
