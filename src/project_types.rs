@@ -1,4 +1,6 @@
 
+use Error;
+
 /// Structure to represent a Proton Project.
 /// This is what will be written to a Protonfile at the project root.
 #[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
@@ -24,7 +26,7 @@ impl Project {
 
     /// Finds a user in the users vector
     /// Returns true if found, else false
-    pub fn find_user(&self, user: &User) -> bool {
+    pub fn user_exists(&self, user: &User) -> bool {
         for u in &self.users {
             if user == u {
                 return true;
@@ -34,14 +36,24 @@ impl Project {
     }
 
     /// Adds a user to the project
-    pub fn add_user(&self, name: String, pub_key: String) -> Project {
+    pub fn add_user(&self, name: &str, pub_key: &str) -> Result<Project, Error> {
+        
         let user = User {
-            name: name,
-            public_key: pub_key,
+            name: name.to_string(),
+            public_key: pub_key.to_string(),
         };
-        let mut new_project = self.clone();
-        new_project.users.push(user);
-        new_project
+
+        if self.user_exists(&user) {
+            Err(self.duplicate_user(pub_key, name))
+        } else {
+            let mut new_project = self.clone();
+            new_project.users.push(user);
+            Ok(new_project)
+        }
+    }
+
+    fn duplicate_user(&self, pub_key: &str, name: &str) -> Error {
+        Error::DuplicateUser(pub_key.to_string(), name.to_string())
     }
 
 }

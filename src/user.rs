@@ -16,7 +16,7 @@ use utils;
 pub fn new_user<P: AsRef<Path>>(public_key_path: P, name: String) -> Result<(), Error> {
     let pub_key = try!(utils::file_as_string(public_key_path));
     let project = try!(utils::read_protonfile(None::<P>));
-    let new_project = project.add_user(name, pub_key);
+    let new_project = try!(project.add_user(&name, &pub_key));
     utils::write_protonfile(&new_project, None::<P>)
 }
 

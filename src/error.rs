@@ -10,6 +10,7 @@ pub enum Error {
     FolderNotEmpty(String, usize),
     InvalidPublicKey(String),
     LoadProjectError,
+    DuplicateUser(String, String),
     TodoErr,
 }
 
@@ -22,6 +23,7 @@ impl error::Error for Error {
             Error::FolderNotEmpty(_, _) => "Root folder was not empty",
             Error::InvalidPublicKey(_) => "Invalid public key",
             Error::LoadProjectError => "Loading project failed",
+            Error::DuplicateUser(_, _) => "User already exists",
             Error::TodoErr => "Todo",
         }
     }
@@ -34,6 +36,7 @@ impl error::Error for Error {
            Error::FolderNotEmpty(_, _) => None,
            Error::InvalidPublicKey(_) => None,
            Error::LoadProjectError => None,
+           Error::DuplicateUser(_, _) => None,
            Error::TodoErr => None,
        }
    }
@@ -53,6 +56,8 @@ impl fmt::Display for Error {
             Error::InvalidPublicKey(ref key) => write!(f, 
                 "Public key '{}' is invalid", key),
             Error::LoadProjectError => write!(f, "Loading project failed"),
+            Error::DuplicateUser(ref key, ref user) => write!(f,
+                "User '{}' with key '{}' already exists", user, key),
             Error::TodoErr => write!(f, "TodoErr"),
         }
     }

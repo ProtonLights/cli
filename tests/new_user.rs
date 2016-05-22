@@ -104,7 +104,7 @@ fn assert_exists<P: AsRef<Path>>(public_key_path: P, name: &str, key_content: &s
         name: name.to_string(),
         public_key: key_content.to_string(),
     };
-    assert_eq!(project.find_user(&u), true);
+    assert_eq!(project.user_exists(&u), true);
 }
 
 /// Creates a key file at the given location
