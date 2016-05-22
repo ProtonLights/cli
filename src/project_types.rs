@@ -1,13 +1,13 @@
 
 /// Structure to represent a Proton Project.
 /// This is what will be written to a Protonfile at the project root.
-#[derive(Clone, Debug, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
 pub struct Project {
     pub name: String,
     pub users: Vec<User>,
 }
 
-#[derive(Clone, Debug, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
 pub struct User {
     pub name: String,
     pub public_key: String,
@@ -46,23 +46,4 @@ impl Project {
         new_project
     }
 
-}
-
-impl PartialEq for Project {
-    fn eq(&self, other: &Project) -> bool {
-        self.name == other.name
-    }
-}
-
-impl Eq for Project {
-}
-
-impl PartialEq for User {
-    fn eq(&self, other: &User) -> bool {
-        self.name == other.name &&
-        self.public_key == other.public_key
-    }
-}
-
-impl Eq for User {
 }
