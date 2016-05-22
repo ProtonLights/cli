@@ -89,6 +89,71 @@ fn fails_with_nonexistent_key_path() {
     assert!(env::set_current_dir(Path::new("..")).is_ok());
 }
 
+/// Warning: This test changes env::current_directory
+/// to better model new_user's expected use case.
+/// Running tests with RUST_TEST_THREADS=1 runs tests
+/// in serial, which avoids occasional false negatives
+#[test]
+#[should_panic(expected = "Error adding user 2")]
+fn fails_with_duplicate_user_key() {
+    let root_dir = setup();
+    let root = root_dir.path();
+
+    let _ = proton_cli::initialize_project(&root)
+        .expect("Error initializing project");
+    
+    let key_path = make_key_file(root, "a.pub", "123");
+
+    // Move into temp directory (new_user assumes it is run in project directory)
+    assert!(env::set_current_dir(&root).is_ok());
+
+    // Add new user to project
+    let _ = proton_cli::new_user(&key_path.as_path(), String::from("Test User"))
+        .expect("Error adding user");
+
+    // Assert that user was added
+    assert_exists(key_path.as_path(), "Test User", "123");
+
+    // Now try adding another user with the same key
+    let _ = proton_cli::new_user(&key_path.as_path(), String::from("Test User 2"))
+        .expect("Error adding user 2");
+
+    panic!("Should not get to here");
+}
+
+/// Warning: This test changes env::current_directory
+/// to better model new_user's expected use case.
+/// Running tests with RUST_TEST_THREADS=1 runs tests
+/// in serial, which avoids occasional false negatives
+#[test]
+#[should_panic(expected = "Error adding second user")]
+fn fails_with_duplicate_user_name() {
+    let root_dir = setup();
+    let root = root_dir.path();
+
+    let _ = proton_cli::initialize_project(&root)
+        .expect("Error initializing project");
+    
+    let key_path_a = make_key_file(root, "a.pub", "123");
+    let key_path_b = make_key_file(root, "b.pub", "456");
+
+    // Move into temp directory (new_user assumes it is run in project directory)
+    assert!(env::set_current_dir(&root).is_ok());
+
+    // Add new user to project
+    let _ = proton_cli::new_user(&key_path_a.as_path(), String::from("Test User"))
+        .expect("Error adding user");
+
+    // Assert that user was added
+    assert_exists(key_path_a.as_path(), "Test User", "123");
+
+    // Now try adding another user with the same key
+    let _ = proton_cli::new_user(&key_path_b.as_path(), String::from("Test User"))
+        .expect("Error adding second user");
+
+    panic!("Should not get to here");
+}
+
 /// Check if the public key at the given path exists and contains key_content,
 /// and check to see that the user is in the project at the current directory's protonfile
 fn assert_exists<P: AsRef<Path>>(public_key_path: P, name: &str, key_content: &str) {
@@ -115,14 +180,12 @@ fn make_key_file<P: AsRef<Path>>(root_dir: P, file_name: &str, file_content: &st
     key_path.push(file_name);
     File::create(&key_path)
         .and_then(|mut file| write!(file, "{}\n", file_content))
-        .map_err(Error::Io)
         .expect("Error creating key file");
 
     key_path
 }
 
 /// Creates a temporary directory to run a test out of
-/// and initializes a new project inside this directory
 fn setup() -> TempDir {
     TempDir::new("proton_cli_tests").unwrap()
 }
