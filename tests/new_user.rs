@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use tempdir::TempDir;
 
-use proton_cli::{Error, Project, User, utils};
+use proton_cli::{Project, User, utils};
 
 
 /// Warning: This test changes env::current_directory
