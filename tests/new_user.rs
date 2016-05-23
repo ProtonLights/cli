@@ -46,9 +46,6 @@ fn works_with_new_and_existing_protonfile() {
     // Assert that both users exist
     assert_exists(key_path_a.as_path(), "Test User", "123");
     assert_exists(key_path_b.as_path(), "Test User 2", "456");
-
-    // Move back out of project directory
-    assert!(env::set_current_dir(Path::new("..")).is_ok());
 }
 
 #[test]
@@ -84,9 +81,6 @@ fn fails_with_nonexistent_key_path() {
         Ok(_) => (),
         Err(_) => panic!("Error adding user"),
     };
-
-    // Move back out of project directory
-    assert!(env::set_current_dir(Path::new("..")).is_ok());
 }
 
 /// Warning: This test changes env::current_directory
