@@ -25,8 +25,9 @@ pub fn commit_file<P: AsRef<Path>>(
         .and_then(|mut index| index.write_tree())
         .and_then(|oid| repo.find_tree(oid))
         .and_then(|tree| {
-            let parent_obj = repo.revparse_single("HEAD").expect("HEAD not found");
-            let parent = [parent_obj.as_commit().expect("Error turning parent into commit")];
+            let parent = repo.refname_to_id("refs/heads/master")
+                .and_then(|oid| repo.find_commit(oid))
+                .expect("Finding master failed");
 
             repo.commit(
                 Some("HEAD"),
@@ -34,7 +35,7 @@ pub fn commit_file<P: AsRef<Path>>(
                 signature,
                 msg,
                 &tree,
-                &parent)
+                &[&parent])
         })
         .map_err(Error::Git);
 
