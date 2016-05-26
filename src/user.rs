@@ -21,7 +21,7 @@ use utils;
 ///
 /// Impure.
 pub fn new_user<P: AsRef<Path>>(public_key_path: P, name: String) -> Result<(), Error> {
-    let pub_key = try!(utils::file_as_string(public_key_path));
+    let pub_key = try!(get_public_key(public_key_path));
     let project = try!(utils::read_protonfile(None::<P>));
     let new_project = try!(project.add_user(&name, &pub_key));
     utils::write_protonfile(&new_project, None::<P>)
@@ -62,6 +62,20 @@ pub fn id_user<P: AsRef<Path>>(private_key_path: P) -> Result<User, Error> {
 
     let private_key_str = try!(utils::file_as_string(&private_key_path));
     Err(user_not_found_error(private_key_str))
+}
+
+fn get_public_key<P: AsRef<Path>>(public_key_path: P) -> Result<String, Error> {
+    let pub_key = try!(utils::file_as_string(public_key_path));
+    let mut pub_key_readable = Cursor::new(&pub_key);
+    match openssl_RSA::public_key_from_pem(&mut pub_key_readable) {
+        Ok(_) => Ok(pub_key.clone()),
+        Err(_) => Err(invalid_pub_key_error(&pub_key)),
+    }
+
+}
+
+fn invalid_pub_key_error(key: &str) -> Error {
+    Error::InvalidPublicKey(key.to_string())
 }
 
 fn user_not_found_error(private_key: String) -> Error {

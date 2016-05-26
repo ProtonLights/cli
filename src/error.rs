@@ -64,7 +64,7 @@ impl fmt::Display for Error {
             Error::FolderNotEmpty(ref root, count) => write!(f,
                 "{} was not empty: {} files exist", root, count),
             Error::InvalidPublicKey(ref key) => write!(f, 
-                "Public key '{}' is invalid", key),
+                "Public key is invalid: {}", key),
             Error::LoadProjectError => write!(f, "Loading project failed"),
             Error::DuplicateUser(ref key, ref user) => write!(f,
                 "Duplicate user '{}' or key '{}'", user, key),
