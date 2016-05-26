@@ -1,4 +1,6 @@
 
+#![allow(dead_code)]
+
 pub enum TestKey {
     BadPrivKeyPem,
     BadPubKeyPem,

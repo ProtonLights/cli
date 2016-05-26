@@ -1,3 +1,7 @@
+// For some reason, Rust doesn't detect these functions being used in other tests
+// Make the compiled output less verbose
+#![allow(dead_code)]
+
 extern crate proton_cli;
 extern crate tempdir;
 
@@ -24,8 +28,6 @@ pub fn make_key_file<P: AsRef<Path>>(
     let mut key_path = PathBuf::new();
     key_path.push(root_dir);
     key_path.push(file_name);
-
-    println!("{}", key_path.display());
 
     let file_content = rsa_keys::get_test_key(test_key);
     File::create(&key_path)

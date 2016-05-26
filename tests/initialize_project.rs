@@ -9,7 +9,6 @@ use std::io::Read;
 
 use git2::Repository;
 use rustc_serialize::json;
-use tempdir::TempDir;
 
 use proton_cli::{Error, Project, initialize_project};
 mod common;
