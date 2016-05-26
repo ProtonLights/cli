@@ -67,7 +67,7 @@ fn run_new_user(args: Args) -> Result<(), Error> {
 	let public_key = args.arg_public_key.unwrap();
 	let public_key_path = Path::new(&public_key);
 	let name = args.arg_name.unwrap();
-	proton_cli::new_user(&public_key_path, name)
+	proton_cli::new_user(&public_key_path, &name)
 }
 
 fn run_id_user(args: Args) -> Result<(), Error> {

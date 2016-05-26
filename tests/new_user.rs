@@ -4,9 +4,7 @@ extern crate tempdir;
 mod common;
 
 use std::env;
-use std::path::Path;
 
-use proton_cli::{Project, User, utils};
 use common::rsa_keys::TestKey;
 
 
@@ -31,20 +29,23 @@ fn works_with_new_and_existing_protonfile() {
     // Move into temp directory (new_user assumes it is run in project directory)
     assert!(env::set_current_dir(&root).is_ok());
 
+    let user_name = "Test User";
+    let user_name2 = "Test User 2";
+
     // Add new user to project
-    let _ = proton_cli::new_user(&key_path_a.as_path(), String::from("Test User"))
+    let _ = proton_cli::new_user(&key_path_a.as_path(), &user_name)
         .expect("Error adding user");
 
     // Assert that user was added
-    assert_user_added(key_path_a.as_path(), "Test User");
+    common::assert_user_added(key_path_a.as_path(), "Test User");
 
     // Now try adding another user
-    let _ = proton_cli::new_user(&key_path_b.as_path(), String::from("Test User 2"))
+    let _ = proton_cli::new_user(&key_path_b.as_path(), &user_name2)
         .expect("Error adding user 2");
 
     // Assert that both users exist
-    assert_user_added(key_path_a.as_path(), "Test User");
-    assert_user_added(key_path_b.as_path(), "Test User 2");
+    common::assert_user_added(key_path_a.as_path(), &user_name);
+    common::assert_user_added(key_path_b.as_path(), &user_name2);
 }
 
 #[test]
@@ -56,7 +57,7 @@ fn fails_with_a_nonexistent_protonfile() {
     // Make key file, but don't initialize project
     let key_path = common::make_key_file(root, "a.pub", TestKey::GoodKeyPub);
 
-    match proton_cli::new_user(&key_path.as_path(), String::from("Username")) {
+    match proton_cli::new_user(&key_path.as_path(), "Username") {
         Ok(_) => (),
         Err(_) => panic!("Error adding user"),
     };
@@ -76,7 +77,7 @@ fn fails_with_nonexistent_key_path() {
     // Move into temp directory (new_user assumes it is run in project directory)
     assert!(env::set_current_dir(&root).is_ok());
 
-    match proton_cli::new_user(&key_path.as_path(), String::from("Username")) {
+    match proton_cli::new_user(&key_path.as_path(), "Username") {
         Ok(_) => (),
         Err(_) => panic!("Error adding user"),
     };
@@ -97,7 +98,7 @@ fn fails_with_non_pem_key() {
     assert!(env::set_current_dir(&root).is_ok());
 
     // Add new user to project
-    match proton_cli::new_user(&key_path.as_path(), String::from("Test User")) {
+    match proton_cli::new_user(&key_path.as_path(), "Test User") {
         Ok(_) => (),
         Err(e) => panic!("{}", e),
     };
@@ -123,14 +124,14 @@ fn fails_with_duplicate_user_key() {
     assert!(env::set_current_dir(&root).is_ok());
 
     // Add new user to project
-    let _ = proton_cli::new_user(&key_path.as_path(), String::from("Test User"))
+    let _ = proton_cli::new_user(&key_path.as_path(), "Test User")
         .expect("Error adding user");
 
     // Assert that user was added
-    assert_user_added(key_path.as_path(), "Test User");
+    common::assert_user_added(key_path.as_path(), "Test User");
 
     // Now try adding another user with the same key
-    let _ = proton_cli::new_user(&key_path.as_path(), String::from("Test User 2"))
+    let _ = proton_cli::new_user(&key_path.as_path(), "Test User 2")
         .expect("Error adding user 2");
 
     panic!("Should not get to here");
@@ -156,32 +157,16 @@ fn fails_with_duplicate_user_name() {
     assert!(env::set_current_dir(&root).is_ok());
 
     // Add new user to project
-    let _ = proton_cli::new_user(&key_path_a.as_path(), String::from("Test User"))
+    let _ = proton_cli::new_user(&key_path_a.as_path(), "Test User")
         .expect("Error adding user");
 
     // Assert that user was added
-    assert_user_added(key_path_a.as_path(), "Test User");
+    common::assert_user_added(key_path_a.as_path(), "Test User");
 
     // Now try adding another user with the same key
-    let _ = proton_cli::new_user(&key_path_b.as_path(), String::from("Test User"))
+    let _ = proton_cli::new_user(&key_path_b.as_path(), "Test User")
         .expect("Error adding second user");
 
     panic!("Should not get to here");
 }
 
-
-/// Check if the public key at the given path exists and contains key_content,
-/// and check to see that the user is in the project at the current directory's protonfile
-fn assert_user_added<P: AsRef<Path>>(public_key_path: P, name: &str) {
-    let pub_key_contents = utils::file_as_string(public_key_path)
-        .expect("Error reading public key file");
-
-    let project: Project = utils::read_protonfile(None::<P>)
-        .expect("Error reading project");
-        
-    let u = User {
-        name: name.to_string(),
-        public_key: pub_key_contents,
-    };
-    assert_eq!(project.user_exists(&u), true);
-}

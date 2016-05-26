@@ -9,6 +9,8 @@ use std::path::{Path, PathBuf};
 
 use tempdir::TempDir;
 
+use proton_cli::{utils, Project, User};
+
 
 /// Creates a key file at the given location
 /// Returns the path to the key file
@@ -28,6 +30,22 @@ pub fn make_key_file<P: AsRef<Path>>(
         .expect("Error creating key file");
 
     key_path
+}
+
+/// Check if the public key at the given path exists and contains key_content,
+/// and check to see that the user is in the project at the current directory's protonfile
+pub fn assert_user_added<P: AsRef<Path>>(public_key_path: P, name: &str) {
+    let pub_key_contents = utils::file_as_string(public_key_path)
+        .expect("Error reading public key file");
+
+    let project: Project = utils::read_protonfile(None::<P>)
+        .expect("Error reading project");
+        
+    let u = User {
+        name: name.to_string(),
+        public_key: pub_key_contents,
+    };
+    assert_eq!(project.user_exists(&u), true);
 }
 
 /// Creates a temporary directory to run a test out of
