@@ -3,8 +3,6 @@ extern crate tempdir;
 
 mod common;
 
-use std::env;
-
 use common::rsa_keys::TestKey;
 
 
@@ -14,20 +12,11 @@ use common::rsa_keys::TestKey;
 /// in serial, which avoids occasional false negatives
 #[test]
 fn works_with_new_and_existing_protonfile() {
-    // Make temp directory to work out of
-    let root_dir = common::setup();
-    let root = root_dir.path();
-
-    // Make new project in temp directory
-    let _ = proton_cli::initialize_project(&root)
-        .expect("Error initializing project");
+    let root = common::setup_init_cd();
 
     // Make key files for users
-    let key_path_a = common::make_key_file(root, "a.pub", TestKey::GoodKeyPub);
-    let key_path_b = common::make_key_file(root, "b.pub", TestKey::GoodKey2Pub);
-
-    // Move into temp directory (new_user assumes it is run in project directory)
-    assert!(env::set_current_dir(&root).is_ok());
+    let key_path_a = common::make_key_file(root.as_path(), "a.pub", TestKey::GoodKeyPub);
+    let key_path_b = common::make_key_file(root.as_path(), "b.pub", TestKey::GoodKey2Pub);
 
     let user_name = "Test User";
     let user_name2 = "Test User 2";
@@ -66,16 +55,9 @@ fn fails_with_a_nonexistent_protonfile() {
 #[test]
 #[should_panic(expected = "Error adding user")]
 fn fails_with_nonexistent_key_path() {
-    let root_dir = common::setup();
-    let root = root_dir.path();
-
-    let _ = proton_cli::initialize_project(&root)
-        .expect("Error initializing project");
+    let root = common::setup_init_cd();
     
     let key_path = root.join("nonexistent");
-
-    // Move into temp directory (new_user assumes it is run in project directory)
-    assert!(env::set_current_dir(&root).is_ok());
 
     match proton_cli::new_user(&key_path.as_path(), "Username") {
         Ok(_) => (),
@@ -86,16 +68,9 @@ fn fails_with_nonexistent_key_path() {
 #[test]
 #[should_panic(expected = "Public key is invalid")]
 fn fails_with_non_pem_key() {
-    let root_dir = common::setup();
-    let root = root_dir.path();
+    let root = common::setup_init_cd();
 
-    let _ = proton_cli::initialize_project(&root)
-        .expect("Error initializing project");
-
-    let key_path = common::make_key_file(&root, "bad_pub_key.pub", TestKey::BadPubKeyPub);
-
-    // Move into temp directory (new_user assumes it is run in project directory)
-    assert!(env::set_current_dir(&root).is_ok());
+    let key_path = common::make_key_file(root.as_path(), "bad_pub_key.pub", TestKey::BadPubKeyPub);
 
     // Add new user to project
     match proton_cli::new_user(&key_path.as_path(), "Test User") {
@@ -112,16 +87,9 @@ fn fails_with_non_pem_key() {
 #[test]
 #[should_panic(expected = "Error adding user 2")]
 fn fails_with_duplicate_user_key() {
-    let root_dir = common::setup();
-    let root = root_dir.path();
-
-    let _ = proton_cli::initialize_project(&root)
-        .expect("Error initializing project");
-    
+    let root = common::setup_init_cd();
+ 
     let key_path = common::make_key_file(root, "a.pub", TestKey::GoodKeyPub);
-
-    // Move into temp directory (new_user assumes it is run in project directory)
-    assert!(env::set_current_dir(&root).is_ok());
 
     // Add new user to project
     let _ = proton_cli::new_user(&key_path.as_path(), "Test User")
@@ -144,18 +112,12 @@ fn fails_with_duplicate_user_key() {
 #[test]
 #[should_panic(expected = "Error adding second user")]
 fn fails_with_duplicate_user_name() {
-    let root_dir = common::setup();
-    let root = root_dir.path();
+    let root = common::setup_init_cd();
 
-    let _ = proton_cli::initialize_project(&root)
-        .expect("Error initializing project");
+    let key_path_a = common::make_key_file(root.as_path(), "a.pub", TestKey::GoodKeyPub);
+    let key_path_b = common::make_key_file(root.as_path(), "b.pub", TestKey::GoodKey2Pub);
+
     
-    let key_path_a = common::make_key_file(root, "a.pub", TestKey::GoodKeyPub);
-    let key_path_b = common::make_key_file(root, "b.pub", TestKey::GoodKey2Pub);
-
-    // Move into temp directory (new_user assumes it is run in project directory)
-    assert!(env::set_current_dir(&root).is_ok());
-
     // Add new user to project
     let _ = proton_cli::new_user(&key_path_a.as_path(), "Test User")
         .expect("Error adding user");
@@ -169,4 +131,3 @@ fn fails_with_duplicate_user_name() {
 
     panic!("Should not get to here");
 }
-

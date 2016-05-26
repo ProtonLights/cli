@@ -42,6 +42,12 @@ fn works_with_valid_keys() {
     assert_user_equal(&user, &name, public_key_path);
 }
 
+#[test]
+#[should_panic(expected = "")]
+fn fails_with_invalid_private_key() {
+    
+}
+
 fn assert_user_equal(user: &User, name: &str, pub_key_path: PathBuf) {
     let pub_key = utils::file_as_string(pub_key_path).expect("Error reading public key");
     let u = User {

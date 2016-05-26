@@ -3,6 +3,7 @@ extern crate tempdir;
 
 pub mod rsa_keys;
 
+use std::env;
 use std::fs::File;
 use std::io::{Write};
 use std::path::{Path, PathBuf};
@@ -51,4 +52,17 @@ pub fn assert_user_added<P: AsRef<Path>>(public_key_path: P, name: &str) {
 /// Creates a temporary directory to run a test out of
 pub fn setup() -> TempDir {
     TempDir::new("proton_cli_tests").unwrap()
+}
+
+pub fn setup_init_cd() -> PathBuf {
+    let root_dir = setup();
+    let root = root_dir.path();
+
+    let _ = proton_cli::initialize_project(&root)
+        .expect("Error initializing project");
+
+    // Move into temp directory (new_user assumes it is run in project directory)
+    assert!(env::set_current_dir(&root).is_ok());
+
+    PathBuf::from(root)
 }
