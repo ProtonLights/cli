@@ -4,15 +4,15 @@ extern crate tempdir;
 use tempdir::TempDir;
 
 use proton_cli::{Project, User, utils};
+mod common;
 
 
 #[test]
 fn works_with_valid_keys() {
+    let root_dir = common::setup();
+    let root = root_dir.path();
 
+    let _ = proton_cli::initialize_project(&root)
+        .expect("Error initializing project");
 }
 
-
-/// Creates a temporary directory to run a test out of
-fn setup() -> TempDir {
-    TempDir::new("proton_cli_tests").unwrap()
-}

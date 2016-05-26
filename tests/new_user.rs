@@ -1,16 +1,13 @@
 extern crate proton_cli;
 extern crate tempdir;
 
-use std::env;
-use std::fs::File;
-use std::io::{Write};
-use std::path::{Path, PathBuf};
+mod common;
 
-use tempdir::TempDir;
+use std::env;
+use std::path::Path;
 
 use proton_cli::{Project, User, utils};
-mod rsa_keys;
-use rsa_keys::TestKey;
+use common::rsa_keys::TestKey;
 
 
 /// Warning: This test changes env::current_directory
@@ -20,7 +17,7 @@ use rsa_keys::TestKey;
 #[test]
 fn works_with_new_and_existing_protonfile() {
     // Make temp directory to work out of
-    let root_dir = setup();
+    let root_dir = common::setup();
     let root = root_dir.path();
 
     // Make new project in temp directory
@@ -28,8 +25,8 @@ fn works_with_new_and_existing_protonfile() {
         .expect("Error initializing project");
 
     // Make key files for users
-    let key_path_a = make_key_file(root, "a.pub", TestKey::GoodKeyPub);
-    let key_path_b = make_key_file(root, "b.pub", TestKey::GoodKey2Pub);
+    let key_path_a = common::make_key_file(root, "a.pub", TestKey::GoodKeyPub);
+    let key_path_b = common::make_key_file(root, "b.pub", TestKey::GoodKey2Pub);
 
     // Move into temp directory (new_user assumes it is run in project directory)
     assert!(env::set_current_dir(&root).is_ok());
@@ -39,25 +36,25 @@ fn works_with_new_and_existing_protonfile() {
         .expect("Error adding user");
 
     // Assert that user was added
-    assert_added(key_path_a.as_path(), "Test User");
+    assert_user_added(key_path_a.as_path(), "Test User");
 
     // Now try adding another user
     let _ = proton_cli::new_user(&key_path_b.as_path(), String::from("Test User 2"))
         .expect("Error adding user 2");
 
     // Assert that both users exist
-    assert_added(key_path_a.as_path(), "Test User");
-    assert_added(key_path_b.as_path(), "Test User 2");
+    assert_user_added(key_path_a.as_path(), "Test User");
+    assert_user_added(key_path_b.as_path(), "Test User 2");
 }
 
 #[test]
 #[should_panic(expected = "Error adding user")]
 fn fails_with_a_nonexistent_protonfile() {
-    let root_dir = setup();
+    let root_dir = common::setup();
     let root = root_dir.path();
 
     // Make key file, but don't initialize project
-    let key_path = make_key_file(root, "a.pub", TestKey::GoodKeyPub);
+    let key_path = common::make_key_file(root, "a.pub", TestKey::GoodKeyPub);
 
     match proton_cli::new_user(&key_path.as_path(), String::from("Username")) {
         Ok(_) => (),
@@ -68,7 +65,7 @@ fn fails_with_a_nonexistent_protonfile() {
 #[test]
 #[should_panic(expected = "Error adding user")]
 fn fails_with_nonexistent_key_path() {
-    let root_dir = setup();
+    let root_dir = common::setup();
     let root = root_dir.path();
 
     let _ = proton_cli::initialize_project(&root)
@@ -88,13 +85,13 @@ fn fails_with_nonexistent_key_path() {
 #[test]
 #[should_panic(expected = "Public key is invalid")]
 fn fails_with_non_pem_key() {
-    let root_dir = setup();
+    let root_dir = common::setup();
     let root = root_dir.path();
 
     let _ = proton_cli::initialize_project(&root)
         .expect("Error initializing project");
 
-    let key_path = make_key_file(&root, "bad_pub_key.pub", TestKey::BadPubKeyPub);
+    let key_path = common::make_key_file(&root, "bad_pub_key.pub", TestKey::BadPubKeyPub);
 
     // Move into temp directory (new_user assumes it is run in project directory)
     assert!(env::set_current_dir(&root).is_ok());
@@ -114,13 +111,13 @@ fn fails_with_non_pem_key() {
 #[test]
 #[should_panic(expected = "Error adding user 2")]
 fn fails_with_duplicate_user_key() {
-    let root_dir = setup();
+    let root_dir = common::setup();
     let root = root_dir.path();
 
     let _ = proton_cli::initialize_project(&root)
         .expect("Error initializing project");
     
-    let key_path = make_key_file(root, "a.pub", TestKey::GoodKeyPub);
+    let key_path = common::make_key_file(root, "a.pub", TestKey::GoodKeyPub);
 
     // Move into temp directory (new_user assumes it is run in project directory)
     assert!(env::set_current_dir(&root).is_ok());
@@ -130,7 +127,7 @@ fn fails_with_duplicate_user_key() {
         .expect("Error adding user");
 
     // Assert that user was added
-    assert_added(key_path.as_path(), "Test User");
+    assert_user_added(key_path.as_path(), "Test User");
 
     // Now try adding another user with the same key
     let _ = proton_cli::new_user(&key_path.as_path(), String::from("Test User 2"))
@@ -146,14 +143,14 @@ fn fails_with_duplicate_user_key() {
 #[test]
 #[should_panic(expected = "Error adding second user")]
 fn fails_with_duplicate_user_name() {
-    let root_dir = setup();
+    let root_dir = common::setup();
     let root = root_dir.path();
 
     let _ = proton_cli::initialize_project(&root)
         .expect("Error initializing project");
     
-    let key_path_a = make_key_file(root, "a.pub", TestKey::GoodKeyPub);
-    let key_path_b = make_key_file(root, "b.pub", TestKey::GoodKey2Pub);
+    let key_path_a = common::make_key_file(root, "a.pub", TestKey::GoodKeyPub);
+    let key_path_b = common::make_key_file(root, "b.pub", TestKey::GoodKey2Pub);
 
     // Move into temp directory (new_user assumes it is run in project directory)
     assert!(env::set_current_dir(&root).is_ok());
@@ -163,7 +160,7 @@ fn fails_with_duplicate_user_name() {
         .expect("Error adding user");
 
     // Assert that user was added
-    assert_added(key_path_a.as_path(), "Test User");
+    assert_user_added(key_path_a.as_path(), "Test User");
 
     // Now try adding another user with the same key
     let _ = proton_cli::new_user(&key_path_b.as_path(), String::from("Test User"))
@@ -172,9 +169,10 @@ fn fails_with_duplicate_user_name() {
     panic!("Should not get to here");
 }
 
+
 /// Check if the public key at the given path exists and contains key_content,
 /// and check to see that the user is in the project at the current directory's protonfile
-fn assert_added<P: AsRef<Path>>(public_key_path: P, name: &str) {
+fn assert_user_added<P: AsRef<Path>>(public_key_path: P, name: &str) {
     let pub_key_contents = utils::file_as_string(public_key_path)
         .expect("Error reading public key file");
 
@@ -186,24 +184,4 @@ fn assert_added<P: AsRef<Path>>(public_key_path: P, name: &str) {
         public_key: pub_key_contents,
     };
     assert_eq!(project.user_exists(&u), true);
-}
-
-/// Creates a key file at the given location
-/// Returns the path to the key file
-fn make_key_file<P: AsRef<Path>>(root_dir: P, file_name: &str, test_key: TestKey) -> PathBuf {
-    let mut key_path = PathBuf::new();
-    key_path.push(root_dir);
-    key_path.push(file_name);
-
-    let file_content = rsa_keys::get_test_key(test_key);
-    File::create(&key_path)
-        .and_then(|mut file| write!(file, "{}\n", file_content))
-        .expect("Error creating key file");
-
-    key_path
-}
-
-/// Creates a temporary directory to run a test out of
-fn setup() -> TempDir {
-    TempDir::new("proton_cli_tests").unwrap()
 }
