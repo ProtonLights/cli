@@ -25,6 +25,8 @@ pub fn make_key_file<P: AsRef<Path>>(
     key_path.push(root_dir);
     key_path.push(file_name);
 
+    println!("{}", key_path.display());
+
     let file_content = rsa_keys::get_test_key(test_key);
     File::create(&key_path)
         .and_then(|mut file| write!(file, "{}\n", file_content))
@@ -54,15 +56,21 @@ pub fn setup() -> TempDir {
     TempDir::new("proton_cli_tests").unwrap()
 }
 
-pub fn setup_init_cd() -> PathBuf {
+/// Creates a temporary directory, initializes a project in it,
+/// and changes the current directory to it
+/// Returns the path to the temp directory 
+pub fn setup_init_cd() -> TempDir {
     let root_dir = setup();
-    let root = root_dir.path();
+    
+    {
+        let root = root_dir.path();
 
-    let _ = proton_cli::initialize_project(&root)
-        .expect("Error initializing project");
+        let _ = proton_cli::initialize_project(&root)
+            .expect("Error initializing project");
 
-    // Move into temp directory (new_user assumes it is run in project directory)
-    assert!(env::set_current_dir(&root).is_ok());
+        // Move into temp directory (new_user assumes it is run in project directory)
+        assert!(env::set_current_dir(&root).is_ok());
+    }
 
-    PathBuf::from(root)
+    root_dir
 }

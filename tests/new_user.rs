@@ -15,8 +15,8 @@ fn works_with_new_and_existing_protonfile() {
     let root = common::setup_init_cd();
 
     // Make key files for users
-    let key_path_a = common::make_key_file(root.as_path(), "a.pub", TestKey::GoodKeyPub);
-    let key_path_b = common::make_key_file(root.as_path(), "b.pub", TestKey::GoodKey2Pub);
+    let key_path_a = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);
+    let key_path_b = common::make_key_file(root.path(), "b.pub", TestKey::GoodKey2Pub);
 
     let user_name = "Test User";
     let user_name2 = "Test User 2";
@@ -57,7 +57,7 @@ fn fails_with_a_nonexistent_protonfile() {
 fn fails_with_nonexistent_key_path() {
     let root = common::setup_init_cd();
     
-    let key_path = root.join("nonexistent");
+    let key_path = root.path().join("nonexistent");
 
     match proton_cli::new_user(&key_path.as_path(), "Username") {
         Ok(_) => (),
@@ -70,7 +70,7 @@ fn fails_with_nonexistent_key_path() {
 fn fails_with_non_pem_key() {
     let root = common::setup_init_cd();
 
-    let key_path = common::make_key_file(root.as_path(), "bad_pub_key.pub", TestKey::BadPubKeyPub);
+    let key_path = common::make_key_file(root.path(), "bad_pub_key.pub", TestKey::BadPubKeyPub);
 
     // Add new user to project
     match proton_cli::new_user(&key_path.as_path(), "Test User") {
@@ -89,7 +89,7 @@ fn fails_with_non_pem_key() {
 fn fails_with_duplicate_user_key() {
     let root = common::setup_init_cd();
  
-    let key_path = common::make_key_file(root, "a.pub", TestKey::GoodKeyPub);
+    let key_path = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);
 
     // Add new user to project
     let _ = proton_cli::new_user(&key_path.as_path(), "Test User")
@@ -114,8 +114,8 @@ fn fails_with_duplicate_user_key() {
 fn fails_with_duplicate_user_name() {
     let root = common::setup_init_cd();
 
-    let key_path_a = common::make_key_file(root.as_path(), "a.pub", TestKey::GoodKeyPub);
-    let key_path_b = common::make_key_file(root.as_path(), "b.pub", TestKey::GoodKey2Pub);
+    let key_path_a = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);
+    let key_path_b = common::make_key_file(root.path(), "b.pub", TestKey::GoodKey2Pub);
 
     
     // Add new user to project

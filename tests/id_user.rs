@@ -3,7 +3,6 @@ extern crate tempdir;
 
 mod common;
 
-use std::env;
 use std::path::PathBuf;
 
 use common::rsa_keys::TestKey;
@@ -12,18 +11,11 @@ use proton_cli::{User, utils};
 
 #[test]
 fn works_with_valid_keys() {
-    let root_dir = common::setup();
-    let root = root_dir.path();
-
-    let _ = proton_cli::initialize_project(&root)
-        .expect("Error initializing project");
+    let root = common::setup_init_cd();
 
     // Make key files for users
-    let public_key_path = common::make_key_file(root, "a.pub", TestKey::GoodKeyPub);
-    let private_key_path = common::make_key_file(root, "a.pem", TestKey::GoodKeyPem);
-
-    // Move into temp directory (new_user assumes it is run in project directory)
-    assert!(env::set_current_dir(&root).is_ok());
+    let public_key_path = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);
+    let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKeyPem);
 
     let name = "Test User".to_string();
 
@@ -45,7 +37,7 @@ fn works_with_valid_keys() {
 #[test]
 #[should_panic(expected = "")]
 fn fails_with_invalid_private_key() {
-    
+
 }
 
 fn assert_user_equal(user: &User, name: &str, pub_key_path: PathBuf) {
