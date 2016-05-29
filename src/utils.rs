@@ -28,7 +28,7 @@ pub fn commit_file<P: AsRef<Path>>(
         .and_then(|oid| repo.find_commit(oid))
         .map_err(Error::Git));
 
-    try!(repo.commit(
+    return repo.commit(
         Some("HEAD"),
         signature,
         signature,
@@ -37,7 +37,7 @@ pub fn commit_file<P: AsRef<Path>>(
         &[&parent]
     )
         .map_err(Error::Git)
-        .map(|_| Ok(()) ))
+        .map(|_| ())
     
 }
 
