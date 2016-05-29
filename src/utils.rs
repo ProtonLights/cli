@@ -24,22 +24,21 @@ pub fn commit_file<P: AsRef<Path>>(
         .and_then(|mut index| index.write_tree())
         .map_err(Error::Git));
     let tree = try!(repo.find_tree(tree_oid).map_err(Error::Git));
-    let _ = try!(
-        repo.refname_to_id("refs/heads/master")
-            .and_then(|oid| repo.find_commit(oid))
-            .and_then(|parent| {
-                repo.commit(
-                    Some("HEAD"),
-                    signature,
-                    signature,
-                    msg,
-                    &tree,
-                    &[&parent])
-            })
-            .map_err(Error::Git));
+    let parent = try!(repo.refname_to_id("refs/heads/master")
+        .and_then(|oid| repo.find_commit(oid))
+        .map_err(Error::Git));
 
-    // At this point, everything has been try!-ed, so should be good
-    Ok(())
+    try!(repo.commit(
+        Some("HEAD"),
+        signature,
+        signature,
+        msg,
+        &tree,
+        &[&parent]
+    )
+        .map_err(Error::Git)
+        .map(|_| Ok(()) ))
+    
 }
 
 /// Reads a Project from a Protonfile.
