@@ -18,27 +18,27 @@ pub fn commit_file<P: AsRef<Path>>(
 ) -> Result<(), Error> {
     
     let repo = try!(get_repo_from_path(repo_path));
-
-    let _ = repo.index()
+    let tree_oid = try!(repo.index()
         .and_then(|mut index| index.add_path(&file_path).map(|_| index))
         .and_then(|mut index| index.write().map(|_| index))
         .and_then(|mut index| index.write_tree())
-        .and_then(|oid| repo.find_tree(oid))
-        .and_then(|tree| {
-            let parent = repo.refname_to_id("refs/heads/master")
-                .and_then(|oid| repo.find_commit(oid))
-                .expect("Finding master failed");
+        .map_err(Error::Git));
+    let tree = try!(repo.find_tree(tree_oid).map_err(Error::Git));
+    let _ = try!(
+        repo.refname_to_id("refs/heads/master")
+            .and_then(|oid| repo.find_commit(oid))
+            .and_then(|parent| {
+                repo.commit(
+                    Some("HEAD"),
+                    signature,
+                    signature,
+                    msg,
+                    &tree,
+                    &[&parent])
+            })
+            .map_err(Error::Git));
 
-            repo.commit(
-                Some("HEAD"),
-                signature,
-                signature,
-                msg,
-                &tree,
-                &[&parent])
-        })
-        .map_err(Error::Git);
-
+    // At this point, everything has been try!-ed, so should be good
     Ok(())
 }
 

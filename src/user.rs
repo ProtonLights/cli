@@ -32,15 +32,12 @@ pub fn new_user<P: AsRef<Path>>(public_key_path: P, name: &str) -> Result<(), Er
     // Commit changes
     let signature = Signature::now("Proton Lights", "proton@teslaworks.net").unwrap();
     let msg = format!("Adding {} as new user", name);
-    let pf_path = Path::new("Protonfile.json").as_ref();
+    let pf_path = Path::new("Protonfile.json");
     let repo_path: Option<P> = None;
 
-    match utils::commit_file(pf_path, repo_path, &signature, &msg) {
-        Ok(_) => return Ok(()),
-        Err(e) => return Err(e),
-    }
+    utils::commit_file(&pf_path, repo_path, &signature, &msg)
+        .map(|_| ())
 }
-
 /// Identifies a user by their private SSH key by finding the
 /// corresponding public key in the project. This private key
 /// acts like the user's password, and should be protected.
