@@ -14,7 +14,7 @@ pub enum Error {
     InvalidPublicKey(String),
     LoadProjectError,
     DuplicateUser(String, String),
-    UserNotFound(String),
+    UserNotFound,
     TodoErr,
 }
 
@@ -29,7 +29,7 @@ impl error::Error for Error {
             Error::InvalidPublicKey(_) => "Invalid public key",
             Error::LoadProjectError => "Loading project failed",
             Error::DuplicateUser(_, _) => "User already exists",
-            Error::UserNotFound(_) => "User not found",
+            Error::UserNotFound => "User not found",
             Error::TodoErr => "Todo",
         }
     }
@@ -44,7 +44,7 @@ impl error::Error for Error {
            Error::InvalidPublicKey(_) => None,
            Error::LoadProjectError => None,
            Error::DuplicateUser(_, _) => None,
-           Error::UserNotFound(_) => None,
+           Error::UserNotFound => None,
            Error::TodoErr => None,
        }
    }
@@ -68,8 +68,7 @@ impl fmt::Display for Error {
             Error::LoadProjectError => write!(f, "Loading project failed"),
             Error::DuplicateUser(ref key, ref user) => write!(f,
                 "Duplicate user '{}' or key '{}'", user, key),
-            Error::UserNotFound(ref priv_key) => write!(f, 
-                "User not found for private key {}", priv_key),
+            Error::UserNotFound => write!(f, "User not found"),
             Error::TodoErr => write!(f, "TodoErr"),
         }
     }

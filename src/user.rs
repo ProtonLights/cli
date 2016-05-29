@@ -59,9 +59,7 @@ pub fn id_user<P: AsRef<Path>>(private_key_path: P) -> Result<User, Error> {
         };
     };
     
-
-    let private_key_str = try!(utils::file_as_string(&private_key_path));
-    Err(user_not_found_error(private_key_str))
+    Err(Error::UserNotFound)
 }
 
 fn get_public_key<P: AsRef<Path>>(public_key_path: P) -> Result<String, Error> {
@@ -71,15 +69,10 @@ fn get_public_key<P: AsRef<Path>>(public_key_path: P) -> Result<String, Error> {
         Ok(_) => Ok(pub_key.clone()),
         Err(_) => Err(invalid_pub_key_error(&pub_key)),
     }
-
 }
 
 fn invalid_pub_key_error(key: &str) -> Error {
     Error::InvalidPublicKey(key.to_string())
-}
-
-fn user_not_found_error(private_key: String) -> Error {
-    Error::UserNotFound(private_key)
 }
 
 fn ssl_error(e: openssl_Error) -> Error {
