@@ -72,6 +72,6 @@ fn run_new_user(args: Args) -> Result<(), Error> {
 
 fn run_id_user(args: Args) -> Result<(), Error> {
 	let private_key = args.arg_private_key.unwrap();
-	let _ = try!(proton_cli::id_user(&private_key));
-	Ok(())
+	try!(proton_cli::id_user(&private_key)
+		.map(|_| Ok(())))
 }
