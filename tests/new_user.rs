@@ -101,8 +101,6 @@ fn fails_with_duplicate_user_key() {
     // Now try adding another user with the same key
     let _ = proton_cli::new_user(&key_path.as_path(), "Test User 2")
         .expect("Error adding user 2");
-
-    panic!("Should not get to here");
 }
 
 /// Warning: This test changes env::current_directory
@@ -128,6 +126,4 @@ fn fails_with_duplicate_user_name() {
     // Now try adding another user with the same key
     let _ = proton_cli::new_user(&key_path_b.as_path(), "Test User")
         .expect("Error adding second user");
-
-    panic!("Should not get to here");
 }
