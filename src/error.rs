@@ -14,6 +14,9 @@ pub enum Error {
     InvalidPublicKey(String),
     LoadProjectError,
     DuplicateUser(String, String),
+    DuplicateSequence(String, String),
+    DuplicateMusicFile(String),
+    MusicFileNotFound(String),
     UserNotFound,
     TodoErr,
 }
@@ -29,6 +32,9 @@ impl error::Error for Error {
             Error::InvalidPublicKey(_) => "Invalid public key",
             Error::LoadProjectError => "Loading project failed",
             Error::DuplicateUser(_, _) => "User already exists",
+            Error::DuplicateSequence(_, _) => "Sequence already exists",
+            Error::DuplicateMusicFile(_) => "Music file already exists",
+            Error::MusicFileNotFound(_) => "Music file not found",
             Error::UserNotFound => "User not found",
             Error::TodoErr => "Todo",
         }
@@ -44,6 +50,9 @@ impl error::Error for Error {
            Error::InvalidPublicKey(_) => None,
            Error::LoadProjectError => None,
            Error::DuplicateUser(_, _) => None,
+           Error::DuplicateSequence(_, _) => None,
+           Error::DuplicateMusicFile(_) => None,
+           Error::MusicFileNotFound(_) => None,
            Error::UserNotFound => None,
            Error::TodoErr => None,
        }
@@ -68,6 +77,12 @@ impl fmt::Display for Error {
             Error::LoadProjectError => write!(f, "Loading project failed"),
             Error::DuplicateUser(ref key, ref user) => write!(f,
                 "Duplicate user '{}' or key '{}'", user, key),
+            Error::DuplicateSequence(ref name, ref music_file_name) => write!(f,
+                "Duplicate sequence with name '{}' or music file name '{}'", name, music_file_name),
+            Error::DuplicateMusicFile(ref name) => write!(f, 
+                "Duplicate music file with name '{}'", name),
+            Error::MusicFileNotFound(ref path) => write!(f,
+                "Music file not found at path '{}'", path),
             Error::UserNotFound => write!(f, "User not found"),
             Error::TodoErr => write!(f, "TodoErr"),
         }

@@ -7,6 +7,7 @@ use Error;
 pub struct Project {
     pub name: String,
     pub users: Vec<User>,
+    pub sequences: Vec<Sequence>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
@@ -15,12 +16,28 @@ pub struct User {
     pub public_key: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
+pub struct SequenceSection {
+    pub frame_duration: u32,
+    pub num_frames: u32,
+    pub data: Vec<Vec<u8>>, // Row is channel, column is frame
+    pub editor: Option<User>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
+pub struct Sequence {
+    pub name: String,
+    pub music_file_name: String,
+    pub sections: Vec<SequenceSection>,
+}
+
 impl Project {
     /// Creates an empty project
     pub fn empty() -> Project {
         Project {
             name: "New Project".to_owned(),
             users: Vec::new(),
+            sequences: Vec::new(),
         }
     }
 
@@ -58,6 +75,7 @@ impl Project {
     }
 
     /// Adds a user to the project
+    /// Returns a new project with the user added
     pub fn add_user(&self, name: &str, pub_key: &str) -> Result<Project, Error> {
         
         let user = User {
@@ -80,4 +98,36 @@ impl Project {
         Error::DuplicateUser(pub_key.to_string(), name.to_string())
     }
 
+    /// Adds a sequence to the project
+    /// Returns a new project with the sequence added
+    pub fn add_sequence(&self, name: &str, music_file_name: &str) -> Result<Project, Error> {
+        let sequence = Sequence {
+            name: name.to_string(),
+            music_file_name: music_file_name.to_string(),
+            sections: Vec::new(),
+        };
+
+        let mut exists = false;
+        for s in &self.sequences {
+            if s.name == name ||
+            s.music_file_name == music_file_name {
+                exists = true;
+                break;
+            }
+        }
+
+        if exists {
+            Err(self.duplicate_sequence(name, music_file_name))
+        } else {
+            let mut new_project = self.clone();
+            new_project.sequences.push(sequence);
+            Ok(new_project)
+        }
+    }
+
+    fn duplicate_sequence(&self, name: &str, music_file_name: &str) -> Error {
+        Error::DuplicateSequence(name.to_string(), music_file_name.to_string())
+    }
+
 }
+
