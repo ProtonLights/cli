@@ -22,6 +22,8 @@ fn works_with_valid_music_file_path() {
         Ok(_) => (),
         Err(e) => panic!(e.to_string()),
     };
+
+    common::assert_commits_added(&root.path());
 }
 
 #[test]
