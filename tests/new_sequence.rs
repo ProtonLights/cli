@@ -5,7 +5,7 @@ extern crate git2;
 mod common;
 
 use std::path::Path;
-use std::fs::{self, File, OpenOptions};
+use std::fs::File;
 
 
 #[test]
@@ -30,10 +30,10 @@ fn fails_with_existing_destination_file() {
     let name = "New Sequence".to_string();
 
     let file_name = "TestFile.mp3".to_string();
-    let music_file_path = Path::new(&file_name);
+    let music_file_path = Path::new(&root.path()).join(&file_name);
 
     // Create file before trying to create sequence
-    match File::create(music_file_path) {
+    match File::create(&music_file_path) {
         Ok(_) => (),
         Err(e) => panic!(e.to_string()),
     };
