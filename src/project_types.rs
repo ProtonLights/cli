@@ -117,7 +117,7 @@ impl Project {
         }
 
         if exists {
-            Err(self.duplicate_sequence(name, music_file_name))
+            Err(self.duplicate_sequence(name))
         } else {
             let mut new_project = self.clone();
             new_project.sequences.push(sequence);
@@ -125,8 +125,8 @@ impl Project {
         }
     }
 
-    fn duplicate_sequence(&self, name: &str, music_file_name: &str) -> Error {
-        Error::DuplicateSequence(name.to_string(), music_file_name.to_string())
+    fn duplicate_sequence(&self, name: &str) -> Error {
+        Error::DuplicateSequence(name.to_string())
     }
 
 }

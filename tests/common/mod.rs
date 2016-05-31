@@ -53,6 +53,27 @@ pub fn assert_user_added<P: AsRef<Path>>(public_key_path: P, name: &str) {
     assert_eq!(project.user_exists(&u), true);
 }
 
+/// Creates a PathBuf that points to the cli/tests directory
+/// Needed because many tests change the current directory,
+/// which makes env::current_dir() point to a temporary directory
+/// that no longer exists instead of the present working directory (pwd)
+///
+/// Impure.
+pub fn get_test_directory_path() -> PathBuf {
+    // The first argument is the path to the executable (most of the time)
+    // This gets us to /.../cli/target/debug/new_sequence-e77ba7396396e159 (or whatever)
+    let exec_path_str = env::args().nth(0).expect("First argument not a valid path");
+    // Now we work our way back up to cli/
+    let mut test_dir_path = PathBuf::from(&exec_path_str);
+    test_dir_path.pop();
+    test_dir_path.pop();
+    test_dir_path.pop();
+    // and back down to cli/tests
+    test_dir_path.push("tests");
+
+    test_dir_path
+}
+
 /// Creates a temporary directory to run a test out of
 pub fn setup() -> TempDir {
     TempDir::new("proton_cli_tests").unwrap()

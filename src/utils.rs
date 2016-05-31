@@ -10,6 +10,21 @@ use project_types::Project;
 use error::Error;
 
 
+
+/// Returns the last part of the path, the file name, if no problems arise
+/// Raises errors if the file name is invalid or cannot be converted to UTF-8
+pub fn file_name_from_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
+    match path.as_ref().file_name() {
+        Some(name_os) => {
+            match name_os.to_str() {
+                Some(name) => Ok(name.to_string()),
+                None => Err(Error::InvalidFileName),
+            }
+        },
+        None => Err(Error::InvalidFileName),
+    }
+}
+
 /// Stages a file and commits it
 /// If a path to the repository is not given, assume it is in the current directory
 /// Impure.
