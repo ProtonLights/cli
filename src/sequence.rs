@@ -1,8 +1,11 @@
 //! This module manages project sequences
+extern crate sfml;
+
 use std::path::{Path, PathBuf};
 use std::fs;
 
 use git2::Signature;
+use self::sfml::audio::Music;
 
 use Error;
 use utils;
@@ -18,9 +21,13 @@ pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<()
     // Try to copy music file into current directory
     let dest_path = try!(copy_music_file(&music_file_path));
 
+    // Get duration of music file
+    let music_path_str = &music_file_path.as_ref().to_str().expect("Path is invalid");
+    let music_duration_sec = try!(get_music_duration_sec(&music_path_str));
+
     // Add sequence to project
     let project = try!(utils::read_protonfile(None::<P>));
-    let new_project = match project.add_sequence(name, &music_file_name) {
+    let new_project = match project.add_sequence(name, &music_file_name, music_duration_sec) {
         Ok(proj) => proj,
         Err(e) => {
             // Remove copied music file (clean up)
@@ -65,6 +72,18 @@ fn copy_music_file<P: AsRef<Path>>(music_file_path: P) -> Result<PathBuf, Error>
 
 }
 
+/// Extracts the duration of a music file
+/// Wraps errors in Error::Rsfml
+fn get_music_duration_sec(path: &str) -> Result<u32, Error> {
+    let music = match Music::new_from_file(&path) {
+        Some(m) => m,
+        None => return Err(rsfml_error("Error reading file. Unsupported file type?")),
+    };
+    let duration_time = music.get_duration();
+    let duration = duration_time.as_seconds() as u32;
+    Ok(duration)
+}
+
 fn music_file_not_found_error<P: AsRef<Path>>(path: P) -> Error {
     let path_as_str = path.as_ref().to_str().expect("Path not valid UTF-8");
     Error::MusicFileNotFound(path_as_str.to_string())
@@ -75,4 +94,8 @@ fn duplicate_music_file_error<P: AsRef<Path>>(path: P) -> Error {
         Ok(file_name) => Error::DuplicateMusicFile(file_name),
         Err(e) => e,
     }
+}
+
+fn rsfml_error(error: &str) -> Error {
+    Error::Rsfml(error.to_string())
 }

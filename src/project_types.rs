@@ -18,7 +18,6 @@ pub struct User {
 
 #[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
 pub struct SequenceSection {
-    pub frame_duration: u32,
     pub num_frames: u32,
     pub data: Vec<Vec<u8>>, // Row is channel, column is frame
     pub editor: Option<User>,
@@ -28,7 +27,9 @@ pub struct SequenceSection {
 pub struct Sequence {
     pub name: String,
     pub music_file_name: String,
-    pub sections: Vec<SequenceSection>,
+    pub music_duration_sec: u32,
+    pub frame_duration_ms: u32, // Default: 50ms
+    pub num_sections: u32, // Default: 1
 }
 
 impl Project {
@@ -100,11 +101,19 @@ impl Project {
 
     /// Adds a sequence to the project
     /// Returns a new project with the sequence added
-    pub fn add_sequence(&self, name: &str, music_file_name: &str) -> Result<Project, Error> {
+    pub fn add_sequence(
+        &self,
+        name: &str,
+        music_file_name: &str,
+        music_duration_sec: u32,
+    ) -> Result<Project, Error> {
+    
         let sequence = Sequence {
             name: name.to_string(),
             music_file_name: music_file_name.to_string(),
-            sections: Vec::new(),
+            music_duration_sec: music_duration_sec,
+            frame_duration_ms: 50,
+            num_sections: 1,
         };
 
         let mut exists = false;
