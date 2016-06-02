@@ -11,8 +11,6 @@ use proton_cli::utils;
 
 
 #[test]
-#[allow(unused_variables)]
-// root reference must be kept to keep temp directory in scope, but is never used
 fn works_with_valid_music_file_path() {
     let root = common::setup_init_cd();
 
@@ -42,6 +40,21 @@ fn works_with_valid_music_file_path() {
 #[test]
 #[allow(unused_variables)]
 // root reference must be kept to keep temp directory in scope, but is never used
+#[should_panic(expected = "Unsupported file type")]
+fn fails_with_invalid_file_extension() {
+    let root = common::setup_init_cd();
+
+    let name = "New Sequence".to_string();
+
+    let music_file_path = get_music_file_path("Dissonance.mp3");
+
+    let _ = match proton_cli::new_sequence(&name, &music_file_path) {
+        Ok(_) => (),
+        Err(e) => panic!(e.to_string()),
+    };
+}
+
+#[test]
 #[should_panic(expected = "Duplicate sequence")]
 fn fails_with_duplicate_sequence_name() {
     let root = common::setup_init_cd();
@@ -97,7 +110,7 @@ fn fails_with_nonexistent_music_file_path() {
     let root = common::setup_init_cd();
 
     let name = "New Sequence".to_string();
-    let music_file_path = root.path().join("nonexistent");
+    let music_file_path = root.path().join("nonexistent.ogg");
 
     match proton_cli::new_sequence(&name, &music_file_path) {
         Ok(_) => (),

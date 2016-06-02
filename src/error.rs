@@ -19,6 +19,7 @@ pub enum Error {
     DuplicateSequence(String),
     DuplicateMusicFile(String),
     MusicFileNotFound(String),
+    UnsupportedFileType(String),
     UserNotFound,
     TodoErr,
 }
@@ -39,6 +40,7 @@ impl error::Error for Error {
             Error::DuplicateSequence(_) => "Sequence already exists",
             Error::DuplicateMusicFile(_) => "Music file already exists",
             Error::MusicFileNotFound(_) => "Music file not found",
+            Error::UnsupportedFileType(_) => "Unsupported file type",
             Error::UserNotFound => "User not found",
             Error::TodoErr => "Todo",
         }
@@ -59,6 +61,7 @@ impl error::Error for Error {
            Error::DuplicateSequence(_) => None,
            Error::DuplicateMusicFile(_) => None,
            Error::MusicFileNotFound(_) => None,
+           Error::UnsupportedFileType(_) => None,
            Error::UserNotFound => None,
            Error::TodoErr => None,
        }
@@ -93,6 +96,8 @@ impl fmt::Display for Error {
                 "Duplicate music file with name '{}'", name),
             Error::MusicFileNotFound(ref path) => write!(f,
                 "Music file not found at path '{}'", path),
+            Error::UnsupportedFileType(ref file_type) => write!(f, 
+                "Unsupported file type: {}", file_type),
             Error::UserNotFound => write!(f, "User not found"),
             Error::TodoErr => write!(f, "TodoErr"),
         }

@@ -15,6 +15,20 @@ use utils;
 ///
 /// Impure.
 pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<(), Error> {
+    // Check that the music file is a valid format
+    // Full list of supported formats can be found at
+    // http://www.rust-sfml.org/doc/rsfml/audio/struct.Music.html
+    let _ = match music_file_path.as_ref().extension() {
+        Some(ext) => {
+            let extension = ext.to_str().expect("File extension not valid UTF-8");
+            match extension {
+                "ogg" | "wav" | "flac" | "aiff" | "raw" => (),
+                _ => return Err(unsupported_file_type_error(extension)),
+            };
+        },
+        None => return Err(unsupported_file_type_error("unknown")),
+    };
+
     // Get name of music file from path
     let music_file_name = try!(utils::file_name_from_path(&music_file_path));
 
@@ -77,7 +91,7 @@ fn copy_music_file<P: AsRef<Path>>(music_file_path: P) -> Result<PathBuf, Error>
 fn get_music_duration_sec(path: &str) -> Result<u32, Error> {
     let music = match Music::new_from_file(&path) {
         Some(m) => m,
-        None => return Err(rsfml_error("Error reading file. Unsupported file type?")),
+        None => return Err(rsfml_error("Error reading file.")),
     };
     let duration_time = music.get_duration();
     let duration = duration_time.as_seconds() as u32;
@@ -98,4 +112,8 @@ fn duplicate_music_file_error<P: AsRef<Path>>(path: P) -> Error {
 
 fn rsfml_error(error: &str) -> Error {
     Error::Rsfml(error.to_string())
+}
+
+fn unsupported_file_type_error(file_type: &str) -> Error {
+    Error::UnsupportedFileType(file_type.to_string())
 }
