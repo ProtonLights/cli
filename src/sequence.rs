@@ -15,19 +15,8 @@ use utils;
 ///
 /// Impure.
 pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<(), Error> {
-    // Check that the music file is a valid format
-    // Full list of supported formats can be found at
-    // http://www.rust-sfml.org/doc/rsfml/audio/struct.Music.html
-    let _ = match music_file_path.as_ref().extension() {
-        Some(ext) => {
-            let extension = ext.to_str().expect("File extension not valid UTF-8");
-            match extension {
-                "ogg" | "wav" | "flac" | "aiff" | "raw" => (),
-                _ => return Err(unsupported_file_type_error(extension)),
-            };
-        },
-        None => return Err(unsupported_file_type_error("unknown")),
-    };
+    
+    try!(verify_file_type(&music_file_path));
 
     // Get name of music file from path
     let music_file_name = try!(utils::file_name_from_path(&music_file_path));
@@ -59,6 +48,26 @@ pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<()
 
     utils::commit_file(&pf_path, repo_path, &signature, &msg)
         .map(|_| ())
+}
+
+/// Check that the music file is a valid format
+/// Full list of supported formats can be found at
+/// http://www.rust-sfml.org/doc/rsfml/audio/struct.Music.html
+fn verify_file_type<P: AsRef<Path>>(music_file_path: P) -> Result<(), Error> {
+    match music_file_path.as_ref().extension() {
+        Some(extension) => {
+            match extension.to_str() {
+                Some("ogg")  |
+                Some("wav")  |
+                Some("flac") |
+                Some("aiff") |
+                Some("raw") => Ok(()),
+                None => Err(unsupported_file_type_error("invalid extension")),
+                _ => Err(unsupported_file_type_error(extension.to_str().unwrap())),
+            }
+        },
+        None => Err(unsupported_file_type_error("unknown")),
+    }
 }
 
 /// Copies the file at music_file_path to the current directory
