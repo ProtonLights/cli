@@ -38,6 +38,8 @@ pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<()
             panic!(e.to_string())
         },
     };
+
+    // Save project
     try!(utils::write_protonfile(&new_project, None::<P>));
 
     // Commit changes
