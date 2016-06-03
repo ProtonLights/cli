@@ -10,13 +10,13 @@ pub mod rsa_keys;
 
 use std::env;
 use std::fs::File;
-use std::io::{Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use tempdir::TempDir;
 use self::git2::Repository;
 
-use proton_cli::{utils, Project, User, Error};
+use proton_cli::{utils, Project, User};
 
 
 /// Creates a key file at the given location
@@ -56,26 +56,20 @@ pub fn assert_user_added<P: AsRef<Path>>(public_key_path: P, name: &str) {
 }
 
 /// Check that changes were actually committed to the repository
-pub fn assert_commits_added<P: AsRef<Path>>(repo_path: P) {
-    // Open the git repo and master branch
-    let repo = Repository::open(repo_path).unwrap();
+pub fn assert_repo_no_modified_files<P: AsRef<Path>>(repo_path: P) {
+    let repo = Repository::open(&repo_path).unwrap();
+    let index = repo.index().expect("Error getting repository index");
+
     let commit = repo.refname_to_id("refs/heads/master")
         .and_then(|oid| repo.find_commit(oid))
         .expect("Finding master failed");
     let tree = commit.tree().expect("Opening master tree failed");
 
-    // Check that there aren't any non-commited changes
     let _ = repo.diff_tree_to_workdir_with_index(Some(&tree), None)
         .and_then(|diff| diff.stats())
         .map(|stats| {
             assert!(0 == stats.files_changed(), "No changes should be staged");
-        })
-        .map_err(Error::Git);
-
-    // Assert master is correct
-    assert!(1 == commit.parents().count(), "master must have 1 parent");
-    
-    assert!(tree.get_name("Protonfile.json").is_some(), "master must have protonfile");
+        });
 }
 
 /// Creates a PathBuf that points to the cli/tests directory

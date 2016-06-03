@@ -29,7 +29,7 @@ fn works_with_new_and_existing_protonfile() {
     common::assert_user_added(key_path_a.as_path(), "Test User");
 
     // Make sure the change was committed
-    common::assert_commits_added(&root.path());
+    common::assert_repo_no_modified_files(&root.path());
 
     // Now try adding another user
     let _ = proton_cli::new_user(&key_path_b.as_path(), &user_name2)
@@ -40,7 +40,7 @@ fn works_with_new_and_existing_protonfile() {
     common::assert_user_added(key_path_b.as_path(), &user_name2);
 
     // Make sure the change was committed
-    common::assert_commits_added(&root.path());
+    common::assert_repo_no_modified_files(&root.path());
 }
 
 #[test]

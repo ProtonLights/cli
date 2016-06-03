@@ -16,13 +16,27 @@ use utils;
 /// Impure.
 pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<(), Error> {
     
+    // Make sure the name is valid (needed since it will be used in a file path)
+    try!(verify_name(name));
+
+    // Make sure the music file is a valid format
     try!(verify_file_type(&music_file_path));
+
+    // Make the name of the sequence's directory
+    let mut sequence_dir = String::from("seq_");
+    sequence_dir.push_str(&name);
+    let sequence_dir = sequence_dir;
+
+    // Try to create the sequence's directory
+    // This also throws an error if the directory already exists and is not empty
+    try!(utils::create_empty_directory(Path::new(&sequence_dir))
+        .map_err(|_| Error::DuplicateSequence(name.to_string()) ));
 
     // Get name of music file from path
     let music_file_name = try!(utils::file_name_from_path(&music_file_path));
 
-    // Try to copy music file into current directory
-    let dest_path = try!(copy_music_file(&music_file_path));
+    // Try to copy music file into sequence directory
+    let dest_path = try!(copy_music_file(&music_file_path, &sequence_dir));
 
     // Get duration of music file
     let music_path_str = &music_file_path.as_ref().to_str().expect("Path is invalid");
@@ -30,7 +44,12 @@ pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<()
 
     // Add sequence to project
     let project = try!(utils::read_protonfile(None::<P>));
-    let new_project = match project.add_sequence(name, &music_file_name, music_duration_sec) {
+    let new_project = match project.add_sequence(
+        name,
+        &sequence_dir,
+        &music_file_name,
+        music_duration_sec
+    ) {
         Ok(proj) => proj,
         Err(e) => {
             // Remove copied music file (clean up)
@@ -45,10 +64,9 @@ pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<()
     // Commit changes
     let signature = Signature::now("Proton Lights", "proton@teslaworks.net").unwrap();
     let msg = format!("Adding new sequence '{}'", name);
-    let pf_path = Path::new("Protonfile.json");
     let repo_path: Option<P> = None;
 
-    utils::commit_file(&pf_path, repo_path, &signature, &msg)
+    utils::commit_all(repo_path, &signature, &msg)
         .map(|_| ())
 }
 
@@ -72,26 +90,36 @@ fn verify_file_type<P: AsRef<Path>>(music_file_path: P) -> Result<(), Error> {
     }
 }
 
+/// Makes sure the name has only valid characters in it
+/// A valid character is upper and lower alpha, numbers, and underscores
+fn verify_name(name: &str) -> Result<(), Error> {
+    for c in name.chars() {
+        let alpha_lower = 'a' <= c && c <= 'z';
+        let alpha_upper = 'A' <= c && c <= 'Z';
+        let number = '0' <= c && c <= '9';
+        if !(alpha_lower || alpha_upper || number || c == '_') {
+            return Err(invalid_sequence_name_error(name));
+        }
+    }
+
+    Ok(())
+}
+
 /// Copies the file at music_file_path to the current directory
 /// Throw error if file does not exist
-/// or file with the same name exists in the current directory
 ///
 /// Impure.
-fn copy_music_file<P: AsRef<Path>>(music_file_path: P) -> Result<PathBuf, Error> {
+fn copy_music_file<P: AsRef<Path>>(music_file_path: P, dest_folder: &str) -> Result<PathBuf, Error> {
     // Make sure source file exists
     if !music_file_path.as_ref().exists() {
         Err(music_file_not_found_error(music_file_path))
     } else {
-        // Make sure destination file doesn't already exist
         let file_name = try!(utils::file_name_from_path(&music_file_path));
-        let dest_path = Path::new(&file_name);
-        if dest_path.exists() {
-            Err(duplicate_music_file_error(dest_path))
-        } else {
-            try!(fs::copy(&music_file_path, &dest_path)
-                .map_err(Error::Io)
-                .map(|_| Ok(PathBuf::from(dest_path))))
-        }
+        let dest_path = Path::new(&dest_folder).join(&file_name);
+        try!(fs::copy(&music_file_path, &dest_path)
+            .map_err(Error::Io)
+            .map(|_| Ok(PathBuf::from(dest_path))))
+        
 
     }
 
@@ -109,16 +137,13 @@ fn get_music_duration_sec(path: &str) -> Result<u32, Error> {
     Ok(duration)
 }
 
+fn invalid_sequence_name_error(seq_name: &str) -> Error {
+    Error::InvalidSequenceName(seq_name.to_string())
+}
+
 fn music_file_not_found_error<P: AsRef<Path>>(path: P) -> Error {
     let path_as_str = path.as_ref().to_str().expect("Path not valid UTF-8");
     Error::MusicFileNotFound(path_as_str.to_string())
-}
-
-fn duplicate_music_file_error<P: AsRef<Path>>(path: P) -> Error {
-    match utils::file_name_from_path(path) {
-        Ok(file_name) => Error::DuplicateMusicFile(file_name),
-        Err(e) => e,
-    }
 }
 
 fn rsfml_error(error: &str) -> Error {

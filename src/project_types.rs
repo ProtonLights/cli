@@ -26,6 +26,7 @@ pub struct SequenceSection {
 #[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
 pub struct Sequence {
     pub name: String,
+    pub directory_name: String,
     pub music_file_name: String,
     pub music_duration_sec: u32,
     pub frame_duration_ms: u32, // Default: 50ms
@@ -104,12 +105,14 @@ impl Project {
     pub fn add_sequence(
         &self,
         name: &str,
+        directory_name: &str,
         music_file_name: &str,
         music_duration_sec: u32,
     ) -> Result<Project, Error> {
     
         let sequence = Sequence {
             name: name.to_string(),
+            directory_name: directory_name.to_string(),
             music_file_name: music_file_name.to_string(),
             music_duration_sec: music_duration_sec,
             frame_duration_ms: 50,
@@ -118,8 +121,8 @@ impl Project {
 
         let mut exists = false;
         for s in &self.sequences {
-            if s.name == name ||
-            s.music_file_name == music_file_name {
+            if s.name == name
+            || s.directory_name == directory_name {
                 exists = true;
                 break;
             }
