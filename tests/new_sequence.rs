@@ -79,7 +79,6 @@ fn fails_with_duplicate_sequence_name() {
             panic!(e.to_string())
         },
     };
-
 }
 
 #[test]
