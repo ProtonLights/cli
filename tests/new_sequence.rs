@@ -30,6 +30,13 @@ fn works_with_valid_path_and_name() {
             // Dissonance is 5 min, 4 sec
             assert_eq!(sequence.music_duration_sec, 304);
             assert_eq!(sequence.directory_name, "seq_New_Sequence");
+
+            // Make sure section1 was created
+            let mut section_path = PathBuf::from(&sequence.directory_name);
+            section_path.push("New_Sequence_section1");
+            let section_path = section_path;
+            assert!(section_path.exists());
+
         },
         Err(e) => panic!(e.to_string()),
     };
