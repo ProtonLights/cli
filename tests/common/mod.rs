@@ -58,7 +58,6 @@ pub fn assert_user_added<P: AsRef<Path>>(public_key_path: P, name: &str) {
 /// Check that changes were actually committed to the repository
 pub fn assert_repo_no_modified_files<P: AsRef<Path>>(repo_path: P) {
     let repo = Repository::open(&repo_path).unwrap();
-    let index = repo.index().expect("Error getting repository index");
 
     let commit = repo.refname_to_id("refs/heads/master")
         .and_then(|oid| repo.find_commit(oid))
