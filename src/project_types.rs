@@ -1,6 +1,8 @@
 
+use std::env;
 use std::fs::File;
 use std::io::Write;
+use std::path::PathBuf;
 
 use rustc_serialize::json;
 
@@ -117,15 +119,16 @@ impl Project {
         music_duration_sec: u32,
     ) -> Result<Project, Error> {
     
-        let sequence = Sequence::new(
+        let sequence = try!(Sequence::new(
             name,
             directory_name,
             music_file_name,
             music_duration_sec,
             None,
             None,
-        );
+        ));
 
+        // Check if duplicate
         let mut exists = false;
         for s in &self.sequences {
             if s.name == name
@@ -152,13 +155,15 @@ impl Project {
 
 impl Sequence {
     /// Creates a new Sequence, allowing default values
+    /// Also initializes section files
     pub fn new(name: &str,
-        directory_name: &str,
+        seq_directory_name: &str,
         music_file_name: &str,
         music_duration_sec: u32,
         frame_duration_ms: Option<u32>,
         num_sections: Option<u32>
-    ) -> Sequence {
+    ) -> Result<Sequence, Error> {
+        // Defaults
         let frame_dur_ms = match frame_duration_ms {
             Some(duration) => duration,
             None => 50,
@@ -168,18 +173,19 @@ impl Sequence {
             None => 1,
         };
 
+        // Create sequence
         let sequence = Sequence {
             name: name.to_string(),
-            directory_name: directory_name.to_string(),
+            directory_name: seq_directory_name.to_string(),
             music_file_name: music_file_name.to_string(),
             music_duration_sec: music_duration_sec,
             frame_duration_ms: frame_dur_ms,
             num_sections: num_sects,
         };
 
+        // Create section files
         if num_sects == 1 {
-            // TODO fix
-            let num_frames_f32: f32 = (music_duration_sec * 1000) / frame_duration_ms;
+            let num_frames_f32: f32 = (music_duration_sec as f32 * 1000_f32) / frame_dur_ms as f32;
             let num_frames = num_frames_f32.ceil() as u32;
             let num_channels = 1; // TODO: change when add layout
             let sequence_section = SequenceSection {
@@ -187,14 +193,14 @@ impl Sequence {
                 index: 1,
                 num_frames: num_frames,
                 editor: None,
-                data: vec![vec![0; num_frames]; num_channels],
+                data: vec![vec![0; num_frames as usize]; num_channels],
             };
-            sequence_section.write_to_file();
+            try!(sequence_section.write_to_file(&seq_directory_name));
         } else {
-            sequence.resection(num_sects);
+            try!(sequence.resection(num_sects));
         }
 
-        sequence
+        Ok(sequence)
     }
 
     /// Resection a sequence
@@ -207,9 +213,9 @@ impl Sequence {
 
 impl SequenceSection {
     /// Write the sequence section to a file
-    pub fn write_to_file(&self) -> Result<(), Error> {
+    pub fn write_to_file(&self, seq_directory_name: &str) -> Result<(), Error> {
         let pretty_json = json::as_pretty_json(&self);
-        let section_path = &self.get_path_str();
+        let section_path = &self.get_path(&seq_directory_name);
 
         File::create(&section_path)
             .and_then(|mut section_file| write!(section_file, "{}\n", pretty_json))
@@ -218,10 +224,19 @@ impl SequenceSection {
 
     /// Get the path to this specific section, starting with the sequence directory
     /// E.g. sequence/sequence_section1.json
-    fn get_path_str(&self) -> String {
-        let mut section_path = String::from(self.seq_name);
-        section_path.push_str("_section");
-        section_path.push_str(&self.index.to_string());
+    /// Assumes the current directory is the project directory
+    fn get_path(&self, directory_name: &str) -> PathBuf {
+
+        let mut file_name = String::new();
+        file_name.push_str(&self.seq_name);
+        file_name.push_str("_section");
+        file_name.push_str(&self.index.to_string());
+        let file_name = file_name;
+
+        let mut section_path = PathBuf::from(&directory_name);
+        section_path.push(&file_name);
+        let section_path = section_path;
+        
         section_path
     }
 }
