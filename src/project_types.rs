@@ -1,4 +1,9 @@
 
+use std::fs::File;
+use std::io::Write;
+
+use rustc_serialize::json;
+
 use Error;
 
 /// Structure to represent a Proton Project.
@@ -18,9 +23,11 @@ pub struct User {
 
 #[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
 pub struct SequenceSection {
+    pub seq_name: String,
+    pub index: u32,
     pub num_frames: u32,
-    pub data: Vec<Vec<u8>>, // Row is channel, column is frame
     pub editor: Option<User>,
+    pub data: Vec<Vec<u8>>, // Row is channel, column is frame    
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
@@ -110,14 +117,14 @@ impl Project {
         music_duration_sec: u32,
     ) -> Result<Project, Error> {
     
-        let sequence = Sequence {
-            name: name.to_string(),
-            directory_name: directory_name.to_string(),
-            music_file_name: music_file_name.to_string(),
-            music_duration_sec: music_duration_sec,
-            frame_duration_ms: 50,
-            num_sections: 1,
-        };
+        let sequence = Sequence::new(
+            name,
+            directory_name,
+            music_file_name,
+            music_duration_sec,
+            None,
+            None,
+        );
 
         let mut exists = false;
         for s in &self.sequences {
@@ -141,5 +148,81 @@ impl Project {
         Error::DuplicateSequence(name.to_string())
     }
 
+}
+
+impl Sequence {
+    /// Creates a new Sequence, allowing default values
+    pub fn new(name: &str,
+        directory_name: &str,
+        music_file_name: &str,
+        music_duration_sec: u32,
+        frame_duration_ms: Option<u32>,
+        num_sections: Option<u32>
+    ) -> Sequence {
+        let frame_dur_ms = match frame_duration_ms {
+            Some(duration) => duration,
+            None => 50,
+        };
+        let num_sects = match num_sections {
+            Some(num) => num,
+            None => 1,
+        };
+
+        let sequence = Sequence {
+            name: name.to_string(),
+            directory_name: directory_name.to_string(),
+            music_file_name: music_file_name.to_string(),
+            music_duration_sec: music_duration_sec,
+            frame_duration_ms: frame_dur_ms,
+            num_sections: num_sects,
+        };
+
+        if num_sects == 1 {
+            // TODO fix
+            let num_frames_f32: f32 = (music_duration_sec * 1000) / frame_duration_ms;
+            let num_frames = num_frames_f32.ceil() as u32;
+            let num_channels = 1; // TODO: change when add layout
+            let sequence_section = SequenceSection {
+                seq_name: name.to_string(),
+                index: 1,
+                num_frames: num_frames,
+                editor: None,
+                data: vec![vec![0; num_frames]; num_channels],
+            };
+            sequence_section.write_to_file();
+        } else {
+            sequence.resection(num_sects);
+        }
+
+        sequence
+    }
+
+    /// Resection a sequence
+    pub fn resection(&self, num_sections: u32) -> Result<(), Error> {
+        Err(Error::TodoErr)
+    }
+
+
+}
+
+impl SequenceSection {
+    /// Write the sequence section to a file
+    pub fn write_to_file(&self) -> Result<(), Error> {
+        let pretty_json = json::as_pretty_json(&self);
+        let section_path = &self.get_path_str();
+
+        File::create(&section_path)
+            .and_then(|mut section_file| write!(section_file, "{}\n", pretty_json))
+            .map_err(Error::Io)
+    }
+
+    /// Get the path to this specific section, starting with the sequence directory
+    /// E.g. sequence/sequence_section1.json
+    fn get_path_str(&self) -> String {
+        let mut section_path = String::from(self.seq_name);
+        section_path.push_str("_section");
+        section_path.push_str(&self.index.to_string());
+        section_path
+    }
 }
 
