@@ -38,8 +38,7 @@ pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<()
     let dest_path = try!(copy_music_file(&music_file_path, &sequence_dir));
 
     // Get duration of music file
-    let music_path_str = &music_file_path.as_ref().to_str().expect("Path is invalid");
-    let music_duration_sec = try!(get_music_duration_sec(&music_path_str));
+    let music_duration_sec = try!(get_music_duration_sec(&dest_path));
 
     // Add sequence to project
     let project = try!(utils::read_protonfile(None::<P>));
@@ -126,8 +125,9 @@ fn copy_music_file<P: AsRef<Path>>(music_file_path: P, dest_folder: &str) -> Res
 
 /// Extracts the duration of a music file
 /// Wraps errors in Error::Rsfml
-fn get_music_duration_sec(path: &str) -> Result<u32, Error> {
-    let music = match Music::new_from_file(&path) {
+fn get_music_duration_sec<P: AsRef<Path>>(path: P) -> Result<u32, Error> {
+    let path_str = &path.as_ref().to_str().expect("Path is invalid");
+    let music = match Music::new_from_file(&path_str) {
         Some(m) => m,
         None => return Err(rsfml_error("Error reading file.")),
     };
