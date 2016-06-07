@@ -1,11 +1,10 @@
 //! This module manages project sequences
-extern crate sfml;
 
 use std::path::{Path, PathBuf};
 use std::fs;
 
 use git2::Signature;
-use self::sfml::audio::Music;
+use sfml::audio::Music;
 
 use Error;
 use utils;
