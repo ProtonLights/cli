@@ -138,18 +138,17 @@ impl Project {
         }
 
         if exists {
-            Err(self.duplicate_sequence(name))
+            Err(duplicate_sequence(name))
         } else {
             let mut new_project = self.clone();
             new_project.sequences.push(sequence);
             Ok(new_project)
         }
     }
+}
 
-    fn duplicate_sequence(&self, name: &str) -> Error {
-        Error::DuplicateSequence(name.to_string())
-    }
-
+fn duplicate_sequence(name: &str) -> Error {
+    Error::DuplicateSequence(name.to_string())
 }
 
 impl Sequence {
