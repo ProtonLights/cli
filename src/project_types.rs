@@ -37,8 +37,8 @@ pub struct Sequence {
     pub directory_name: String,
     pub music_file_name: String,
     pub music_duration_sec: u32,
-    pub frame_duration_ms: u32, // Default: 50ms
-    pub num_sections: u32, // Default: 1
+    pub frame_duration_ms: u32,
+    pub num_sections: u32,
 }
 
 impl Project {
@@ -154,7 +154,8 @@ impl Project {
 
 impl Sequence {
     /// Creates a new Sequence, allowing default values
-    /// Also initializes section files
+    /// of 50ms for frame_duration_ms and 1 for num_sections
+    /// Also initializes section file(s)
     pub fn new(name: &str,
         seq_directory_name: &str,
         music_file_name: &str,
