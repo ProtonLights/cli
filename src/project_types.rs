@@ -163,14 +163,8 @@ impl Sequence {
         num_sections: Option<u32>
     ) -> Result<Sequence, Error> {
         // Defaults
-        let frame_dur_ms = match frame_duration_ms {
-            Some(duration) => duration,
-            None => 50,
-        };
-        let num_sects = match num_sections {
-            Some(num) => num,
-            None => 1,
-        };
+        let frame_dur_ms = frame_duration_ms.unwrap_or(50);
+        let num_sects = num_sections.unwrap_or(1);
 
         // Create sequence
         let sequence = Sequence {
@@ -182,31 +176,30 @@ impl Sequence {
             num_sections: num_sects,
         };
 
-        // Create section files
-        if num_sects == 1 {
-            let num_frames_f32: f32 = (music_duration_sec as f32 * 1000_f32) / frame_dur_ms as f32;
-            let num_frames = num_frames_f32.ceil() as u32;
-            let num_channels = 1; // TODO: change when add layout
-            let sequence_section = SequenceSection {
-                seq_name: name.to_string(),
-                index: 1,
-                num_frames: num_frames,
-                editor: None,
-                data: vec![vec![0; num_frames as usize]; num_channels],
-            };
-            try!(sequence_section.write_to_file(&seq_directory_name));
-        } else {
-            try!(sequence.resection(num_sects));
-        }
+        // Section sequence
+        try!(sequence.resection());
 
         Ok(sequence)
     }
 
     /// Resection a sequence
-    pub fn resection(&self, num_sections: u32) -> Result<(), Error> {
-        Err(Error::TodoErr)
+    pub fn resection(&self) -> Result<(), Error> {
+        if self.num_sections == 1 {
+            let num_frames_f32: f32 = (self.music_duration_sec as f32 * 1000_f32) / self.frame_duration_ms as f32;
+            let num_frames = num_frames_f32.ceil() as u32;
+            let num_channels = 1; // TODO: change when add layout
+            let sequence_section = SequenceSection {
+                seq_name: self.name.to_string(),
+                index: 1,
+                num_frames: num_frames,
+                editor: None,
+                data: vec![vec![0; num_frames as usize]; num_channels],
+            };
+            sequence_section.write_to_file(&self.directory_name)
+        } else {
+            Err(Error::TodoErr)
+        }
     }
-
 
 }
 
