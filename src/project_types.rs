@@ -219,15 +219,13 @@ impl SequenceSection {
     /// Assumes the current directory is the project directory
     fn get_path(&self, directory_name: &str) -> PathBuf {
 
-        let mut file_name = String::new();
-        file_name.push_str(&self.seq_name);
-        file_name.push_str("_section");
-        file_name.push_str(&self.index.to_string());
-        let file_name = file_name;
+        let mut filename = String::new();
+        filename.push_str(&self.seq_name);
+        filename.push_str("_section");
+        filename.push_str(&self.index.to_string());
 
         let mut section_path = PathBuf::from(&directory_name);
-        section_path.push(&file_name);
-        let section_path = section_path;
+        section_path.push(&filename);
         
         section_path
     }
