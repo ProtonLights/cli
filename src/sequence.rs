@@ -5,6 +5,7 @@ use std::fs;
 
 use git2::Signature;
 use sfml::audio::Music;
+use regex::Regex;
 
 use Error;
 use utils;
@@ -16,10 +17,10 @@ use utils;
 pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<(), Error> {
     
     // Make sure the name is valid (needed since it will be used in a file path)
-    try!(verify_name(name));
+    try!(validate_seq_name(name));
 
     // Make sure the music file is a valid format
-    try!(verify_file_type(&music_file_path));
+    try!(validate_file_type(&music_file_path));
 
     // Make the name of the sequence's directory
     let mut sequence_dir = String::from("seq_");
@@ -71,7 +72,7 @@ pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<()
 /// Check that the music file is a valid format
 /// Full list of supported formats can be found at
 /// http://www.rust-sfml.org/doc/rsfml/audio/struct.Music.html
-fn verify_file_type<P: AsRef<Path>>(music_file_path: P) -> Result<(), Error> {
+fn validate_file_type<P: AsRef<Path>>(music_file_path: P) -> Result<(), Error> {
     match music_file_path.as_ref().extension() {
         Some(extension) => {
             match extension.to_str() {
@@ -80,8 +81,8 @@ fn verify_file_type<P: AsRef<Path>>(music_file_path: P) -> Result<(), Error> {
                 Some("flac") |
                 Some("aiff") |
                 Some("raw") => Ok(()),
-                None => Err(unsupported_file_type_error("invalid extension")),
-                _ => Err(unsupported_file_type_error(extension.to_str().unwrap())),
+                None => Err(unsupported_file_type_error("Extension is not valid unicode")),
+                Some(ext) => Err(unsupported_file_type_error(ext)),
             }
         },
         None => Err(unsupported_file_type_error("unknown")),
@@ -90,17 +91,14 @@ fn verify_file_type<P: AsRef<Path>>(music_file_path: P) -> Result<(), Error> {
 
 /// Makes sure the name has only valid characters in it
 /// A valid character is upper and lower alpha, numbers, and underscores
-fn verify_name(name: &str) -> Result<(), Error> {
-    for c in name.chars() {
-        let alpha_lower = 'a' <= c && c <= 'z';
-        let alpha_upper = 'A' <= c && c <= 'Z';
-        let number = '0' <= c && c <= '9';
-        if !(alpha_lower || alpha_upper || number || c == '_') {
-            return Err(invalid_sequence_name_error(name));
-        }
-    }
+fn validate_seq_name(name: &str) -> Result<(), Error> {
 
-    Ok(())
+    let seq_name_regex = Regex::new("^[0-9A-Za-z_]+$").expect("Invalid regex given");
+    if seq_name_regex.is_match(name) {
+        Ok(())
+    } else {
+        Err(invalid_sequence_name_error(name))
+    }
 }
 
 /// Copies the file at music_file_path to the current directory
@@ -114,17 +112,14 @@ fn copy_music_file<P: AsRef<Path>>(music_file_path: P, dest_folder: &str) -> Res
     } else {
         let file_name = try!(utils::file_name_from_path(&music_file_path));
         let dest_path = Path::new(&dest_folder).join(&file_name);
-        try!(fs::copy(&music_file_path, &dest_path)
+        fs::copy(&music_file_path, &dest_path)
             .map_err(Error::Io)
-            .map(|_| Ok(PathBuf::from(dest_path))))
-        
-
+            .map(|_| PathBuf::from(dest_path))
     }
 
 }
 
 /// Extracts the duration of a music file
-/// Wraps errors in Error::Rsfml
 fn get_music_duration_sec<P: AsRef<Path>>(path: P) -> Result<u32, Error> {
     let path_str = &path.as_ref().to_str().expect("Path is invalid");
     let music = match Music::new_from_file(&path_str) {

@@ -1,6 +1,7 @@
 extern crate git2;
 extern crate rustc_serialize;
 extern crate sfml;
+extern crate regex;
 
 
 pub mod utils;
