@@ -85,7 +85,7 @@ fn validate_file_type<P: AsRef<Path>>(music_file_path: P) -> Result<(), Error> {
                 Some(ext) => Err(unsupported_file_type_error(ext)),
             }
         },
-        None => Err(unsupported_file_type_error("unknown")),
+        None => Err(unsupported_file_type_error("No file extension")),
     }
 }
 
@@ -93,7 +93,7 @@ fn validate_file_type<P: AsRef<Path>>(music_file_path: P) -> Result<(), Error> {
 /// A valid character is upper and lower alpha, numbers, and underscores
 fn validate_seq_name(name: &str) -> Result<(), Error> {
 
-    let seq_name_regex = Regex::new("^[0-9A-Za-z_]+$").expect("Invalid regex given");
+    let seq_name_regex = Regex::new("^[0-9A-Za-z_]+$").expect("Regex failed to compile");
     if seq_name_regex.is_match(name) {
         Ok(())
     } else {
