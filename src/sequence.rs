@@ -9,6 +9,8 @@ use regex::Regex;
 
 use Error;
 use utils;
+use err_funcs;
+
 
 /// Creates a new user for the project in the current directory.
 /// Assumes the current directory contains a Protonfile.json file.
@@ -30,7 +32,7 @@ pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<()
     // Try to create the sequence's directory
     // This also throws an error if the directory already exists and is not empty
     try!(utils::create_empty_directory(Path::new(&sequence_dir))
-        .map_err(|_| Error::DuplicateSequence(name.to_string()) ));
+        .map_err(|_| err_funcs::duplicate_sequence(name)));
 
     // Get name of music file from path
     let music_file_name = try!(utils::file_name_from_path(&music_file_path));
@@ -81,11 +83,13 @@ fn validate_file_type<P: AsRef<Path>>(music_file_path: P) -> Result<(), Error> {
                 Some("flac") |
                 Some("aiff") |
                 Some("raw") => Ok(()),
-                None => Err(unsupported_file_type_error("Extension is not valid unicode")),
-                Some(ext) => Err(unsupported_file_type_error(ext)),
+                None => Err(
+                    err_funcs::unsupported_file_type("Extension is not valid unicode")
+                    ),
+                Some(ext) => Err(err_funcs::unsupported_file_type(ext)),
             }
         },
-        None => Err(unsupported_file_type_error("No file extension")),
+        None => Err(err_funcs::unsupported_file_type("No file extension")),
     }
 }
 
@@ -97,7 +101,7 @@ fn validate_seq_name(name: &str) -> Result<(), Error> {
     if seq_name_regex.is_match(name) {
         Ok(())
     } else {
-        Err(invalid_sequence_name_error(name))
+        Err(err_funcs::invalid_sequence_name(name))
     }
 }
 
@@ -108,7 +112,7 @@ fn validate_seq_name(name: &str) -> Result<(), Error> {
 fn copy_music_file<P: AsRef<Path>>(music_file_path: P, dest_folder: &str) -> Result<PathBuf, Error> {
     // Make sure source file exists
     if !music_file_path.as_ref().exists() {
-        Err(music_file_not_found_error(music_file_path))
+        Err(err_funcs::music_file_not_found(music_file_path))
     } else {
         let file_name = try!(utils::file_name_from_path(&music_file_path));
         let dest_path = Path::new(&dest_folder).join(&file_name);
@@ -124,26 +128,10 @@ fn get_music_duration_sec<P: AsRef<Path>>(path: P) -> Result<u32, Error> {
     let path_str = &path.as_ref().to_str().expect("Path is invalid");
     let music = match Music::new_from_file(&path_str) {
         Some(m) => m,
-        None => return Err(rsfml_error("Error reading file.")),
+        None => return Err(err_funcs::rsfml("Error reading file.")),
     };
     let duration_time = music.get_duration();
     let duration = duration_time.as_seconds() as u32;
     Ok(duration)
 }
 
-fn invalid_sequence_name_error(seq_name: &str) -> Error {
-    Error::InvalidSequenceName(seq_name.to_string())
-}
-
-fn music_file_not_found_error<P: AsRef<Path>>(path: P) -> Error {
-    let path_as_str = path.as_ref().to_str().expect("Path not valid UTF-8");
-    Error::MusicFileNotFound(path_as_str.to_string())
-}
-
-fn rsfml_error(error: &str) -> Error {
-    Error::Rsfml(error.to_string())
-}
-
-fn unsupported_file_type_error(file_type: &str) -> Error {
-    Error::UnsupportedFileType(file_type.to_string())
-}

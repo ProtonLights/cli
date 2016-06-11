@@ -6,6 +6,8 @@ use std::path::PathBuf;
 use rustc_serialize::json;
 
 use Error;
+use err_funcs;
+
 
 /// Structure to represent a Proton Project.
 /// This is what will be written to a Protonfile at the project root.
@@ -96,16 +98,12 @@ impl Project {
         if self.find_user_by_name(name).is_some() ||
            self.find_user_by_public_key(pub_key).is_some() {
            
-            Err(self.duplicate_user(pub_key, name))
+            Err(err_funcs::duplicate_user(pub_key, name))
         } else {
             let mut new_project = self.clone();
             new_project.users.push(user);
             Ok(new_project)
         }
-    }
-
-    fn duplicate_user(&self, pub_key: &str, name: &str) -> Error {
-        Error::DuplicateUser(pub_key.to_string(), name.to_string())
     }
 
     /// Adds a sequence to the project
@@ -138,17 +136,13 @@ impl Project {
         }
 
         if exists {
-            Err(duplicate_sequence(name))
+            Err(err_funcs::duplicate_sequence(name))
         } else {
             let mut new_project = self.clone();
             new_project.sequences.push(sequence);
             Ok(new_project)
         }
     }
-}
-
-fn duplicate_sequence(name: &str) -> Error {
-    Error::DuplicateSequence(name.to_string())
 }
 
 impl Sequence {
