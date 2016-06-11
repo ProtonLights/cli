@@ -8,7 +8,6 @@ use openssl::crypto::hash::Type as openssl_HashType;
 use git2::Signature;
 
 use Error;
-use err_funcs;
 use User;
 use utils;
 
@@ -72,10 +71,10 @@ pub fn id_user<P: AsRef<Path>>(private_key_path: P) -> Result<User, Error> {
 
 fn get_public_key<P: AsRef<Path>>(public_key_path: P) -> Result<String, Error> {
     let pub_key = try!(utils::file_as_string(public_key_path));
-    let mut pub_key_readable = Cursor::new(&pub_key);
+    let mut pub_key_readable = Cursor::new(pub_key.clone());
     match openssl_RSA::public_key_from_pem(&mut pub_key_readable) {
-        Ok(_) => Ok(pub_key.clone()),
-        Err(_) => Err(err_funcs::invalid_pub_key(&pub_key)),
+        Ok(_) => Ok(pub_key),
+        Err(_) => Err(Error::InvalidPublicKey(pub_key)),
     }
 }
 
