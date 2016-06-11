@@ -6,7 +6,6 @@ use std::path::PathBuf;
 use rustc_serialize::json;
 
 use Error;
-use err_funcs;
 
 
 /// Structure to represent a Proton Project.
@@ -98,7 +97,7 @@ impl Project {
         if self.find_user_by_name(name).is_some() ||
            self.find_user_by_public_key(pub_key).is_some() {
            
-            Err(err_funcs::duplicate_user(pub_key, name))
+            Err(Error::DuplicateUser(pub_key.to_string(), name.to_string()))
         } else {
             let mut new_project = self.clone();
             new_project.users.push(user);
@@ -136,7 +135,7 @@ impl Project {
         }
 
         if exists {
-            Err(err_funcs::duplicate_sequence(name))
+            Err(Error::DuplicateSequence(name.to_string()))
         } else {
             let mut new_project = self.clone();
             new_project.sequences.push(sequence);
