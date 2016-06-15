@@ -11,6 +11,7 @@ mod user;
 mod sequence;
 mod project_types;
 mod error;
+mod permissions;
 
 // Re-exports
 pub use init::*;
@@ -18,3 +19,4 @@ pub use user::*;
 pub use sequence::*;
 pub use project_types::*;
 pub use error::*;
+pub use permissions::*;

@@ -8,7 +8,9 @@ extern crate docopt;
 use std::env;
 use std::path::Path;
 use docopt::Docopt;
+
 use proton_cli::Error;
+use proton_cli::Permission;
 
 
 const USAGE: &'static str = "
@@ -17,8 +19,10 @@ Command-line interface for Proton
 Usage:
   ./proton init <folder>
   ./proton new-user <name> <public-key>
-  ./proton id-user <private-key>
   ./proton new-sequence <name> <music-file>
+  ./proton id-user <private-key>
+  ./proton list-permissions
+  ./proton mod-permission <private-key> (allow | deny) <name> <permission> <target>
   ./proton (-h | --help)
 
 Options:
@@ -27,15 +31,13 @@ Options:
 
 #[derive(Debug, RustcDecodable)]
 struct Args {
-	cmd_init: bool,
-	cmd_new_user: bool,
-	cmd_id_user: bool,
-	cmd_new_sequence: bool,
 	arg_folder: Option<String>,
 	arg_public_key: Option<String>,
 	arg_private_key: Option<String>,
 	arg_name: Option<String>,
 	arg_music_file: Option<String>,
+	arg_permission: Option<Permission>,
+	arg_target: Option<String>,
 }
 
 fn main() {
@@ -50,6 +52,8 @@ fn main() {
 		"new-user" => run_new_user,
 		"id-user" => run_id_user,
 		"new-sequence" => run_new_sequence,
+		"list-permissions" => run_list_permissions,
+		"mod-permission" => run_modify_permission,
 		_ => panic!("Invalid first argument"),
 	};
 
@@ -77,7 +81,11 @@ fn run_new_user(args: Args) -> Result<(), Error> {
 fn run_id_user(args: Args) -> Result<(), Error> {
 	let private_key = args.arg_private_key.unwrap();
 	try!(proton_cli::id_user(&private_key)
-		.map(|_| Ok(())))
+		.map(|user| {
+			println!("{:?}", user);
+			Ok(())
+		})
+	)
 }
 
 fn run_new_sequence(args: Args) -> Result<(), Error> {
@@ -86,3 +94,24 @@ fn run_new_sequence(args: Args) -> Result<(), Error> {
 	let music_file_path = Path::new(&music_file);
 	proton_cli::new_sequence(&name, &music_file_path)
 }
+
+#[allow(unused_variables)]
+fn run_list_permissions(args: Args) -> Result<(), Error> {
+	let perm_as_str = proton_cli::permissions_as_string();
+	let permissions = perm_as_str.replace(",", "\n");
+	println!("{}", permissions);
+	Ok(())
+}
+
+fn run_modify_permission(args: Args) -> Result<(), Error> {
+	let private_key = args.arg_private_key.unwrap();
+	let allowed = env::args().nth(3).unwrap() == "allow";
+	let name = args.arg_name.unwrap();
+	let permission = args.arg_permission.unwrap();
+	let target = args.arg_target.unwrap();
+
+	proton_cli::allow_permission()
+}
+
+
+
