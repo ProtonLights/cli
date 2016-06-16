@@ -1,16 +1,15 @@
 /// Executable for proton_cli
-
-extern crate proton_cli;
-extern crate git2;
 extern crate rustc_serialize;
+extern crate proton_cli;
 extern crate docopt;
 
 use std::env;
 use std::path::Path;
 use docopt::Docopt;
 
-use proton_cli::Error;
+use proton_cli::error::Error;
 use proton_cli::Permission;
+use proton_cli::utils;
 
 
 const USAGE: &'static str = "
@@ -105,12 +104,21 @@ fn run_list_permissions(args: Args) -> Result<(), Error> {
 
 fn run_modify_permission(args: Args) -> Result<(), Error> {
 	let private_key = args.arg_private_key.unwrap();
+	let granting_user = try!(proton_cli::id_user(&private_key));
+
+	
+
 	let allowed = env::args().nth(3).unwrap() == "allow";
 	let name = args.arg_name.unwrap();
 	let permission = args.arg_permission.unwrap();
 	let target = args.arg_target.unwrap();
 
-	proton_cli::allow_permission()
+	let project_path = Path::new(&target);
+	let project = try!(utils::read_protonfile(Some(&project_path)));
+
+	let target_user = try!(project.find_user_by_name(&name).ok_or(Error::UserNotFound));
+
+	proton_cli::modify_permission(&target_user, &project, &permission, allowed)
 }
 
 

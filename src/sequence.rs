@@ -7,7 +7,7 @@ use git2::Signature;
 use sfml::audio::Music;
 use regex::Regex;
 
-use Error;
+use error::Error;
 use utils;
 
 

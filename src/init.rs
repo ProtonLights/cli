@@ -6,8 +6,8 @@ use std::path::Path;
 use git2::{Oid, Repository, Signature};
 
 use utils;
-use Error;
-use Project;
+use error::Error;
+use project_types::Project;
 
 /// Initializes a new project at root. The root must either not exist, or must
 /// be an empty directory. This will

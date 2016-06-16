@@ -1,5 +1,6 @@
 
-use Error;
+use error::Error;
+use project_types::{User, Project};
 
 
 #[derive(Debug, RustcDecodable)]
@@ -14,11 +15,14 @@ pub fn permissions_as_string() -> String {
     String::from("GrantPerm,EditProj,EditSeq,EditSeqSec,")
 }
 
-pub fn allow_permission() -> Result<(), Error> {
+pub fn modify_permission(
+    user: &User,
+    project: &Project,
+    permission: &Permission,
+    allowed: bool
+) -> Result<(), Error> {
+
     Err(Error::TodoErr)
 }
 
-pub fn deny_permission() -> Result<(), Error> {
-    Err(Error::TodoErr)    
-}
 
