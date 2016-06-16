@@ -10,7 +10,9 @@ use std::io::Read;
 use git2::Repository;
 use rustc_serialize::json;
 
-use proton_cli::{Error, Project, initialize_project};
+use proton_cli::error::Error;
+use proton_cli::project_types::Project;
+use proton_cli::initialize_project;
 mod common;
 
 #[test]

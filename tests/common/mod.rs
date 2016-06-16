@@ -16,7 +16,8 @@ use std::path::{Path, PathBuf};
 use tempdir::TempDir;
 use self::git2::Repository;
 
-use proton_cli::{utils, Project, User};
+use proton_cli::utils;
+use proton_cli::project_types::{Project, User};
 
 
 /// Creates a key file at the given location
@@ -48,10 +49,7 @@ pub fn assert_user_added<P: AsRef<Path>>(public_key_path: P, name: &str) {
     let project: Project = utils::read_protonfile(None::<P>)
         .expect("Error reading project");
         
-    let u = User {
-        name: name.to_string(),
-        public_key: pub_key_contents,
-    };
+    let u = User::new(name, &pub_key_contents);
     assert_eq!(project.user_exists(&u), true);
 }
 

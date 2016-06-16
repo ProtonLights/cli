@@ -20,6 +20,13 @@ impl User {
     }
 
     pub fn has_permission(&self, perm: &Permission) -> bool {
+        
+        for p in &self.permissions {
+            if p == perm {
+                return true;
+            }
+        }
+
         false
     }
 

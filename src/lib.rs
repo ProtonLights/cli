@@ -8,7 +8,7 @@ pub mod utils;
 mod init;
 mod user;
 mod sequence;
-mod project_types;
+pub mod project_types;
 pub mod error;
 mod permissions;
 
