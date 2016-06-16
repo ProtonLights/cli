@@ -3,7 +3,7 @@ use error::Error;
 use project_types::{User, Project};
 
 
-#[derive(Debug, RustcDecodable)]
+#[derive(Clone, Debug, Eq, PartialEq, RustcEncodable, RustcDecodable)]
 pub enum Permission {
     GrantPerm,
     EditProj,

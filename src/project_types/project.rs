@@ -59,10 +59,7 @@ impl Project {
     /// Returns a new project with the user added
     pub fn add_user(&self, name: &str, pub_key: &str) -> Result<Project, Error> {
         
-        let user = User {
-            name: name.to_string(),
-            public_key: pub_key.to_string(),
-        };
+        let user = User::new(name, pub_key);
 
         if self.find_user_by_name(name).is_some() ||
            self.find_user_by_public_key(pub_key).is_some() {
