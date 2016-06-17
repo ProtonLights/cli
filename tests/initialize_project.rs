@@ -19,20 +19,18 @@ use common::rsa_keys::{self, TestKey};
 #[test]
 fn works_with_an_empty_root() {
     let root_dir = common::setup();
-
     let root = root_dir.path();
-    let admin_pub_key = rsa_keys::get_test_key(TestKey::AdminKeyPub);
-    initialize_project(root, &admin_pub_key).expect("Initialization failed");
-
-    assert_admin_created(root, &admin_pub_key);
-    assert_initialized(root, &admin_pub_key);
+    assert_works(&root);
 }
 
 #[test]
 fn works_with_an_non_existent_root() {
     let root_dir = common::setup();
-
     let root = &root_dir.path().join("nonexistent");
+    assert_works(&root);
+}
+
+fn assert_works(root: &Path) {
     let admin_pub_key = rsa_keys::get_test_key(TestKey::AdminKeyPub);
 
     initialize_project(root, &admin_pub_key).expect("Initialization failed");
