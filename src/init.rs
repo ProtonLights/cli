@@ -17,22 +17,23 @@ use project_types::Project;
 /// 3. Initialize a git repository and commit the protonfile.
 ///
 /// Impure.
-pub fn initialize_project<P: AsRef<Path>>(path: P) -> Result<(), Error> {
+pub fn initialize_project<P: AsRef<Path>>(path: P, admin_pub_key: &str) -> Result<(), Error> {
     let root = path.as_ref();
     let signature = Signature::now("Proton Lights", "proton@teslaworks.net").unwrap();
 
     utils::create_empty_directory(root)
-        .and_then(|_| make_protonfile(root))
+        .and_then(|_| make_protonfile(root, &admin_pub_key))
         .and_then(|_| make_repository(root))
         .and_then(|repo| initial_commit(&repo, &signature))
         .map(|_| ())
 }
 
-/// Writes an empty Protonfile to the root.
+/// Writes a new Protonfile to the root.
+/// It only contains one user, the admin
 ///
 /// Impure.
-fn make_protonfile(root: &Path) -> Result<(), Error> {
-    let project = Project::empty();
+fn make_protonfile(root: &Path, admin_pub_key: &str) -> Result<(), Error> {
+    let project = try!(Project::empty(&admin_pub_key));
     utils::write_protonfile(&project, Some(root))
 }
 

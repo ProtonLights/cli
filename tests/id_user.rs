@@ -112,6 +112,6 @@ fn fails_with_invalid_private_key() {
 
 fn assert_user_equal(user: &User, name: &str, pub_key_path: PathBuf) {
     let pub_key = utils::file_as_string(pub_key_path).expect("Error reading public key");
-    let u = User::new(name, &pub_key);
+    let u = User::new(name, &pub_key).expect("Creating user failed");
     assert_eq!(user, &u);
 }

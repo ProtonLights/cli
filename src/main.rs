@@ -16,7 +16,7 @@ const USAGE: &'static str = "
 Command-line interface for Proton
 
 Usage:
-  ./proton init <folder>
+  ./proton init <folder> <public-key>
   ./proton new-user <name> <public-key>
   ./proton new-sequence <name> <music-file>
   ./proton id-user <private-key>
@@ -67,7 +67,11 @@ fn main() {
 fn run_init(args: Args) -> Result<(), Error> {
 	let root = args.arg_folder.unwrap();
 	let root_path = Path::new(&root);
-	proton_cli::initialize_project(&root_path)
+
+	let admin_pub_key_path = args.arg_public_key.unwrap();
+	let admin_pub_key = try!(utils::file_as_string(&admin_pub_key_path));
+	
+	proton_cli::initialize_project(&root_path, &admin_pub_key)
 }
 
 fn run_new_user(args: Args) -> Result<(), Error> {

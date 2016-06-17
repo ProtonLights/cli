@@ -1,6 +1,7 @@
 
 use project_types::{Sequence, User};
 use error::Error;
+use Permission;
 
 
 /// Structure to represent a Proton Project.
@@ -13,13 +14,16 @@ pub struct Project {
 }
 
 impl Project {
-    /// Creates an empty project
-    pub fn empty() -> Project {
-        Project {
+    /// Creates an empty project with the given admin user
+    pub fn empty(admin_pub_key: &str) -> Result<Project, Error> {
+
+        let mut admin = try!(User::new("admin".as_ref(), &admin_pub_key));
+        admin.permissions.push(Permission::GrantPerm);
+        Ok(Project {
             name: "New Project".to_owned(),
-            users: Vec::new(),
+            users: vec![admin],
             sequences: Vec::new(),
-        }
+        })
     }
 
     /// Finds a user with the given public key
@@ -59,7 +63,7 @@ impl Project {
     /// Returns a new project with the user added
     pub fn add_user(&self, name: &str, pub_key: &str) -> Result<Project, Error> {
         
-        let user = User::new(name, pub_key);
+        let user = try!(User::new(name, pub_key));
 
         if self.find_user_by_name(name).is_some() ||
            self.find_user_by_public_key(pub_key).is_some() {

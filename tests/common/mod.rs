@@ -13,11 +13,13 @@ use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use tempdir::TempDir;
+use self::tempdir::TempDir;
 use self::git2::Repository;
 
-use proton_cli::utils;
-use proton_cli::project_types::{Project, User};
+use self::proton_cli::utils;
+use self::proton_cli::project_types::{Project, User};
+
+use self::rsa_keys::TestKey;
 
 
 /// Creates a key file at the given location
@@ -49,7 +51,7 @@ pub fn assert_user_added<P: AsRef<Path>>(public_key_path: P, name: &str) {
     let project: Project = utils::read_protonfile(None::<P>)
         .expect("Error reading project");
         
-    let u = User::new(name, &pub_key_contents);
+    let u = User::new(name, &pub_key_contents).expect("Error making user for comparison");
     assert_eq!(project.user_exists(&u), true);
 }
 
@@ -103,8 +105,9 @@ pub fn setup_init_cd() -> TempDir {
     
     {
         let root = root_dir.path();
+        let admin_pub_key = rsa_keys::get_test_key(TestKey::AdminKeyPub);
 
-        let _ = proton_cli::initialize_project(&root)
+        let _ = proton_cli::initialize_project(root, &admin_pub_key)
             .expect("Error initializing project");
 
         // Move into temp directory (new_user assumes it is run in project directory)

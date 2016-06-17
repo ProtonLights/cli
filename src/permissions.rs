@@ -15,6 +15,7 @@ pub fn permissions_as_string() -> String {
     String::from("GrantPerm,EditProj,EditSeq,EditSeqSec,")
 }
 
+#[allow(unused_variables)]
 pub fn modify_permission(
     user: &User,
     project: &Project,

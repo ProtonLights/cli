@@ -5,24 +5,27 @@ extern crate rustc_serialize;
 
 use std::fs::File;
 use std::path::Path;
-use std::io::Read;
 
 use git2::Repository;
-use rustc_serialize::json;
 
-use proton_cli::error::Error;
-use proton_cli::project_types::Project;
+use proton_cli::project_types::{Project, User};
 use proton_cli::initialize_project;
+use proton_cli::{utils, Permission};
+
 mod common;
+use common::rsa_keys::{self, TestKey};
+
 
 #[test]
 fn works_with_an_empty_root() {
     let root_dir = common::setup();
 
     let root = root_dir.path();
-    initialize_project(root).expect("Initialization failed");
+    let admin_pub_key = rsa_keys::get_test_key(TestKey::AdminKeyPub);
+    initialize_project(root, &admin_pub_key).expect("Initialization failed");
 
-    assert_initialized(root);
+    assert_admin_created(root, &admin_pub_key);
+    assert_initialized(root, &admin_pub_key);
 }
 
 #[test]
@@ -30,9 +33,12 @@ fn works_with_an_non_existent_root() {
     let root_dir = common::setup();
 
     let root = &root_dir.path().join("nonexistent");
-    initialize_project(root).expect("Initialization failed");
+    let admin_pub_key = rsa_keys::get_test_key(TestKey::AdminKeyPub);
 
-    assert_initialized(root);
+    initialize_project(root, &admin_pub_key).expect("Initialization failed");
+
+    assert_admin_created(root, &admin_pub_key);
+    assert_initialized(root, &admin_pub_key);
 }
 
 #[test]
@@ -41,24 +47,39 @@ fn fails_with_a_non_empty_directory() {
     let root_dir = common::setup();
 
     let root = root_dir.path();
+    let admin_pub_key = rsa_keys::get_test_key(TestKey::AdminKeyPub);
     let _ = File::create(&root.join("unexpected")).expect("Making unexpected file failed");
-    initialize_project(root).expect("Initialization failed");
+    initialize_project(root, &admin_pub_key).expect("Initialization failed");
 }
 
-fn assert_initialized(root: &Path) {
+#[test]
+#[should_panic(expect = "Initialization failed")]
+fn fails_with_bad_key() {
+    let root_dir = common::setup();
+
+    let root = root_dir.path();
+    let admin_pub_key = rsa_keys::get_test_key(TestKey::BadPubKeyPub);
+    initialize_project(root, &admin_pub_key).expect("Initialization failed");   
+}
+
+fn assert_admin_created<P: AsRef<Path>>(root: P, admin_pub_key: &str) {
+    let project = utils::read_protonfile(Some(root.as_ref()))
+        .expect("Loading project from file failed");
+    let mut admin_user = User::new("admin".as_ref(), &admin_pub_key)
+        .expect("Error creating admin user for comparison");
+    admin_user.permissions.push(Permission::GrantPerm);
+    assert_eq!(project.users.len(), 1);
+    assert_eq!(project.users[0], admin_user);
+}
+
+fn assert_initialized(root: &Path, admin_pub_key: &str) {
     // Assert that protonfile exists
     let protonfile_path = root.join(Path::new("Protonfile.json"));
     assert!(protonfile_path.is_file(), "protonfile must exist");
 
     // Check that protonfile has right content
-    assert_eq!(Project::empty(), File::open(&protonfile_path)
-        .and_then(|mut protonfile| {
-            let mut content = "".to_owned();
-            protonfile.read_to_string(&mut content).map(|_| content)
-        })
-        .map_err(Error::Io)
-        .and_then(|content| json::decode(&content).map_err(Error::JsonDecode))
-        .expect("Loading protonfile into Project failed"));
+    assert_eq!(Project::empty(&admin_pub_key).expect("Creating empty project failed"), 
+        utils::read_protonfile(Some(root)).expect("Reading protonfile failed"));
 
     // Open the git repo and master branch
     let repo = Repository::open(root).unwrap();
