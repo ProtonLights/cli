@@ -44,17 +44,19 @@ pub fn try_new_user(
     key_name: &str,
     key: TestKey
 ) {
-
+    // Create public key file
     let key_path = super::make_key_file(&root_path, &key_name, key);
 
     // Add new user to project
-    match proton_cli::new_user(key_path.as_path(), &user_name) {
+    let _ = match proton_cli::new_user(key_path.as_path(), &user_name) {
         Ok(_) => (),
-        Err(e) => panic!(e.to_string()),
+        Err(e) => panic!("{}", e.to_string()),
     };
 
     // Assert that user was added
     super::assert_user_added(key_path.as_path(), &user_name);
 
+    // Check that commit was made
     super::assert_repo_no_modified_files(&root_path);
+
 }

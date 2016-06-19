@@ -20,7 +20,7 @@ fn works_with_new_and_existing_protonfile() {
 }
 
 #[test]
-#[should_panic(expected = "entity not found")]
+#[should_panic(expected = "not found")]
 fn fails_with_a_nonexistent_protonfile() {
     // Don't initialize project (no protonfile created)
     let root_dir = setup::setup();

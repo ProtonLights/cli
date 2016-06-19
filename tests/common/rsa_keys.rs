@@ -1,6 +1,7 @@
 
 #![allow(dead_code)]
 
+#[derive(Clone)]
 pub enum TestKey {
     AdminKeyPub,
     AdminKeyPem,

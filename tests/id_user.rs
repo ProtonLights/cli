@@ -3,7 +3,7 @@ extern crate tempdir;
 
 mod common;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use common::rsa_keys::TestKey;
 use common::setup;
@@ -11,48 +11,43 @@ use proton_cli::project_types::User;
 use proton_cli::utils;
 
 
-#[test]
-fn works_with_valid_keys() {
-    let root = setup::setup_init_cd();
+fn try_id_user(root_path: &Path, name: &str, public_key: TestKey, private_key: TestKey) {
 
-    // Make key files for users
-    let public_key_path = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);
-    let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKeyPem);
+    // Add user to project
+    setup::try_new_user(root_path, &name, "a.pub", public_key.clone());
 
-    let name = "Test User".to_string();
-
-    // Add new user to project
-    let _ = proton_cli::new_user(&public_key_path.as_path(), &name)
-        .expect("Error adding user");
-
-    // Assert that user was added
-    common::assert_user_added(public_key_path.as_path(), &name);
+    // Make private key file for user
+    let private_key_path = common::make_key_file(root_path, "a.pem", private_key);
 
     // Identify user
     let user = proton_cli::id_user(&private_key_path.as_path())
         .expect("Error identifying user");
 
-    // Assert equality
-    assert_user_equal(&user, &name, public_key_path);
+    // Assert that the user created was the one identified
+    let public_key_str = common::rsa_keys::get_test_key(public_key);
+    assert_user_equal(&user, &name, &public_key_str.trim_right());
+}
+
+#[test]
+fn works_with_valid_keys() {
+    let root = setup::setup_init_cd();
+    let name = "Test User";
+
+    try_id_user(root.path(), &name, TestKey::GoodKeyPub, TestKey::GoodKeyPem);
+
 }
 
 #[test]
 #[should_panic(expected = "IO error occurred")]
 fn fails_with_nonexistent_private_key() {
     let root = setup::setup_init_cd();
-
-    // Make key files for users
-    let public_key_path = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);
-    let private_key_path = root.path().join("nonexistent.pem");
-
     let name = "Test User".to_string();
 
-    // Add new user to project
-    let _ = proton_cli::new_user(&public_key_path.as_path(), &name)
-        .expect("Error adding user");
+    // Add user to project
+    setup::try_new_user(root.path(), &name, "a.pub", TestKey::GoodKeyPub);
 
-    // Assert that user was added
-    common::assert_user_added(public_key_path.as_path(), &name);
+    // Make bad path to private key file
+    let private_key_path = root.path().join("nonexistent.pem");
 
     // Identify user
     match proton_cli::id_user(&private_key_path.as_path()) {
@@ -65,19 +60,13 @@ fn fails_with_nonexistent_private_key() {
 #[should_panic(expected = "User not found")]
 fn fails_with_valid_private_key_no_match() {
     let root = setup::setup_init_cd();
-
-    // Make key files for users
-    let public_key_path = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);
-    let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKey2Pem);
-
     let name = "Test User".to_string();
 
-    // Add new user to project
-    let _ = proton_cli::new_user(&public_key_path.as_path(), &name)
-        .expect("Error adding user");
+    // Add user to project
+    setup::try_new_user(root.path(), &name, "a.pub", TestKey::GoodKeyPub);
 
-    // Assert that user was added
-    common::assert_user_added(public_key_path.as_path(), &name);
+    // Make private key for user
+    let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKey2Pem);
 
     // Identify user
     match proton_cli::id_user(&private_key_path.as_path()) {
@@ -90,19 +79,12 @@ fn fails_with_valid_private_key_no_match() {
 #[should_panic(expected = "SSL error occured")]
 fn fails_with_invalid_private_key() {
     let root = setup::setup_init_cd();
-
-    // Make key files for users
-    let public_key_path = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);
-    let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::BadPrivKeyPem);
-
     let name = "Test User".to_string();
 
-    // Add new user to project
-    let _ = proton_cli::new_user(&public_key_path.as_path(), &name)
-        .expect("Error adding user");
+    setup::try_new_user(root.path(), &name, "a.pub", TestKey::GoodKeyPub);
 
-    // Assert that user was added
-    common::assert_user_added(public_key_path.as_path(), &name);
+    // Make bad private key for user
+    let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::BadPrivKeyPem);
 
     // Identify user
     match proton_cli::id_user(&private_key_path.as_path()) {
@@ -111,8 +93,7 @@ fn fails_with_invalid_private_key() {
     }
 }
 
-fn assert_user_equal(user: &User, name: &str, pub_key_path: PathBuf) {
-    let pub_key = utils::file_as_string(pub_key_path).expect("Error reading public key");
+fn assert_user_equal(user: &User, name: &str, pub_key: &str) {
     let u = User::new(name, &pub_key).expect("Creating user failed");
     assert_eq!(user, &u);
 }
