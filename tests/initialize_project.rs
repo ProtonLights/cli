@@ -20,17 +20,17 @@ use common::rsa_keys::{self, TestKey};
 fn works_with_an_empty_root() {
     let root_dir = common::setup();
     let root = root_dir.path();
-    assert_works(&root);
+    try_initialize_project(&root);
 }
 
 #[test]
 fn works_with_an_non_existent_root() {
     let root_dir = common::setup();
     let root = &root_dir.path().join("nonexistent");
-    assert_works(&root);
+    try_initialize_project(&root);
 }
 
-fn assert_works(root: &Path) {
+fn try_initialize_project(root: &Path) {
     let admin_pub_key = rsa_keys::get_test_key(TestKey::AdminKeyPub);
 
     initialize_project(root, &admin_pub_key).expect("Initialization failed");
