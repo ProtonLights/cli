@@ -6,12 +6,13 @@ mod common;
 
 use std::path::{Path, PathBuf};
 
+use common::setup;
 use proton_cli::utils;
 
 
 #[test]
 fn works_with_valid_path_and_name() {
-    let root = common::setup_init_cd();
+    let root = setup::setup_init_cd();
     try_make_sequence("New_Sequence", "Dissonance.ogg");
 
     // Make sure the calculated music duration is correct
@@ -42,14 +43,14 @@ fn works_with_valid_path_and_name() {
 // root reference must be kept to keep temp directory in scope, but is never used
 #[should_panic(expected = "Unsupported file type")]
 fn fails_with_invalid_file_extension() {
-    let root = common::setup_init_cd();
+    let root = setup::setup_init_cd();
     try_make_sequence("New_Sequence", "Dissonance.mp3");
 }
 
 #[test]
 #[should_panic(expected = "Duplicate sequence")]
 fn fails_with_duplicate_sequence_name() {
-    let root = common::setup_init_cd();
+    let root = setup::setup_init_cd();
 
     let name = "New_Sequence";
 
@@ -73,7 +74,7 @@ fn fails_with_duplicate_sequence_name() {
 // root reference must be kept to keep temp directory in scope, but is never used
 #[should_panic(expected = "Sequence name had invalid characters")]
 fn fails_with_invalid_sequence_name() {
-    let root = common::setup_init_cd();
+    let root = setup::setup_init_cd();
     try_make_sequence("New Sequence", "Dissonance.ogg");
 }
 
@@ -82,7 +83,7 @@ fn fails_with_invalid_sequence_name() {
 // root reference must be kept to keep temp directory in scope, but is never used
 #[should_panic(expected = "Music file not found")]
 fn fails_with_nonexistent_music_file_path() {
-    let root = common::setup_init_cd();
+    let root = setup::setup_init_cd();
     try_make_sequence("New_Sequence", "nonexistent.ogg");
 }
 

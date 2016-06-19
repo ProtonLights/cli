@@ -3,6 +3,8 @@ extern crate tempdir;
 extern crate git2;
 extern crate rustc_serialize;
 
+mod common;
+
 use std::fs::File;
 use std::path::Path;
 
@@ -12,20 +14,20 @@ use proton_cli::project_types::{Project, User};
 use proton_cli::initialize_project;
 use proton_cli::{utils, Permission};
 
-mod common;
 use common::rsa_keys::{self, TestKey};
+use common::setup;
 
 
 #[test]
 fn works_with_an_empty_root() {
-    let root_dir = common::setup();
+    let root_dir = setup::setup();
     let root = root_dir.path();
     try_initialize_project(&root);
 }
 
 #[test]
 fn works_with_an_non_existent_root() {
-    let root_dir = common::setup();
+    let root_dir = setup::setup();
     let root = &root_dir.path().join("nonexistent");
     try_initialize_project(&root);
 }
@@ -42,7 +44,7 @@ fn try_initialize_project(root: &Path) {
 #[test]
 #[should_panic(expected = "Initialization failed")]
 fn fails_with_a_non_empty_directory() {
-    let root_dir = common::setup();
+    let root_dir = setup::setup();
 
     let root = root_dir.path();
     let admin_pub_key = rsa_keys::get_test_key(TestKey::AdminKeyPub);
@@ -53,7 +55,7 @@ fn fails_with_a_non_empty_directory() {
 #[test]
 #[should_panic(expect = "Initialization failed")]
 fn fails_with_bad_key() {
-    let root_dir = common::setup();
+    let root_dir = setup::setup();
 
     let root = root_dir.path();
     let admin_pub_key = rsa_keys::get_test_key(TestKey::BadPubKeyPub);

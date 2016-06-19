@@ -1,12 +1,14 @@
 extern crate proton_cli;
 
 mod common;
+
+use common::setup;
 use common::rsa_keys::TestKey;
 
 
 #[test]
 fn works_with_valid_args() {
-    let root = common::setup_init_cd();
+    let root = setup::setup_init_cd();
 
     // Make key file for user
     let key_path_a = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);

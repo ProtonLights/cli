@@ -6,13 +6,14 @@ mod common;
 use std::path::PathBuf;
 
 use common::rsa_keys::TestKey;
+use common::setup;
 use proton_cli::project_types::User;
 use proton_cli::utils;
 
 
 #[test]
 fn works_with_valid_keys() {
-    let root = common::setup_init_cd();
+    let root = setup::setup_init_cd();
 
     // Make key files for users
     let public_key_path = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);
@@ -38,7 +39,7 @@ fn works_with_valid_keys() {
 #[test]
 #[should_panic(expected = "IO error occurred")]
 fn fails_with_nonexistent_private_key() {
-    let root = common::setup_init_cd();
+    let root = setup::setup_init_cd();
 
     // Make key files for users
     let public_key_path = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);
@@ -63,7 +64,7 @@ fn fails_with_nonexistent_private_key() {
 #[test]
 #[should_panic(expected = "User not found")]
 fn fails_with_valid_private_key_no_match() {
-    let root = common::setup_init_cd();
+    let root = setup::setup_init_cd();
 
     // Make key files for users
     let public_key_path = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);
@@ -88,7 +89,7 @@ fn fails_with_valid_private_key_no_match() {
 #[test]
 #[should_panic(expected = "SSL error occured")]
 fn fails_with_invalid_private_key() {
-    let root = common::setup_init_cd();
+    let root = setup::setup_init_cd();
 
     // Make key files for users
     let public_key_path = common::make_key_file(root.path(), "a.pub", TestKey::GoodKeyPub);

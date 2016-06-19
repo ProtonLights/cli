@@ -3,23 +3,20 @@
 #![allow(dead_code)]
 
 extern crate proton_cli;
-extern crate tempdir;
 extern crate git2;
 
 pub mod rsa_keys;
+pub mod setup;
 
 use std::env;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use self::tempdir::TempDir;
 use self::git2::Repository;
 
 use self::proton_cli::utils;
 use self::proton_cli::project_types::{Project, User};
-
-use self::rsa_keys::TestKey;
 
 
 /// Creates a key file at the given location
@@ -90,29 +87,4 @@ pub fn get_test_directory_path() -> PathBuf {
     test_dir_path.push("tests");
 
     test_dir_path
-}
-
-/// Creates a temporary directory to run a test out of
-pub fn setup() -> TempDir {
-    TempDir::new("proton_cli_tests").unwrap()
-}
-
-/// Creates a temporary directory, initializes a project in it,
-/// and changes the current directory to it
-/// Returns the path to the temp directory 
-pub fn setup_init_cd() -> TempDir {
-    let root_dir = setup();
-    
-    {
-        let root = root_dir.path();
-        let admin_pub_key = rsa_keys::get_test_key(TestKey::AdminKeyPub);
-
-        let _ = proton_cli::initialize_project(root, &admin_pub_key)
-            .expect("Error initializing project");
-
-        // Move into temp directory (new_user assumes it is run in project directory)
-        assert!(env::set_current_dir(&root).is_ok());
-    }
-
-    root_dir
 }
