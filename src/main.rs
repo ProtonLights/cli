@@ -21,7 +21,7 @@ Usage:
   ./proton new-sequence <name> <music-file>
   ./proton id-user <private-key>
   ./proton list-permissions
-  ./proton mod-permission <private-key> (add | remove) <name> <permission>
+  ./proton mod-permission <private-key> (add | remove) <name> <permission> [target]
   ./proton (-h | --help)
 
 Options:
@@ -36,6 +36,7 @@ struct Args {
 	arg_name: Option<String>,
 	arg_music_file: Option<String>,
 	arg_permission: Option<Permission>,
+	arg_target: Option<String>,
 }
 
 fn main() {
@@ -112,11 +113,12 @@ fn run_modify_permission(args: Args) -> Result<(), Error> {
 	let added = env::args().nth(3).unwrap() == "add";
 	let username = args.arg_name.unwrap();
 	let permission = args.arg_permission.unwrap();
+	let target = args.arg_target;
 
 	let project = try!(utils::read_protonfile(None::<&Path>));
     let target_user = try!(project.find_user_by_name(&username).ok_or(Error::UserNotFound));
 
-	proton_cli::modify_permission(&auth_user, added, &target_user, &permission, &project)
+	proton_cli::modify_permission(&auth_user, added, &target_user, &permission, &project, target)
 }
 
 

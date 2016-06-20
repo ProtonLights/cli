@@ -3,12 +3,11 @@ extern crate tempdir;
 
 mod common;
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use common::rsa_keys::TestKey;
 use common::setup;
 use proton_cli::project_types::User;
-use proton_cli::utils;
 
 
 fn try_id_user(root_path: &Path, name: &str, public_key: TestKey, private_key: TestKey) {

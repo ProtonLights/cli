@@ -5,6 +5,7 @@ mod common;
 use std::path::Path;
 
 use common::setup;
+use common::rsa_keys::TestKey;
 use proton_cli::Permission;
 use proton_cli::utils;
 
@@ -12,60 +13,103 @@ use proton_cli::utils;
 #[test]
 #[allow(unused_variables)]
 // root reference must be kept to keep temp directory in scope, but is never used
-fn works_adding_with_valid_args() {
+fn works_with_valid_args() {
     let root = setup::setup_init_cd();
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
-    try_mod_permission("admin", true, "Test User", &Permission::EditProj);
+    // Create user
+    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+
+    // Try to add permission to user
+    try_mod_permission(&admin_private_key_path, true, "Test User", &Permission::EditProj, None);
+
+    // Now try to remove the permission
+    try_mod_permission(&admin_private_key_path, false, "Test User", &Permission::EditProj, None);
 }
 
 #[test]
-#[allow(unused_variables)]
-// root reference must be kept to keep temp directory in scope, but is never used
-fn works_removing_with_valid_args() {
-    let root = setup::setup_init_cd();
-
-    try_mod_permission("admin", false, "Test User", &Permission::EditProj);
-}
-
-#[test]
-#[should_panic(expect = "IO Error")]
+#[should_panic(expected = "IO Error")]
 fn fails_with_bad_path_to_private_key() {
-    
+    let root = setup::setup_init_cd();
+    let admin_private_key_path = Path::new("undefined.pem");
+
+    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+
+    try_mod_permission(&admin_private_key_path, true, "Test User", &Permission::EditProj, None);
 }
 
 #[test]
-#[should_panic(expect = "User not found")]
+#[should_panic(expected = "Modifying own permissions")]
+fn fails_modifying_own_permissions() {
+    let root = setup::setup_init_cd();
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+
+    try_mod_permission(&admin_private_key_path, true, "admin", &Permission::EditProj, None);
+}
+
+#[test]
+#[should_panic(expectd = "Auth user not found")]
 fn fails_with_unused_private_key() {
+    let root = setup::setup_init_cd();
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKey2Pem);
     
+    // Create user
+    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+
+    try_mod_permission(&admin_private_key_path, true, "Test User", &Permission::EditProj, None);
 }
 
 #[test]
-#[should_panic(expect = "User not found")]
-fn fails_with_nonexistent_user() {
+#[should_panic(expected = "User target not found")]
+fn fails_with_nonexisteent_username() {
+    let root = setup::setup_init_cd();
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+
+    try_mod_permission(&admin_private_key_path, true, "Test User", &Permission::EditProj, None);
 
 }
 
 #[test]
-#[should_panic(expect = "Unauthorized action")]
+#[should_panic(expected = "Unauthorized action")]
 fn fails_with_unauthorized_authority() {
+    let root = setup::setup_init_cd();
 
+    // Create user
+    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+    let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKeyPem);
+
+    try_mod_permission(&private_key_path, true, "admin", &Permission::EditProj, None);
 }
 
 /// Tries to modify a user's permission
 /// Panics on error
 ///
 /// Impure.
-fn try_mod_permission(auth_username: &str, add: bool, target_username: &str, permission: &Permission) {
+fn try_mod_permission<P: AsRef<Path>>(
+    auth_private_key_path: P,
+    add: bool,
+    target_username: &str,
+    permission: &Permission,
+    target: Option<String>,
+) {
+
     let project = utils::read_protonfile(None::<&Path>)
         .expect("Error reading project");
     let target_user = project.find_user_by_name(&target_username)
-        .expect("User not found");
-    let auth_user = project.find_user_by_name(&auth_username)
-        .expect("User not found");
+        .expect("User target not found");
+    let auth_user = proton_cli::id_user(&auth_private_key_path)
+        .expect("Auth user not found");
 
-    match proton_cli::modify_permission(&auth_user, add, &target_user, permission, &project) {
+    match proton_cli::modify_permission(
+        &auth_user,
+        add,
+        &target_user,
+        permission,
+        &project,
+        target
+    ) {
         Ok(_) => (),
-        Err(e) => panic!("{}", e),
+        Err(e) => panic!("{}", e.to_string()),
     };
 
     if add {

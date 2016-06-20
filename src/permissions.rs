@@ -21,6 +21,7 @@ pub fn modify_permission(
     target_user: &User,
     permission: &Permission,
     project: &Project,
+    target: Option<String>
 ) -> Result<(), Error> {
 
     if add {
