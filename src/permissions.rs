@@ -15,15 +15,38 @@ pub fn permissions_as_string() -> String {
     String::from("GrantPerm,EditProj,EditSeq,EditSeqSec,")
 }
 
-#[allow(unused_variables)]
 pub fn modify_permission(
-    user: &User,
-    project: &Project,
+    auth_user: &User,
+    add: bool,
+    target_user: &User,
     permission: &Permission,
-    allowed: bool
+    project: &Project,
+) -> Result<(), Error> {
+
+    if add {
+        add_permission(&target_user, permission, &project)
+    } else {
+        remove_permission(&target_user, permission, &project)
+    }
+}
+
+#[allow(unused_variables)]
+fn add_permission(
+    user: &User,
+    permission: &Permission,
+    project: &Project,
 ) -> Result<(), Error> {
 
     Err(Error::TodoErr)
 }
 
+#[allow(unused_variables)]
+fn remove_permission(
+    user: &User,
+    permission: &Permission,
+    project: &Project,
+) -> Result<(), Error> {
+
+    Err(Error::TodoErr)
+}
 

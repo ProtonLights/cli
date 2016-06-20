@@ -21,7 +21,7 @@ Usage:
   ./proton new-sequence <name> <music-file>
   ./proton id-user <private-key>
   ./proton list-permissions
-  ./proton mod-permission <private-key> (allow | deny) <name> <permission> <target>
+  ./proton mod-permission <private-key> (add | remove) <name> <permission>
   ./proton (-h | --help)
 
 Options:
@@ -36,7 +36,6 @@ struct Args {
 	arg_name: Option<String>,
 	arg_music_file: Option<String>,
 	arg_permission: Option<Permission>,
-	arg_target: Option<String>,
 }
 
 fn main() {
@@ -108,21 +107,16 @@ fn run_list_permissions(args: Args) -> Result<(), Error> {
 
 fn run_modify_permission(args: Args) -> Result<(), Error> {
 	let private_key = args.arg_private_key.unwrap();
-	let granting_user = try!(proton_cli::id_user(&private_key));
+	let auth_user = try!(proton_cli::id_user(&private_key));
 
-	
-
-	let allowed = env::args().nth(3).unwrap() == "allow";
-	let name = args.arg_name.unwrap();
+	let added = env::args().nth(3).unwrap() == "add";
+	let username = args.arg_name.unwrap();
 	let permission = args.arg_permission.unwrap();
-	let target = args.arg_target.unwrap();
 
-	let project_path = Path::new(&target);
-	let project = try!(utils::read_protonfile(Some(&project_path)));
+	let project = try!(utils::read_protonfile(None::<&Path>));
+    let target_user = try!(project.find_user_by_name(&username).ok_or(Error::UserNotFound));
 
-	let target_user = try!(project.find_user_by_name(&name).ok_or(Error::UserNotFound));
-
-	proton_cli::modify_permission(&target_user, &project, &permission, allowed)
+	proton_cli::modify_permission(&auth_user, added, &target_user, &permission, &project)
 }
 
 
