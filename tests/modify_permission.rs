@@ -15,7 +15,6 @@ use proton_cli::utils;
 fn works_adding_with_valid_args() {
     let root = setup::setup_init_cd();
 
-
     try_mod_permission("admin", true, "Test User", &Permission::EditProj);
 }
 
