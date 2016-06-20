@@ -35,17 +35,17 @@ impl Permission {
     /// Returns error if invalid target
     fn validate_permission(permission: &PermissionEnum, target: &Option<String>) -> Result<(), Error> {
         
-        let valid = match *permission {
-            PermissionEnum::GrantPerm => {
+        let valid = match permission {
+            &PermissionEnum::GrantPerm => {
                 target == &None::<String>
             },
-            PermissionEnum::EditProj => {
+            &PermissionEnum::EditProj => {
                 target == &None::<String>
             },
-            PermissionEnum::EditSeq => {
+            &PermissionEnum::EditSeq => {
                 false
             },
-            PermissionEnum::EditSeqSec => {
+            &PermissionEnum::EditSeqSec => {
                 false
             },
         };
