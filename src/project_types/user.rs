@@ -34,14 +34,20 @@ impl User {
             .map_err(|_| Error::InvalidPublicKey(pub_key.to_string())))
     }
 
-    #[allow(unused_variables)]
-    pub fn add_permission(&self, perm: &Permission, target: Option<String>) -> Result<(), Error> {
-        Err(Error::TodoErr)
+    /// Adds the given permission to the user's list of permissions
+    /// If it already exists, this becomes a NOP
+    pub fn add_permission(&mut self, perm: Permission) {
+        if !self.has_permission(&perm) {
+            self.permissions.push(perm);
+        }
     }
 
-    #[allow(unused_variables)]
-    pub fn remove_permission(&self, perm: &Permission, target: Option<String>) -> Result<(), Error> {
-        Err(Error::TodoErr)
+    /// Removes the given permission from the User's list of permissions
+    /// If it isn't found, this becomes a NOP
+    pub fn remove_permission(&self, perm: Permission) {
+        if self.has_permission(&perm) {
+            //self.permissions.remove(perm);
+        }
     }
 
     pub fn has_permission(&self, perm: &Permission) -> bool {
@@ -56,7 +62,8 @@ impl User {
     }
 
     pub fn is_admin(&self) -> bool {
-        let admin_permission = Permission::new(PermissionEnum::GrantPerm, None::<String>);
+        let admin_permission = Permission::new(PermissionEnum::GrantPerm, None::<String>)
+            .expect("Error creating default admin permission");
         self.has_permission(&admin_permission)
     }
 

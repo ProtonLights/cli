@@ -21,10 +21,10 @@ fn works_with_grantperm() {
     setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
 
     // Try to add permission to user
-    try_mod_permission(&admin_private_key_path, true, "Test User", &PermissionEnum::GrantPerm, None);
+    try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::GrantPerm, None);
 
     // Now try to remove the permission
-    try_mod_permission(&admin_private_key_path, false, "Test User", &PermissionEnum::GrantPerm, None);
+    try_mod_permission(&admin_private_key_path, false, "Test User", PermissionEnum::GrantPerm, None);
 }
 
 #[test]
@@ -38,10 +38,10 @@ fn works_with_editproj() {
     setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
 
     // Try to add permission to user
-    try_mod_permission(&admin_private_key_path, true, "Test User", &PermissionEnum::EditProj, None);
+    try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
 
     // Now try to remove the permission
-    try_mod_permission(&admin_private_key_path, false, "Test User", &PermissionEnum::EditProj, None);
+    try_mod_permission(&admin_private_key_path, false, "Test User", PermissionEnum::EditProj, None);
 }
 
 #[test]
@@ -62,7 +62,7 @@ fn works_with_editseq() {
         &admin_private_key_path,
         true,
         "Test User",
-        &PermissionEnum::EditSeq,
+        PermissionEnum::EditSeq,
         Some("test_seq".to_string()));
 
     // Now try removing the permission
@@ -70,7 +70,7 @@ fn works_with_editseq() {
         &admin_private_key_path,
         false,
         "Test User",
-        &PermissionEnum::EditSeq,
+        PermissionEnum::EditSeq,
         Some("test_seq".to_string()));
 
 }
@@ -93,7 +93,7 @@ fn works_with_editseqsec() {
         &admin_private_key_path,
         true,
         "Test User",
-        &PermissionEnum::EditSeqSec,
+        PermissionEnum::EditSeqSec,
         Some("section1".to_string()));
 
     // Now try removing the permission
@@ -101,7 +101,7 @@ fn works_with_editseqsec() {
         &admin_private_key_path,
         false,
         "Test User",
-        &PermissionEnum::EditSeq,
+        PermissionEnum::EditSeq,
         Some("section1".to_string()));
 
 }
@@ -123,7 +123,7 @@ fn fails_with_bad_target_editseq() {
         &admin_private_key_path,
         true,
         "Test User",
-        &PermissionEnum::EditSeq,
+        PermissionEnum::EditSeq,
         Some("nonexistent".to_string()));
 
 }
@@ -145,7 +145,7 @@ fn fails_with_bad_target_editseqsec() {
         &admin_private_key_path,
         true,
         "Test User",
-        &PermissionEnum::EditSeqSec,
+        PermissionEnum::EditSeqSec,
         Some("section999".to_string()));
 }
 
@@ -157,7 +157,7 @@ fn fails_with_bad_path_to_private_key() {
 
     setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
 
-    try_mod_permission(&admin_private_key_path, true, "Test User", &PermissionEnum::EditProj, None);
+    try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
 }
 
 #[test]
@@ -166,7 +166,7 @@ fn fails_modifying_own_permissions() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
-    try_mod_permission(&admin_private_key_path, true, "admin", &PermissionEnum::EditProj, None);
+    try_mod_permission(&admin_private_key_path, true, "admin", PermissionEnum::EditProj, None);
 }
 
 #[test]
@@ -178,7 +178,7 @@ fn fails_with_unused_private_key() {
     // Create user
     setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
 
-    try_mod_permission(&admin_private_key_path, true, "Test User", &PermissionEnum::EditProj, None);
+    try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
 }
 
 #[test]
@@ -187,7 +187,7 @@ fn fails_with_nonexistent_username() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
-    try_mod_permission(&admin_private_key_path, true, "Test User", &PermissionEnum::EditProj, None);
+    try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
 
 }
 
@@ -205,7 +205,7 @@ fn fails_adding_existing_permission() {
         &admin_private_key_path,
         true,
         "Test User",
-        &PermissionEnum::EditProj,
+        PermissionEnum::EditProj,
         None);
 
     // Now do it again
@@ -213,7 +213,7 @@ fn fails_adding_existing_permission() {
         &admin_private_key_path,
         true,
         "Test User",
-        &PermissionEnum::EditProj,
+        PermissionEnum::EditProj,
         None);
 }
 
@@ -226,7 +226,7 @@ fn fails_with_unauthorized_authority() {
     setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
     let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKeyPem);
 
-    try_mod_permission(&private_key_path, true, "admin", &PermissionEnum::EditProj, None);
+    try_mod_permission(&private_key_path, true, "admin", PermissionEnum::EditProj, None);
 }
 
 /// Tries to modify a user's permission
@@ -237,22 +237,22 @@ fn try_mod_permission<P: AsRef<Path>>(
     auth_private_key_path: P,
     add: bool,
     target_username: &str,
-    permission: &PermissionEnum,
+    permission: PermissionEnum,
     target: Option<String>,
 ) {
     let project = utils::read_protonfile(None::<P>)
         .expect("Error reading project from file");
-    let target_user = project.find_user_by_name(&target_username)
-        .expect("User target not found");
+    let mut target_user = project.find_user_by_name(&target_username)
+        .expect("User target not found")
+        .to_owned();
     let auth_user = proton_cli::id_user(&auth_private_key_path)
         .expect("Auth user not found");
 
     match proton_cli::modify_permission(
         &auth_user,
         add,
-        &target_user,
-        permission,
-        &project,
+        &mut target_user,
+        permission.clone(),
         target.clone()
     ) {
         Ok(_) => (),
@@ -261,7 +261,7 @@ fn try_mod_permission<P: AsRef<Path>>(
 
     if add {
         assert_eq!(target_user.permissions.len(), 1);
-        assert_eq!(target_user.permissions[0].which, *permission);
+        assert_eq!(target_user.permissions[0].which, permission);
         assert_eq!(target_user.permissions[0].target, target);
     } else {
         assert_eq!(target_user.permissions.len(), 0);

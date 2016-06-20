@@ -19,8 +19,9 @@ impl Project {
     pub fn empty(admin_pub_key: &str) -> Result<Project, Error> {
 
         let mut admin = try!(User::new("admin".as_ref(), &admin_pub_key));
-        let admin_permission = Permission::new(PermissionEnum::GrantPerm, None::<String>);
-        admin.permissions.push(admin_permission);
+        let admin_permission = try!(Permission::new(PermissionEnum::GrantPerm, None::<String>));
+        admin.add_permission(admin_permission);
+
         Ok(Project {
             name: "New Project".to_owned(),
             users: vec![admin],

@@ -1,6 +1,6 @@
 
 use error::Error;
-use project_types::{User, Project};
+use project_types::User;
 
 
 #[derive(Clone, Debug, Eq, PartialEq, RustcEncodable, RustcDecodable)]
@@ -18,12 +18,27 @@ pub struct Permission {
 }
 
 impl Permission {
-    pub fn new(which_enum: PermissionEnum, t: Option<String>) -> Permission {
-        Permission {
+    /// Creates a new Permission, joining a permission type with a target
+    /// Returns an error if the target is invalid
+    pub fn new(which_enum: PermissionEnum, t: Option<String>) -> Result<Permission, Error> {
+        // Make sure the target is valid for the given permission type
+        try!(Permission::validate_permission(&which_enum, &t));
+
+        // Create permission if valid
+        Ok(Permission {
             which: which_enum,
             target: t,
-        }
+        })
     }
+
+    #[allow(unused_variables)]
+    /// Validates the target for the given permission type
+    /// Returns error if invalid target
+    fn validate_permission(permission: &PermissionEnum, target: &Option<String>) -> Result<(), Error> {
+        
+        Ok(())
+    }
+
 }
 
 pub fn permissions_as_string() -> String {
@@ -33,9 +48,8 @@ pub fn permissions_as_string() -> String {
 pub fn modify_permission(
     auth_user: &User,
     add: bool,
-    target_user: &User,
-    permission: &PermissionEnum,
-    project: &Project,
+    target_user: &mut User,
+    permission: PermissionEnum,
     target: Option<String>
 ) -> Result<(), Error> {
 
@@ -43,38 +57,14 @@ pub fn modify_permission(
         return Err(Error::UnauthorizedAction);
     }
 
-    let perm = try!(get_permission(permission, &target));
+    let perm = try!(Permission::new(permission, target));
 
     if add {
-        add_permission(&target_user, &perm, &project)
+        target_user.add_permission(perm)
     } else {
-        remove_permission(&target_user, &perm, &project)
+        target_user.remove_permission(perm)
     }
-}
 
-#[allow(unused_variables)]
-fn get_permission(permission: &PermissionEnum, target: &Option<String>) -> Result<Permission, Error> {
-// Todo: update README
-    Err(Error::TodoErr)
-}
-
-#[allow(unused_variables)]
-fn add_permission(
-    user: &User,
-    permission: &Permission,
-    project: &Project,
-) -> Result<(), Error> {
-
-    Err(Error::TodoErr)
-}
-
-#[allow(unused_variables)]
-fn remove_permission(
-    user: &User,
-    permission: &Permission,
-    project: &Project,
-) -> Result<(), Error> {
-
-    Err(Error::TodoErr)
+    Ok(())
 }
 
