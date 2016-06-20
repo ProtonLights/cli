@@ -13,7 +13,7 @@ use proton_cli::utils;
 #[test]
 #[allow(unused_variables)]
 // root reference must be kept to keep temp directory in scope, but is never used
-fn works_with_valid_args() {
+fn works_with_editproj() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
@@ -25,6 +25,68 @@ fn works_with_valid_args() {
 
     // Now try to remove the permission
     try_mod_permission(&admin_private_key_path, false, "Test User", &Permission::EditProj, None);
+}
+
+#[test]
+#[allow(unused_variables)]
+// root reference must be kept to keep temp directory in scope, but is never used
+fn works_with_editseq() {
+    let root = setup::setup_init_cd();
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+
+    // Create user
+    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+
+    // Create sequence
+    setup::try_make_sequence("test_seq", "Dissonance.ogg");
+
+    // Try to add permission to user
+    try_mod_permission(
+        &admin_private_key_path,
+        true,
+        "Test User",
+        &Permission::EditSeq,
+        Some("test_seq".to_string()));
+
+    // Now try removing the permission
+    try_mod_permission(
+        &admin_private_key_path,
+        false,
+        "Test User",
+        &Permission::EditSeq,
+        Some("test_seq".to_string()));
+
+}
+
+#[test]
+#[allow(unused_variables)]
+// root reference must be kept to keep temp directory in scope, but is never used
+fn works_with_editseqsec() {
+    let root = setup::setup_init_cd();
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+
+    // Create user
+    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+
+    // Create sequence
+    setup::try_make_sequence("test_seq", "Dissonance.ogg");
+
+    // Try to add permission to user
+    try_mod_permission(
+        &admin_private_key_path,
+        true,
+        "Test User",
+        &Permission::EditSeqSec,
+        Some("section1".to_string()));
+
+    // Now try removing the permission
+    try_mod_permission(
+        &admin_private_key_path,
+        false,
+        "Test User",
+        &Permission::EditSeq,
+        Some("section1".to_string()));
+
 }
 
 #[test]
@@ -61,12 +123,38 @@ fn fails_with_unused_private_key() {
 
 #[test]
 #[should_panic(expected = "User target not found")]
-fn fails_with_nonexisteent_username() {
+fn fails_with_nonexistent_username() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
     try_mod_permission(&admin_private_key_path, true, "Test User", &Permission::EditProj, None);
 
+}
+
+#[test]
+#[should_panic(expected = "Permission already exists")]
+fn fails_adding_existing_permission() {
+    let root = setup::setup_init_cd();
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+
+    // Create user
+    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+
+    // Try to add permission to user
+    try_mod_permission(
+        &admin_private_key_path,
+        true,
+        "Test User",
+        &Permission::EditProj,
+        None);
+
+    // Now do it again
+    try_mod_permission(
+        &admin_private_key_path,
+        true,
+        "Test User",
+        &Permission::EditProj,
+        None);
 }
 
 #[test]
@@ -92,9 +180,8 @@ fn try_mod_permission<P: AsRef<Path>>(
     permission: &Permission,
     target: Option<String>,
 ) {
-
-    let project = utils::read_protonfile(None::<&Path>)
-        .expect("Error reading project");
+    let project = utils::read_protonfile(None::<P>)
+        .expect("Error reading project from file");
     let target_user = project.find_user_by_name(&target_username)
         .expect("User target not found");
     let auth_user = proton_cli::id_user(&auth_private_key_path)

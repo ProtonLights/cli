@@ -39,6 +39,15 @@ pub fn make_key_file<P: AsRef<Path>>(
     key_path
 }
 
+/// Returns the path to a music file in /.../cli/tests/music/
+pub fn get_music_file_path(file_name: &str) -> PathBuf {
+    let mut music_file_path = get_test_directory_path();
+    music_file_path.push("music");
+    music_file_path.push(&file_name);
+    
+    music_file_path
+}
+
 /// Check if the public key at the given path exists and contains key_content,
 /// and check to see that the user is in the project at the current directory's protonfile
 pub fn assert_user_added<P: AsRef<Path>>(public_key_path: P, name: &str) {

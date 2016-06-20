@@ -13,7 +13,7 @@ use proton_cli::utils;
 #[test]
 fn works_with_valid_path_and_name() {
     let root = setup::setup_init_cd();
-    try_make_sequence("New_Sequence", "Dissonance.ogg");
+    setup::try_make_sequence("New_Sequence", "Dissonance.ogg");
 
     // Make sure the calculated music duration is correct
     // and check that the sequence folder is named correctly
@@ -44,7 +44,7 @@ fn works_with_valid_path_and_name() {
 #[should_panic(expected = "Unsupported file type")]
 fn fails_with_invalid_file_extension() {
     let root = setup::setup_init_cd();
-    try_make_sequence("New_Sequence", "Dissonance.mp3");
+    setup::try_make_sequence("New_Sequence", "Dissonance.mp3");
 }
 
 #[test]
@@ -54,9 +54,9 @@ fn fails_with_duplicate_sequence_name() {
 
     let name = "New_Sequence";
 
-    try_make_sequence(&name, "Dissonance.ogg");
+    setup::try_make_sequence(&name, "Dissonance.ogg");
 
-    let music_file_path = get_music_file_path("GlorytotheBells.ogg");
+    let music_file_path = common::get_music_file_path("GlorytotheBells.ogg");
 
     match proton_cli::new_sequence(&name, &music_file_path) {
         Ok(_) => (),
@@ -75,7 +75,7 @@ fn fails_with_duplicate_sequence_name() {
 #[should_panic(expected = "Sequence name had invalid characters")]
 fn fails_with_invalid_sequence_name() {
     let root = setup::setup_init_cd();
-    try_make_sequence("New Sequence", "Dissonance.ogg");
+    setup::try_make_sequence("New Sequence", "Dissonance.ogg");
 }
 
 #[test]
@@ -84,26 +84,6 @@ fn fails_with_invalid_sequence_name() {
 #[should_panic(expected = "Music file not found")]
 fn fails_with_nonexistent_music_file_path() {
     let root = setup::setup_init_cd();
-    try_make_sequence("New_Sequence", "nonexistent.ogg");
-}
-
-/// Returns the path to a music file in /.../cli/tests/music/
-fn get_music_file_path(file_name: &str) -> PathBuf {
-    let mut music_file_path = common::get_test_directory_path();
-    music_file_path.push("music");
-    music_file_path.push(&file_name);
-    
-    music_file_path
-}
-
-/// Attempts to make a new sequence with the given name and music file
-/// Panics if error thrown
-fn try_make_sequence(name: &str, music_file: &str) {
-    let music_file_path = get_music_file_path(music_file);
-
-    let _ = match proton_cli::new_sequence(&name, &music_file_path) {
-        Ok(_) => (),
-        Err(e) => panic!(e.to_string()),
-    };
+    setup::try_make_sequence("New_Sequence", "nonexistent.ogg");
 }
 

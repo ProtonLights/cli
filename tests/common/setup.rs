@@ -60,3 +60,14 @@ pub fn try_new_user(
     super::assert_repo_no_modified_files(&root_path);
 
 }
+
+/// Attempts to make a new sequence with the given name and music file
+/// Panics if error thrown
+pub fn try_make_sequence(name: &str, music_file: &str) {
+    let music_file_path = super::get_music_file_path(music_file);
+
+    let _ = match proton_cli::new_sequence(&name, &music_file_path) {
+        Ok(_) => (),
+        Err(e) => panic!(e.to_string()),
+    };
+}
