@@ -39,17 +39,29 @@ pub fn modify_permission(
     target: Option<String>
 ) -> Result<(), Error> {
 
-    if add {
-        add_permission(&target_user, permission, &project)
-    } else {
-        remove_permission(&target_user, permission, &project)
+    if !auth_user.is_admin() {
+        return Err(Error::UnauthorizedAction);
     }
+
+    let perm = try!(get_permission(permission, &target));
+
+    if add {
+        add_permission(&target_user, &perm, &project)
+    } else {
+        remove_permission(&target_user, &perm, &project)
+    }
+}
+
+#[allow(unused_variables)]
+fn get_permission(permission: &PermissionEnum, target: &Option<String>) -> Result<Permission, Error> {
+// Todo: update README
+    Err(Error::TodoErr)
 }
 
 #[allow(unused_variables)]
 fn add_permission(
     user: &User,
-    permission: &PermissionEnum,
+    permission: &Permission,
     project: &Project,
 ) -> Result<(), Error> {
 
@@ -59,7 +71,7 @@ fn add_permission(
 #[allow(unused_variables)]
 fn remove_permission(
     user: &User,
-    permission: &PermissionEnum,
+    permission: &Permission,
     project: &Project,
 ) -> Result<(), Error> {
 

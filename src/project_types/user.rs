@@ -1,10 +1,10 @@
 
 use std::io::Cursor;
 use openssl::crypto::rsa::RSA as openssl_RSA;
-use openssl::crypto::hash::Type as openssl_HashType;
 
 use error::Error;
 use Permission;
+use PermissionEnum;
 
 
 #[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
@@ -34,10 +34,12 @@ impl User {
             .map_err(|_| Error::InvalidPublicKey(pub_key.to_string())))
     }
 
+    #[allow(unused_variables)]
     pub fn add_permission(&self, perm: &Permission, target: Option<String>) -> Result<(), Error> {
         Err(Error::TodoErr)
     }
 
+    #[allow(unused_variables)]
     pub fn remove_permission(&self, perm: &Permission, target: Option<String>) -> Result<(), Error> {
         Err(Error::TodoErr)
     }
@@ -51,6 +53,11 @@ impl User {
         }
 
         false
+    }
+
+    pub fn is_admin(&self) -> bool {
+        let admin_permission = Permission::new(PermissionEnum::GrantPerm, None::<String>);
+        self.has_permission(&admin_permission)
     }
 
 }

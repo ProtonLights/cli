@@ -107,6 +107,49 @@ fn works_with_editseqsec() {
 }
 
 #[test]
+#[should_panic(expected = "Invalid permission target")]
+fn fails_with_bad_target_editseq() {
+    let root = setup::setup_init_cd();
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+
+    // Create user
+    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+
+    // Create sequence
+    setup::try_make_sequence("test_seq", "Dissonance.ogg");
+
+    // Try to add permission to user
+    try_mod_permission(
+        &admin_private_key_path,
+        true,
+        "Test User",
+        &PermissionEnum::EditSeq,
+        Some("nonexistent".to_string()));
+
+}
+
+#[test]
+#[should_panic(expected = "Invalid permission target")]
+fn fails_with_bad_target_editseqsec() {
+    let root = setup::setup_init_cd();
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+
+    // Create user
+    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+
+    // Create sequence
+    setup::try_make_sequence("test_seq", "Dissonance.ogg");
+
+    // Try to add permission to user
+    try_mod_permission(
+        &admin_private_key_path,
+        true,
+        "Test User",
+        &PermissionEnum::EditSeqSec,
+        Some("section999".to_string()));
+}
+
+#[test]
 #[should_panic(expected = "IO Error")]
 fn fails_with_bad_path_to_private_key() {
     let root = setup::setup_init_cd();
