@@ -31,12 +31,30 @@ impl Permission {
         })
     }
 
-    #[allow(unused_variables)]
     /// Validates the target for the given permission type
     /// Returns error if invalid target
     fn validate_permission(permission: &PermissionEnum, target: &Option<String>) -> Result<(), Error> {
         
-        Ok(())
+        let valid = match *permission {
+            PermissionEnum::GrantPerm => {
+                target == &None::<String>
+            },
+            PermissionEnum::EditProj => {
+                target == &None::<String>
+            },
+            PermissionEnum::EditSeq => {
+                false
+            },
+            PermissionEnum::EditSeqSec => {
+                false
+            },
+        };
+
+        if valid {
+            Ok(())
+        } else {
+            Err(Error::InvalidPermissionTarget)
+        }
     }
 
 }

@@ -29,6 +29,18 @@ impl Project {
         })
     }
 
+    /// Finds a sequence by its name
+    /// Returns the sequence if found, else None
+    pub fn find_sequence_by_name(&self, name: &str) -> Option<&Sequence> {
+        for s in &self.sequences {
+            if s.name == name {
+                return Some(s);
+            }
+        }
+
+        None::<&Sequence>
+    }
+
     /// Finds a user with the given public key
     /// Returns the user if found, else None
     fn find_user_by_public_key(&self, pub_key: &str) -> Option<&User> {
