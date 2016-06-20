@@ -13,6 +13,23 @@ use proton_cli::utils;
 #[test]
 #[allow(unused_variables)]
 // root reference must be kept to keep temp directory in scope, but is never used
+fn works_with_grantperm() {
+    let root = setup::setup_init_cd();
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+
+    // Create user
+    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+
+    // Try to add permission to user
+    try_mod_permission(&admin_private_key_path, true, "Test User", &Permission::GrantPerm, None);
+
+    // Now try to remove the permission
+    try_mod_permission(&admin_private_key_path, false, "Test User", &Permission::GrantPerm, None);
+}
+
+#[test]
+#[allow(unused_variables)]
+// root reference must be kept to keep temp directory in scope, but is never used
 fn works_with_editproj() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
