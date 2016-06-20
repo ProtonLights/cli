@@ -2,6 +2,7 @@
 use project_types::{Sequence, User};
 use error::Error;
 use Permission;
+use PermissionEnum;
 
 
 /// Structure to represent a Proton Project.
@@ -18,7 +19,8 @@ impl Project {
     pub fn empty(admin_pub_key: &str) -> Result<Project, Error> {
 
         let mut admin = try!(User::new("admin".as_ref(), &admin_pub_key));
-        admin.permissions.push(Permission::GrantPerm);
+        let admin_permission = Permission::new(PermissionEnum::GrantPerm, None::<String>);
+        admin.permissions.push(admin_permission);
         Ok(Project {
             name: "New Project".to_owned(),
             users: vec![admin],

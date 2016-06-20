@@ -12,7 +12,7 @@ use git2::Repository;
 
 use proton_cli::project_types::{Project, User};
 use proton_cli::initialize_project;
-use proton_cli::{utils, Permission};
+use proton_cli::{utils, Permission, PermissionEnum};
 
 use common::rsa_keys::{self, TestKey};
 use common::setup;
@@ -67,7 +67,8 @@ fn assert_admin_created<P: AsRef<Path>>(root: P, admin_pub_key: &str) {
         .expect("Loading project from file failed");
     let mut admin_user = User::new("admin".as_ref(), &admin_pub_key)
         .expect("Error creating admin user for comparison");
-    admin_user.permissions.push(Permission::GrantPerm);
+    let admin_permission = Permission::new(PermissionEnum::GrantPerm, None::<String>);
+    admin_user.permissions.push(admin_permission);
     assert_eq!(project.users.len(), 1);
     assert_eq!(project.users[0], admin_user);
 }

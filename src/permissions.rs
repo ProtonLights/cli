@@ -4,11 +4,26 @@ use project_types::{User, Project};
 
 
 #[derive(Clone, Debug, Eq, PartialEq, RustcEncodable, RustcDecodable)]
-pub enum Permission {
+pub enum PermissionEnum {
     GrantPerm,
     EditProj,
     EditSeq,
     EditSeqSec,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, RustcEncodable, RustcDecodable)]
+pub struct Permission {
+    pub which: PermissionEnum,
+    pub target: Option<String>,
+}
+
+impl Permission {
+    pub fn new(which_enum: PermissionEnum, t: Option<String>) -> Permission {
+        Permission {
+            which: which_enum,
+            target: t,
+        }
+    }
 }
 
 pub fn permissions_as_string() -> String {
@@ -19,7 +34,7 @@ pub fn modify_permission(
     auth_user: &User,
     add: bool,
     target_user: &User,
-    permission: &Permission,
+    permission: &PermissionEnum,
     project: &Project,
     target: Option<String>
 ) -> Result<(), Error> {
@@ -34,7 +49,7 @@ pub fn modify_permission(
 #[allow(unused_variables)]
 fn add_permission(
     user: &User,
-    permission: &Permission,
+    permission: &PermissionEnum,
     project: &Project,
 ) -> Result<(), Error> {
 
@@ -44,7 +59,7 @@ fn add_permission(
 #[allow(unused_variables)]
 fn remove_permission(
     user: &User,
-    permission: &Permission,
+    permission: &PermissionEnum,
     project: &Project,
 ) -> Result<(), Error> {
 

@@ -8,7 +8,7 @@ use std::path::Path;
 use docopt::Docopt;
 
 use proton_cli::error::Error;
-use proton_cli::Permission;
+use proton_cli::PermissionEnum;
 use proton_cli::utils;
 
 
@@ -35,7 +35,7 @@ struct Args {
 	arg_private_key: Option<String>,
 	arg_name: Option<String>,
 	arg_music_file: Option<String>,
-	arg_permission: Option<Permission>,
+	arg_permission: Option<PermissionEnum>,
 	arg_target: Option<String>,
 }
 

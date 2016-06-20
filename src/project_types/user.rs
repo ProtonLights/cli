@@ -34,8 +34,12 @@ impl User {
             .map_err(|_| Error::InvalidPublicKey(pub_key.to_string())))
     }
 
-    pub fn add_permission(&self, perm: &Permission) -> Result<(), Error> {
-        Ok(())
+    pub fn add_permission(&self, perm: &Permission, target: Option<String>) -> Result<(), Error> {
+        Err(Error::TodoErr)
+    }
+
+    pub fn remove_permission(&self, perm: &Permission, target: Option<String>) -> Result<(), Error> {
+        Err(Error::TodoErr)
     }
 
     pub fn has_permission(&self, perm: &Permission) -> bool {
