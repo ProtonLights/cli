@@ -1,6 +1,9 @@
 
+use std::path::Path;
+
 use error::Error;
 use project_types::User;
+use utils;
 
 
 #[derive(Clone, Debug, Eq, PartialEq, RustcEncodable, RustcDecodable)]
@@ -43,10 +46,24 @@ impl Permission {
                 target == &None::<String>
             },
             &PermissionEnum::EditSeq => {
-                false
+                if target.is_none() {
+                    false
+                } else {
+                    let seq_name = target.to_owned().unwrap();
+                    let project = try!(utils::read_protonfile(None::<&Path>));
+                    project.find_sequence_by_name(&seq_name).is_some()
+                }
             },
             &PermissionEnum::EditSeqSec => {
-                false
+                if target.is_none() {
+                    false
+                } else {
+                    let target_str = target.to_owned().unwrap();
+                    let targets = target_str.split(",");
+                    let seq_name = target.to_owned().unwrap();
+                    let project = try!(utils::read_protonfile(None::<&Path>));
+                    project.find_sequence_by_name(&seq_name).is_some()
+                }
             },
         };
 

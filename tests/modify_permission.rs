@@ -150,7 +150,7 @@ fn fails_with_bad_target_editseqsec() {
 }
 
 #[test]
-#[should_panic(expected = "IO Error")]
+#[should_panic(expected = "Auth user not found")]
 fn fails_with_bad_path_to_private_key() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = Path::new("undefined.pem");
@@ -161,12 +161,18 @@ fn fails_with_bad_path_to_private_key() {
 }
 
 #[test]
-#[should_panic(expected = "Modifying own permissions")]
+#[should_panic(expected = "Unauthorized action")]
 fn fails_modifying_own_permissions() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+    let admin2_private_key_path = common::make_key_file(root.path(), "b.pem", TestKey::GoodKeyPem);
 
-    try_mod_permission(&admin_private_key_path, true, "admin", PermissionEnum::EditProj, None);
+    // Setup new user with GrantPerm permission
+    setup::try_new_user(root.path(), "Admin2", "b.pub", TestKey::GoodKeyPub);
+    try_mod_permission(&admin_private_key_path, true, "Admin2", PermissionEnum::GrantPerm, None);
+
+    // Now have that new user give themselves another permission
+    try_mod_permission(&admin2_private_key_path, true, "Admin2", PermissionEnum::EditProj, None);
 }
 
 #[test]
