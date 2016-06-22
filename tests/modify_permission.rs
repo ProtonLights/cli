@@ -94,15 +94,15 @@ fn works_with_editseqsec() {
         true,
         "Test User",
         PermissionEnum::EditSeqSec,
-        Some("section1".to_string()));
+        Some("test_seq,1".to_string()));
 
     // Now try removing the permission
     try_mod_permission(
         &admin_private_key_path,
         false,
         "Test User",
-        PermissionEnum::EditSeq,
-        Some("section1".to_string()));
+        PermissionEnum::EditSeqSec,
+        Some("test_seq,1".to_string()));
 
 }
 

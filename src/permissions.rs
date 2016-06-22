@@ -59,10 +59,25 @@ impl Permission {
                     false
                 } else {
                     let target_str = target.to_owned().unwrap();
-                    let targets = target_str.split(",");
-                    let seq_name = target.to_owned().unwrap();
-                    let project = try!(utils::read_protonfile(None::<&Path>));
-                    project.find_sequence_by_name(&seq_name).is_some()
+                    let targets: Vec<&str> = target_str.split(",").collect();
+                    if targets.len() != 2 {
+                        false
+                    } else {
+                        let seq_name = targets[0];
+                        let section_num_str = targets[1];
+                        let section_num = match section_num_str.parse::<u32>() {
+                            Ok(n) => n,
+                            Err(_) => return Err(Error::InvalidPermissionTarget), 
+                        };
+                        let project = try!(utils::read_protonfile(None::<&Path>));
+                        match project.find_sequence_by_name(&seq_name) {
+                            Some(seq) => {
+                                section_num > 0 && section_num <= seq.num_sections
+                            },
+                            None => false,
+                        }
+
+                    }
                 }
             },
         };
