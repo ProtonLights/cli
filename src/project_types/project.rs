@@ -54,6 +54,7 @@ impl Project {
 
     /// Finds a user with the given name
     /// Returns the user if found, else None
+    // TODO: make private?
     pub fn find_user_by_name(&self, name: &str) -> Option<&User> {
         for u in &self.users {
             if u.name == name {
@@ -89,6 +90,23 @@ impl Project {
             new_project.users.push(user);
             Ok(new_project)
         }
+    }
+
+    /// Removes a user from the project
+    /// Returns a new project with the user removed
+    ///
+    /// Impure.
+    // TODO: make public once command is added
+    fn remove_user(&self, name: &str) -> Result<Project, Error> {
+        let mut new_project = self.clone();
+        for i in 0..new_project.users.len() {
+            if new_project.users[i].name == name {
+                new_project.users.remove(i);
+                return Ok(new_project);
+            }
+        }
+
+        Err(Error::UserNotFound)
     }
 
     /// Adds a sequence to the project
@@ -128,5 +146,29 @@ impl Project {
             Ok(new_project)
         }
     }
+
+    /// Changes a user's permissions
+    pub fn modify_user_permission(
+        &mut self,
+        name: &str,
+        perm: Permission,
+        add: bool
+    ) -> Result<(), Error> {
+    
+        for mut u in &mut self.users {
+            if u.name == name {
+                if add {
+                    u.add_permission(perm);
+                } else {
+                    u.remove_permission(perm);
+                }
+
+                return Ok(());
+            }
+        }
+
+        Err(Error::UserNotFound)
+    }
+
 }
 

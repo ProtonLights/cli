@@ -7,15 +7,23 @@ use Permission;
 use PermissionEnum;
 
 
-#[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
+#[derive(Clone, Debug, Eq, RustcEncodable, RustcDecodable)]
 pub struct User {
     pub name: String,
     pub public_key: String,
     pub permissions: Vec<Permission>,
 }
 
+impl PartialEq for User {
+    fn eq(&self, other: &User) -> bool {
+        self.name == other.name ||
+        self.public_key == other.public_key
+    }
+}
+
 impl User {
 
+    /// Validates the public key, then creates a new User with that key
     pub fn new(name: &str, pub_key: &str) -> Result<User, Error> {
         try!(User::validate_public_key(&pub_key));
 
@@ -44,12 +52,16 @@ impl User {
 
     /// Removes the given permission from the User's list of permissions
     /// If it isn't found, this becomes a NOP
-    pub fn remove_permission(&self, perm: Permission) {
-        if self.has_permission(&perm) {
-            //self.permissions.remove(perm);
+    pub fn remove_permission(&mut self, perm: Permission) {
+        for i in 0..self.permissions.len() {
+            if self.permissions[i] == perm {
+                self.permissions.remove(i);
+                break;
+            }
         }
     }
 
+    /// Checks to see if the user has the given Permission
     pub fn has_permission(&self, perm: &Permission) -> bool {
         
         for p in &self.permissions {
@@ -61,10 +73,15 @@ impl User {
         false
     }
 
+    /// Determines whether the user has the GrantPerm permission
     pub fn is_admin(&self) -> bool {
-        let admin_permission = Permission::new(PermissionEnum::GrantPerm, None::<String>)
-            .expect("Error creating default admin permission");
-        self.has_permission(&admin_permission)
+        for p in &self.permissions {
+            if p.which == PermissionEnum::GrantPerm {
+                return true;
+            }
+        }
+
+        false
     }
 
 }

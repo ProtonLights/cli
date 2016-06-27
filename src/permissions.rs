@@ -98,23 +98,34 @@ pub fn permissions_as_string() -> String {
 pub fn modify_permission(
     auth_user: &User,
     add: bool,
-    target_user: &mut User,
+    target_username: &str,
     permission: PermissionEnum,
     target: Option<String>
 ) -> Result<(), Error> {
 
+    // Only admins (those with GrantPerm permission) can change permissions
     if !auth_user.is_admin() {
         return Err(Error::UnauthorizedAction);
     }
 
-    let perm = try!(Permission::new(permission, target));
-
-    if add {
-        target_user.add_permission(perm)
-    } else {
-        target_user.remove_permission(perm)
+    // Don't let users change their own permissions; that's what the admin account is for
+    if auth_user.name == target_username {
+        return Err(Error::UnauthorizedAction);
     }
 
+    // Validate and create permission
+    let perm = try!(Permission::new(permission, target));
+
+    // Get project that will be modified
+    let mut project = try!(utils::read_protonfile(None::<&Path>));
+
+    // Modify permissions
+    try!(project.modify_user_permission(&target_username, perm, add));
+
+    // Save changes to protonfile
+    try!(utils::write_protonfile(&project, None::<&Path>));
+
+    // Nothing failed, so good
     Ok(())
 }
 

@@ -161,8 +161,7 @@ fn fails_with_bad_path_to_private_key() {
 }
 
 #[test]
-#[should_panic(expected = "Unauthorized action")]
-fn fails_modifying_own_permissions() {
+fn works_trading_admin_power() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
     let admin2_private_key_path = common::make_key_file(root.path(), "b.pem", TestKey::GoodKeyPem);
@@ -171,8 +170,17 @@ fn fails_modifying_own_permissions() {
     setup::try_new_user(root.path(), "Admin2", "b.pub", TestKey::GoodKeyPub);
     try_mod_permission(&admin_private_key_path, true, "Admin2", PermissionEnum::GrantPerm, None);
 
-    // Now have that new user give themselves another permission
-    try_mod_permission(&admin2_private_key_path, true, "Admin2", PermissionEnum::EditProj, None);
+    // Now have that new user give the admin another permission
+    try_mod_permission(&admin2_private_key_path, false, "admin", PermissionEnum::GrantPerm, None);
+}
+
+#[test]
+#[should_panic(expected = "Unauthorized action")]
+fn fails_modifying_own_permissions() {
+    let root = setup::setup_init_cd();
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+    
+    try_mod_permission(&admin_private_key_path, false, "admin", PermissionEnum::GrantPerm, None);
 }
 
 #[test]
@@ -188,39 +196,13 @@ fn fails_with_unused_private_key() {
 }
 
 #[test]
-#[should_panic(expected = "User target not found")]
+#[should_panic(expected = "User not found")]
 fn fails_with_nonexistent_username() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
     try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
 
-}
-
-#[test]
-#[should_panic(expected = "Permission already exists")]
-fn fails_adding_existing_permission() {
-    let root = setup::setup_init_cd();
-    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
-
-    // Create user
-    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
-
-    // Try to add permission to user
-    try_mod_permission(
-        &admin_private_key_path,
-        true,
-        "Test User",
-        PermissionEnum::EditProj,
-        None);
-
-    // Now do it again
-    try_mod_permission(
-        &admin_private_key_path,
-        true,
-        "Test User",
-        PermissionEnum::EditProj,
-        None);
 }
 
 #[test]
@@ -246,24 +228,27 @@ fn try_mod_permission<P: AsRef<Path>>(
     permission: PermissionEnum,
     target: Option<String>,
 ) {
-    let project = utils::read_protonfile(None::<P>)
-        .expect("Error reading project from file");
-    let mut target_user = project.find_user_by_name(&target_username)
-        .expect("User target not found")
-        .to_owned();
     let auth_user = proton_cli::id_user(&auth_private_key_path)
         .expect("Auth user not found");
 
     match proton_cli::modify_permission(
         &auth_user,
         add,
-        &mut target_user,
+        &target_username,
         permission.clone(),
         target.clone()
     ) {
         Ok(_) => (),
         Err(e) => panic!("{}", e.to_string()),
     };
+
+    let project = utils::read_protonfile(None::<P>)
+        .expect("Error reading project from file");
+    let target_user = project.find_user_by_name(&target_username)
+        .expect("User target not found")
+        .to_owned();
+
+    println!("End permissions: {:?}", target_user.permissions);
 
     if add {
         assert_eq!(target_user.permissions.len(), 1);

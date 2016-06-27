@@ -115,11 +115,7 @@ fn run_modify_permission(args: Args) -> Result<(), Error> {
 	let permission = args.arg_permission.unwrap();
 	let target = args.arg_target;
 
-	let project = try!(utils::read_protonfile(None::<&Path>));
-    let mut target_user = try!(project.find_user_by_name(&username).ok_or(Error::UserNotFound))
-    	.to_owned();
-
-	proton_cli::modify_permission(&auth_user, added, &mut target_user, permission, target)
+	proton_cli::modify_permission(&auth_user, added, &username, permission, target)
 }
 
 
