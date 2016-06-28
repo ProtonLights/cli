@@ -18,7 +18,12 @@ fn works_with_grantperm() {
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
     // Create user
-    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+    setup::try_new_user(
+        &admin_private_key_path.as_path(),
+        root.path(),
+        "Test User",
+        "a.pub",
+        TestKey::GoodKeyPub);
 
     // Try to add permission to user
     try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::GrantPerm, None);
@@ -35,7 +40,12 @@ fn works_with_editproj() {
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
     // Create user
-    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+    setup::try_new_user(
+        admin_private_key_path.as_path(),
+        root.path(),
+        "Test User",
+        "a.pub",
+        TestKey::GoodKeyPub);
 
     // Try to add permission to user
     try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
@@ -52,7 +62,12 @@ fn works_with_editseq() {
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
     // Create user
-    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+    setup::try_new_user(
+        admin_private_key_path.as_path(),
+        root.path(),
+        "Test User",
+        "a.pub",
+        TestKey::GoodKeyPub);
 
     // Create sequence
     setup::try_make_sequence("test_seq", "Dissonance.ogg");
@@ -83,7 +98,12 @@ fn works_with_editseqsec() {
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
     // Create user
-    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+    setup::try_new_user(
+        admin_private_key_path.as_path(),
+        root.path(),
+        "Test User",
+        "a.pub",
+        TestKey::GoodKeyPub);
 
     // Create sequence
     setup::try_make_sequence("test_seq", "Dissonance.ogg");
@@ -113,7 +133,12 @@ fn fails_with_bad_target_editseq() {
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
     // Create user
-    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+    setup::try_new_user(
+        admin_private_key_path.as_path(),
+        root.path(),
+        "Test User",
+        "a.pub",
+        TestKey::GoodKeyPub);
 
     // Create sequence
     setup::try_make_sequence("test_seq", "Dissonance.ogg");
@@ -135,7 +160,12 @@ fn fails_with_bad_target_editseqsec() {
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
     // Create user
-    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+    setup::try_new_user(
+        admin_private_key_path.as_path(),
+        root.path(),
+        "Test User",
+        "a.pub",
+        TestKey::GoodKeyPub);
 
     // Create sequence
     setup::try_make_sequence("test_seq", "Dissonance.ogg");
@@ -155,7 +185,12 @@ fn fails_with_bad_path_to_private_key() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = Path::new("undefined.pem");
 
-    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+    setup::try_new_user(
+        admin_private_key_path,
+        root.path(),
+        "Test User",
+        "a.pub",
+        TestKey::GoodKeyPub);
 
     try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
 }
@@ -167,7 +202,12 @@ fn works_trading_admin_power() {
     let admin2_private_key_path = common::make_key_file(root.path(), "b.pem", TestKey::GoodKeyPem);
 
     // Setup new user with GrantPerm permission
-    setup::try_new_user(root.path(), "Admin2", "b.pub", TestKey::GoodKeyPub);
+    setup::try_new_user(
+        &admin_private_key_path.as_path(),
+        root.path(),
+        "Admin2",
+        "b.pub",
+        TestKey::GoodKeyPub);
     try_mod_permission(&admin_private_key_path, true, "Admin2", PermissionEnum::GrantPerm, None);
 
     // Now have that new user give the admin another permission
@@ -190,7 +230,12 @@ fn fails_with_unused_private_key() {
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKey2Pem);
     
     // Create user
-    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+    setup::try_new_user(
+        admin_private_key_path.as_path(),
+        root.path(),
+        "Test User",
+        "a.pub",
+        TestKey::GoodKeyPub);
 
     try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
 }
@@ -209,9 +254,15 @@ fn fails_with_nonexistent_username() {
 #[should_panic(expected = "Unauthorized action")]
 fn fails_with_unauthorized_authority() {
     let root = setup::setup_init_cd();
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
     // Create user
-    setup::try_new_user(root.path(), "Test User", "a.pub", TestKey::GoodKeyPub);
+    setup::try_new_user(
+        admin_private_key_path.as_path(),
+        root.path(),
+        "Test User",
+        "a.pub",
+        TestKey::GoodKeyPub);
     let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKeyPem);
 
     try_mod_permission(&private_key_path, true, "admin", PermissionEnum::EditProj, None);

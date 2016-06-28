@@ -59,6 +59,7 @@ pub fn assert_user_added<P: AsRef<Path>>(public_key_path: P, name: &str) {
         
     let u = User::new(name, &pub_key_contents).expect("Error making user for comparison");
     assert_eq!(project.user_exists(&u), true);
+    assert_eq!(u.permissions.len(), 0);
 }
 
 /// Check that changes were actually committed to the repository

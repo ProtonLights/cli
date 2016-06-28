@@ -39,22 +39,23 @@ pub fn setup_init_cd() -> TempDir {
 /// then tries to add the user to the project
 /// Returns any errors received
 pub fn try_new_user(
+    admin_key_path: &Path,
     root_path: &Path,
     user_name: &str,
     key_name: &str,
     key: TestKey
 ) {
-    // Create public key file
-    let key_path = super::make_key_file(&root_path, &key_name, key);
+    // Create public key files
+    let user_key_path = super::make_key_file(&root_path, &key_name, key);
 
     // Add new user to project
-    let _ = match proton_cli::new_user(key_path.as_path(), &user_name) {
+    let _ = match proton_cli::new_user(&admin_key_path, &user_key_path.as_path(), &user_name) {
         Ok(_) => (),
         Err(e) => panic!("{}", e.to_string()),
     };
 
     // Assert that user was added
-    super::assert_user_added(key_path.as_path(), &user_name);
+    super::assert_user_added(user_key_path.as_path(), &user_name);
 
     // Check that commit was made
     super::assert_repo_no_modified_files(&root_path);

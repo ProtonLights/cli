@@ -10,10 +10,22 @@ use common::setup;
 use proton_cli::project_types::User;
 
 
-fn try_id_user(root_path: &Path, name: &str, public_key: TestKey, private_key: TestKey) {
+fn try_id_user(
+    root_path: &Path,
+    name: &str,
+    public_key: TestKey,
+    private_key: TestKey
+) {
 
     // Add user to project
-    setup::try_new_user(root_path, &name, "a.pub", public_key.clone());
+    let admin_private_key_path = common::make_key_file(root_path, "a.pem", TestKey::AdminKeyPem);
+
+    setup::try_new_user(
+        &admin_private_key_path.as_path(),
+        root_path,
+        &name,
+        "a.pub",
+        public_key.clone());
 
     // Make private key file for user
     let private_key_path = common::make_key_file(root_path, "a.pem", private_key);
@@ -43,7 +55,14 @@ fn fails_with_nonexistent_private_key() {
     let name = "Test User".to_string();
 
     // Add user to project
-    setup::try_new_user(root.path(), &name, "a.pub", TestKey::GoodKeyPub);
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+
+    setup::try_new_user(
+        admin_private_key_path.as_path(),
+        root.path(),
+        &name,
+        "a.pub",
+        TestKey::GoodKeyPub);
 
     // Make bad path to private key file
     let private_key_path = root.path().join("nonexistent.pem");
@@ -62,7 +81,14 @@ fn fails_with_valid_private_key_no_match() {
     let name = "Test User".to_string();
 
     // Add user to project
-    setup::try_new_user(root.path(), &name, "a.pub", TestKey::GoodKeyPub);
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+
+    setup::try_new_user(
+        admin_private_key_path.as_path(),
+        root.path(),
+        &name,
+        "a.pub",
+        TestKey::GoodKeyPub);
 
     // Make private key for user
     let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKey2Pem);
@@ -80,7 +106,14 @@ fn fails_with_invalid_private_key() {
     let root = setup::setup_init_cd();
     let name = "Test User".to_string();
 
-    setup::try_new_user(root.path(), &name, "a.pub", TestKey::GoodKeyPub);
+    let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
+
+    setup::try_new_user(
+        admin_private_key_path.as_path(),
+        root.path(),
+        &name,
+        "a.pub",
+        TestKey::GoodKeyPub);
 
     // Make bad private key for user
     let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::BadPrivKeyPem);

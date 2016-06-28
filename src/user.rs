@@ -19,7 +19,12 @@ use utils;
 /// 2. Add the user's name and public key to the protonfile
 ///
 /// Impure.
-pub fn new_user<P: AsRef<Path>>(public_key_path: P, name: &str) -> Result<(), Error> {
+pub fn new_user<P: AsRef<Path>>(
+    admin_key_path: P,
+    public_key_path: P,
+    name: &str
+) -> Result<(), Error> {
+
     // Add user
     let project = try!(utils::read_protonfile(None::<P>));
     let pub_key = try!(utils::file_as_string(&public_key_path));

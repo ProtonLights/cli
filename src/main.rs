@@ -17,11 +17,11 @@ Command-line interface for Proton
 
 Usage:
   ./proton init <folder> <public-key>
-  ./proton new-user <name> <public-key>
+  ./proton <admin-key> new-user <name> <public-key>
   ./proton new-sequence <name> <music-file>
   ./proton id-user <private-key>
   ./proton list-permissions
-  ./proton mod-permission <private-key> (add | remove) <name> <permission> [target]
+  ./proton mod-permission <admin-key> (add | remove) <name> <permission> [target]
   ./proton (-h | --help)
 
 Options:
@@ -33,6 +33,7 @@ struct Args {
 	arg_folder: Option<String>,
 	arg_public_key: Option<String>,
 	arg_private_key: Option<String>,
+	arg_admin_key: Option<String>,
 	arg_name: Option<String>,
 	arg_music_file: Option<String>,
 	arg_permission: Option<PermissionEnum>,
@@ -75,10 +76,12 @@ fn run_init(args: Args) -> Result<(), Error> {
 }
 
 fn run_new_user(args: Args) -> Result<(), Error> {
+	let admin_key = args.arg_admin_key.unwrap();
+	let admin_key_path = Path::new(&admin_key);
 	let public_key = args.arg_public_key.unwrap();
 	let public_key_path = Path::new(&public_key);
 	let name = args.arg_name.unwrap();
-	proton_cli::new_user(&public_key_path, &name)
+	proton_cli::new_user(&admin_key_path, &public_key_path, &name)
 }
 
 fn run_id_user(args: Args) -> Result<(), Error> {
@@ -107,8 +110,8 @@ fn run_list_permissions(args: Args) -> Result<(), Error> {
 }
 
 fn run_modify_permission(args: Args) -> Result<(), Error> {
-	let private_key = args.arg_private_key.unwrap();
-	let auth_user = try!(proton_cli::id_user(&private_key));
+	let admin_key = args.arg_private_key.unwrap();
+	let auth_user = try!(proton_cli::id_user(&admin_key));
 
 	let added = env::args().nth(3).unwrap() == "add";
 	let username = args.arg_name.unwrap();
