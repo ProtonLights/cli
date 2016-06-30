@@ -9,6 +9,7 @@ use git2::Signature;
 
 use error::Error;
 use project_types::User;
+use permissions::{Permission, PermissionEnum};
 use utils;
 
 
@@ -24,6 +25,13 @@ pub fn new_user<P: AsRef<Path>>(
     public_key_path: P,
     name: &str
 ) -> Result<(), Error> {
+
+    // See if admin has permission to add user
+    let admin_user = try!(id_user(admin_key_path));
+    let perm = try!(Permission::new(PermissionEnum::EditProj, None::<String>));
+    if !admin_user.has_permission(&perm) {
+        return Err(Error::UnauthorizedAction);
+    }
 
     // Add user
     let project = try!(utils::read_protonfile(None::<P>));

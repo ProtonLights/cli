@@ -7,7 +7,6 @@ use std::path::Path;
 use common::setup;
 use common::rsa_keys::TestKey;
 use proton_cli::PermissionEnum;
-use proton_cli::utils;
 
 
 #[test]
@@ -30,6 +29,9 @@ fn works_with_grantperm() {
 
     // Now try to remove the permission
     try_mod_permission(&admin_private_key_path, false, "Test User", PermissionEnum::GrantPerm, None);
+
+    // Make sure changes were saved
+    common::assert_repo_no_modified_files(&root.path());
 }
 
 #[test]
@@ -52,6 +54,9 @@ fn works_with_editproj() {
 
     // Now try to remove the permission
     try_mod_permission(&admin_private_key_path, false, "Test User", PermissionEnum::EditProj, None);
+
+    // Make sure changes were saved
+    common::assert_repo_no_modified_files(&root.path());
 }
 
 #[test]
@@ -88,6 +93,8 @@ fn works_with_editseq() {
         PermissionEnum::EditSeq,
         Some("test_seq".to_string()));
 
+    // Make sure changes were saved
+    common::assert_repo_no_modified_files(&root.path());
 }
 
 #[test]
@@ -123,6 +130,9 @@ fn works_with_editseqsec() {
         "Test User",
         PermissionEnum::EditSeqSec,
         Some("test_seq,1".to_string()));
+
+    // Make sure changes were saved
+    common::assert_repo_no_modified_files(&root.path());
 
 }
 
@@ -180,7 +190,7 @@ fn fails_with_bad_target_editseqsec() {
 }
 
 #[test]
-#[should_panic(expected = "Auth user not found")]
+#[should_panic(expected = "entity not found")]
 fn fails_with_bad_path_to_private_key() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = Path::new("undefined.pem");
@@ -210,8 +220,11 @@ fn works_trading_admin_power() {
         TestKey::GoodKeyPub);
     try_mod_permission(&admin_private_key_path, true, "Admin2", PermissionEnum::GrantPerm, None);
 
-    // Now have that new user give the admin another permission
+    // Now have that new user take away the first's GrantPerm permission
     try_mod_permission(&admin2_private_key_path, false, "admin", PermissionEnum::GrantPerm, None);
+
+    // Make sure changes were saved
+    common::assert_repo_no_modified_files(&root.path());
 }
 
 #[test]
@@ -293,20 +306,5 @@ fn try_mod_permission<P: AsRef<Path>>(
         Err(e) => panic!("{}", e.to_string()),
     };
 
-    let project = utils::read_protonfile(None::<P>)
-        .expect("Error reading project from file");
-    let target_user = project.find_user_by_name(&target_username)
-        .expect("User target not found")
-        .to_owned();
-
-    println!("End permissions: {:?}", target_user.permissions);
-
-    if add {
-        assert_eq!(target_user.permissions.len(), 1);
-        assert_eq!(target_user.permissions[0].which, permission);
-        assert_eq!(target_user.permissions[0].target, target);
-    } else {
-        assert_eq!(target_user.permissions.len(), 0);
-    }
 }
 

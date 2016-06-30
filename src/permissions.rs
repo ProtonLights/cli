@@ -1,6 +1,8 @@
 
 use std::path::Path;
 
+use git2::Signature;
+
 use error::Error;
 use project_types::User;
 use utils;
@@ -120,12 +122,21 @@ pub fn modify_permission(
     let mut project = try!(utils::read_protonfile(None::<&Path>));
 
     // Modify permissions
-    try!(project.modify_user_permission(&target_username, perm, add));
+    try!(project.modify_user_permission(&target_username, perm.to_owned(), add));
 
     // Save changes to protonfile
     try!(utils::write_protonfile(&project, None::<&Path>));
 
-    // Nothing failed, so good
-    Ok(())
+    // Commit changes
+    let signature = Signature::now(&auth_user.name, "proton@teslaworks.net").unwrap();
+    let change_type = match add {
+        true => "granting",
+        false => "revoking",
+    };
+    let msg = format!("Admin '{}' {} permission '{:?}' to/from user {}",
+        auth_user.name, change_type, perm, target_username);
+
+    utils::commit_all(None::<&Path>, &signature, &msg)
+
 }
 

@@ -17,11 +17,11 @@ Command-line interface for Proton
 
 Usage:
   ./proton init <folder> <public-key>
-  ./proton <admin-key> new-user <name> <public-key>
+  ./proton new-user <admin-key> <name> <public-key>
   ./proton new-sequence <name> <music-file>
   ./proton id-user <private-key>
   ./proton list-permissions
-  ./proton mod-permission <admin-key> (add | remove) <name> <permission> [target]
+  ./proton mod-permission <admin-key> (add | remove) <name> <permission> [<target>]
   ./proton (-h | --help)
 
 Options:
@@ -110,7 +110,7 @@ fn run_list_permissions(args: Args) -> Result<(), Error> {
 }
 
 fn run_modify_permission(args: Args) -> Result<(), Error> {
-	let admin_key = args.arg_private_key.unwrap();
+	let admin_key = args.arg_admin_key.unwrap();
 	let auth_user = try!(proton_cli::id_user(&admin_key));
 
 	let added = env::args().nth(3).unwrap() == "add";
