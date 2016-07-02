@@ -75,7 +75,7 @@ fn works_with_editseq() {
         TestKey::GoodKeyPub);
 
     // Create sequence
-    setup::try_make_sequence("test_seq", "Dissonance.ogg");
+    setup::try_make_sequence(&admin_private_key_path, "test_seq", "Dissonance.ogg");
 
     // Try to add permission to user
     try_mod_permission(
@@ -113,7 +113,7 @@ fn works_with_editseqsec() {
         TestKey::GoodKeyPub);
 
     // Create sequence
-    setup::try_make_sequence("test_seq", "Dissonance.ogg");
+    setup::try_make_sequence(&admin_private_key_path.as_path(), "test_seq", "Dissonance.ogg");
 
     // Try to add permission to user
     try_mod_permission(
@@ -151,7 +151,7 @@ fn fails_with_bad_target_editseq() {
         TestKey::GoodKeyPub);
 
     // Create sequence
-    setup::try_make_sequence("test_seq", "Dissonance.ogg");
+    setup::try_make_sequence(&admin_private_key_path, "test_seq", "Dissonance.ogg");
 
     // Try to add permission to user
     try_mod_permission(
@@ -178,7 +178,7 @@ fn fails_with_bad_target_editseqsec() {
         TestKey::GoodKeyPub);
 
     // Create sequence
-    setup::try_make_sequence("test_seq", "Dissonance.ogg");
+    setup::try_make_sequence(&admin_private_key_path, "test_seq", "Dissonance.ogg");
 
     // Try to add permission to user
     try_mod_permission(

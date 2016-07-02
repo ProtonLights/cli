@@ -18,7 +18,7 @@ Command-line interface for Proton
 Usage:
   ./proton init <folder> <public-key>
   ./proton new-user <admin-key> <name> <public-key>
-  ./proton new-sequence <name> <music-file>
+  ./proton new-sequence <admin-key> <name> <music-file>
   ./proton id-user <private-key>
   ./proton list-permissions
   ./proton mod-permission <admin-key> (add | remove) <name> <permission> [<target>]
@@ -95,10 +95,12 @@ fn run_id_user(args: Args) -> Result<(), Error> {
 }
 
 fn run_new_sequence(args: Args) -> Result<(), Error> {
+	let admin_key = args.arg_admin_key.unwrap();
+	let admin_key_path = Path::new(&admin_key);
 	let name = args.arg_name.unwrap();
 	let music_file = args.arg_music_file.unwrap();
 	let music_file_path = Path::new(&music_file);
-	proton_cli::new_sequence(&name, &music_file_path)
+	proton_cli::new_sequence(&admin_key_path, &name, &music_file_path)
 }
 
 #[allow(unused_variables)]

@@ -15,7 +15,11 @@ use utils;
 /// Assumes the current directory contains a Protonfile.json file.
 ///
 /// Impure.
-pub fn new_sequence<P: AsRef<Path>>(name: &str, music_file_path: P) -> Result<(), Error> {
+pub fn new_sequence<P: AsRef<Path>>(
+    admin_key_path: P,
+    name: &str,
+    music_file_path: P
+) -> Result<(), Error> {
     
     // Make sure the name is valid (needed since it will be used in a file path)
     try!(validate_seq_name(name));
