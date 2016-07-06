@@ -9,7 +9,8 @@ use regex::Regex;
 
 use error::Error;
 use utils;
-
+use user;
+use permissions::{Permission, PermissionEnum};
 
 /// Creates a new user for the project in the current directory.
 /// Assumes the current directory contains a Protonfile.json file.
@@ -21,6 +22,13 @@ pub fn new_sequence<P: AsRef<Path>>(
     music_file_path: P
 ) -> Result<(), Error> {
     
+    // Check that the admin has sufficient privileges
+    let admin_user = try!(user::id_user(admin_key_path));
+    let perm = try!(Permission::new(PermissionEnum::EditProj, None::<String>));
+    if !admin_user.has_permission(&perm) {
+        return Err(Error::UnauthorizedAction);
+    }
+
     // Make sure the name is valid (needed since it will be used in a file path)
     try!(validate_seq_name(name));
 

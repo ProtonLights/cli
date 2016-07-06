@@ -43,6 +43,43 @@ fn works_with_valid_path_and_name() {
 #[test]
 #[allow(unused_variables)]
 // root reference must be kept to keep temp directory in scope, but is never used
+#[should_panic(expected = "entity not found")]
+fn fails_with_nonexistent_private_key() {
+    let root = setup::setup_init_cd();
+    let admin_key_path = Path::new("nonexistent");
+    setup::try_make_sequence(&admin_key_path, "New_Sequence", "Dissonance.ogg");
+}
+
+#[test]
+#[should_panic(expected = "User not found")]
+fn fails_with_no_user_private_key() {
+    let root = setup::setup_init_cd();
+    let key_path = common::make_key_file(&root.path(), "a.pem", TestKey::GoodKeyPem);
+    setup::try_make_sequence(&key_path, "New_Sequence", "Dissonance.ogg");
+}
+
+#[test]
+#[should_panic(expected = "Unauthorized action")]
+fn fails_with_no_admin_private_key() {
+    let root = setup::setup_init_cd();
+    let admin_key_path = common::make_key_file(&root.path(), "admin.pem", TestKey::AdminKeyPem);
+    let key_path = common::make_key_file(&root.path(), "a.pem", TestKey::GoodKeyPem);
+
+    setup::try_new_user(&admin_key_path, &root.path(), "Test user", "a.pub", TestKey::GoodKeyPub);
+    setup::try_make_sequence(&key_path, "New_Sequence", "Dissonance.ogg");
+}
+
+#[test]
+#[should_panic(expected = "SSL error")]
+fn fails_with_invalid_private_key() {
+    let root = setup::setup_init_cd();
+    let admin_key_path = common::make_key_file(&root.path(), "admin.pem", TestKey::GoodKeyPub);
+    setup::try_make_sequence(&admin_key_path, "New_Sequence", "Dissonance.ogg");
+}
+
+#[test]
+#[allow(unused_variables)]
+// root reference must be kept to keep temp directory in scope, but is never used
 #[should_panic(expected = "Unsupported file type")]
 fn fails_with_invalid_file_extension() {
     let root = setup::setup_init_cd();
