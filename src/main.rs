@@ -103,8 +103,7 @@ fn run_new_sequence(args: Args) -> Result<(), Error> {
 fn run_list_permissions(args: Args) -> Result<(), Error> {
 	let perm_as_str = proton_cli::permissions_as_string();
 	let permissions = perm_as_str.replace(",", "\n");
-	println!("{}", permissions);
-	Ok(())
+	Ok(println!("{}", permissions))
 }
 
 fn run_set_permission(args: Args) -> Result<(), Error> {
