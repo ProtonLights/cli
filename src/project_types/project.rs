@@ -150,7 +150,7 @@ impl Project {
     }
 
     /// Changes a user's permissions
-    pub fn modify_user_permission(
+    pub fn set_user_permission(
         &mut self,
         name: &str,
         perm: Permission,

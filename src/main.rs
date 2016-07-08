@@ -21,7 +21,7 @@ Usage:
   ./proton new-sequence <admin-key> <name> <music-file>
   ./proton id-user <private-key>
   ./proton list-permissions
-  ./proton mod-permission <admin-key> (add | remove) <name> <permission> [<target>]
+  ./proton set-permission <admin-key> (add | remove) <name> <permission> [<target>]
   ./proton (-h | --help)
 
 Options:
@@ -53,7 +53,7 @@ fn main() {
 		"id-user" => run_id_user,
 		"new-sequence" => run_new_sequence,
 		"list-permissions" => run_list_permissions,
-		"mod-permission" => run_modify_permission,
+		"set-permission" => run_set_permission,
 		_ => panic!("Invalid first argument"),
 	};
 
@@ -111,7 +111,7 @@ fn run_list_permissions(args: Args) -> Result<(), Error> {
 	Ok(())
 }
 
-fn run_modify_permission(args: Args) -> Result<(), Error> {
+fn run_set_permission(args: Args) -> Result<(), Error> {
 	let admin_key = args.arg_admin_key.unwrap();
 	let auth_user = try!(proton_cli::id_user(&admin_key));
 
@@ -120,7 +120,7 @@ fn run_modify_permission(args: Args) -> Result<(), Error> {
 	let permission = args.arg_permission.unwrap();
 	let target = args.arg_target;
 
-	proton_cli::modify_permission(&auth_user, added, &username, permission, target)
+	proton_cli::set_permission(&auth_user, added, &username, permission, target)
 }
 
 

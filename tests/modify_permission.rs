@@ -25,10 +25,10 @@ fn works_with_grantperm() {
         TestKey::GoodKeyPub);
 
     // Try to add permission to user
-    try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::GrantPerm, None);
+    try_set_permission(&admin_private_key_path, true, "Test User", PermissionEnum::GrantPerm, None);
 
     // Now try to remove the permission
-    try_mod_permission(&admin_private_key_path, false, "Test User", PermissionEnum::GrantPerm, None);
+    try_set_permission(&admin_private_key_path, false, "Test User", PermissionEnum::GrantPerm, None);
 
     // Make sure changes were saved
     common::assert_repo_no_modified_files(&root.path());
@@ -50,10 +50,10 @@ fn works_with_editproj() {
         TestKey::GoodKeyPub);
 
     // Try to add permission to user
-    try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
+    try_set_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
 
     // Now try to remove the permission
-    try_mod_permission(&admin_private_key_path, false, "Test User", PermissionEnum::EditProj, None);
+    try_set_permission(&admin_private_key_path, false, "Test User", PermissionEnum::EditProj, None);
 
     // Make sure changes were saved
     common::assert_repo_no_modified_files(&root.path());
@@ -78,7 +78,7 @@ fn works_with_editseq() {
     setup::try_make_sequence(&admin_private_key_path, "test_seq", "Dissonance.ogg");
 
     // Try to add permission to user
-    try_mod_permission(
+    try_set_permission(
         &admin_private_key_path,
         true,
         "Test User",
@@ -86,7 +86,7 @@ fn works_with_editseq() {
         Some("test_seq".to_string()));
 
     // Now try removing the permission
-    try_mod_permission(
+    try_set_permission(
         &admin_private_key_path,
         false,
         "Test User",
@@ -116,7 +116,7 @@ fn works_with_editseqsec() {
     setup::try_make_sequence(&admin_private_key_path.as_path(), "test_seq", "Dissonance.ogg");
 
     // Try to add permission to user
-    try_mod_permission(
+    try_set_permission(
         &admin_private_key_path,
         true,
         "Test User",
@@ -124,7 +124,7 @@ fn works_with_editseqsec() {
         Some("test_seq,1".to_string()));
 
     // Now try removing the permission
-    try_mod_permission(
+    try_set_permission(
         &admin_private_key_path,
         false,
         "Test User",
@@ -154,7 +154,7 @@ fn fails_with_bad_target_editseq() {
     setup::try_make_sequence(&admin_private_key_path, "test_seq", "Dissonance.ogg");
 
     // Try to add permission to user
-    try_mod_permission(
+    try_set_permission(
         &admin_private_key_path,
         true,
         "Test User",
@@ -181,7 +181,7 @@ fn fails_with_bad_target_editseqsec() {
     setup::try_make_sequence(&admin_private_key_path, "test_seq", "Dissonance.ogg");
 
     // Try to add permission to user
-    try_mod_permission(
+    try_set_permission(
         &admin_private_key_path,
         true,
         "Test User",
@@ -202,7 +202,7 @@ fn fails_with_bad_path_to_private_key() {
         "a.pub",
         TestKey::GoodKeyPub);
 
-    try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
+    try_set_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
 }
 
 #[test]
@@ -218,10 +218,10 @@ fn works_trading_admin_power() {
         "Admin2",
         "b.pub",
         TestKey::GoodKeyPub);
-    try_mod_permission(&admin_private_key_path, true, "Admin2", PermissionEnum::GrantPerm, None);
+    try_set_permission(&admin_private_key_path, true, "Admin2", PermissionEnum::GrantPerm, None);
 
     // Now have that new user take away the first's GrantPerm permission
-    try_mod_permission(&admin2_private_key_path, false, "admin", PermissionEnum::GrantPerm, None);
+    try_set_permission(&admin2_private_key_path, false, "admin", PermissionEnum::GrantPerm, None);
 
     // Make sure changes were saved
     common::assert_repo_no_modified_files(&root.path());
@@ -233,7 +233,7 @@ fn fails_modifying_own_permissions() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
     
-    try_mod_permission(&admin_private_key_path, false, "admin", PermissionEnum::GrantPerm, None);
+    try_set_permission(&admin_private_key_path, false, "admin", PermissionEnum::GrantPerm, None);
 }
 
 #[test]
@@ -250,7 +250,7 @@ fn fails_with_unused_private_key() {
         "a.pub",
         TestKey::GoodKeyPub);
 
-    try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
+    try_set_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
 }
 
 #[test]
@@ -259,7 +259,7 @@ fn fails_with_nonexistent_username() {
     let root = setup::setup_init_cd();
     let admin_private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::AdminKeyPem);
 
-    try_mod_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
+    try_set_permission(&admin_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
 
 }
 
@@ -278,14 +278,14 @@ fn fails_with_unauthorized_authority() {
         TestKey::GoodKeyPub);
     let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKeyPem);
 
-    try_mod_permission(&private_key_path, true, "admin", PermissionEnum::EditProj, None);
+    try_set_permission(&private_key_path, true, "admin", PermissionEnum::EditProj, None);
 }
 
 /// Tries to modify a user's permission
 /// Panics on error
 ///
 /// Impure.
-fn try_mod_permission<P: AsRef<Path>>(
+fn try_set_permission<P: AsRef<Path>>(
     auth_private_key_path: P,
     add: bool,
     target_username: &str,
@@ -295,7 +295,7 @@ fn try_mod_permission<P: AsRef<Path>>(
     let auth_user = proton_cli::id_user(&auth_private_key_path)
         .expect("Auth user not found");
 
-    match proton_cli::modify_permission(
+    match proton_cli::set_permission(
         &auth_user,
         add,
         &target_username,

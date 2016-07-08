@@ -97,7 +97,7 @@ pub fn permissions_as_string() -> String {
     String::from("GrantPerm,EditProj,EditSeq,EditSeqSec,")
 }
 
-pub fn modify_permission(
+pub fn set_permission(
     auth_user: &User,
     add: bool,
     target_username: &str,
@@ -121,8 +121,8 @@ pub fn modify_permission(
     // Get project that will be modified
     let mut project = try!(utils::read_protonfile(None::<&Path>));
 
-    // Modify permissions
-    try!(project.modify_user_permission(&target_username, perm.to_owned(), add));
+    // Set permissions
+    try!(project.set_user_permission(&target_username, perm.to_owned(), add));
 
     // Save changes to protonfile
     try!(utils::write_protonfile(&project, None::<&Path>));
