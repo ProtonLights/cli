@@ -101,9 +101,8 @@ fn run_new_sequence(args: Args) -> Result<(), Error> {
 
 #[allow(unused_variables)]
 fn run_list_permissions(args: Args) -> Result<(), Error> {
-	let perm_as_str = proton_cli::permissions_as_string();
-	let permissions = perm_as_str.replace(",", "\n");
-	Ok(println!("{}", permissions))
+	let permissions = proton_cli::get_permissions();
+	Ok(println!("{}", permissions.join("\n")))
 }
 
 fn run_set_permission(args: Args) -> Result<(), Error> {

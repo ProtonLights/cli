@@ -93,8 +93,13 @@ impl Permission {
 
 }
 
-pub fn permissions_as_string() -> String {
-    String::from("GrantPerm,EditProj,EditSeq,EditSeqSec,")
+pub fn get_permissions() -> Vec<String> {
+    vec![
+        "GrantPerm".to_string(),
+        "EditProj".to_string(),
+        "EditSeq".to_string(),
+        "EditSeqSec".to_string()
+    ]
 }
 
 pub fn set_permission(

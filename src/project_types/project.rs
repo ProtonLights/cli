@@ -85,7 +85,6 @@ impl Project {
 
         if self.find_user_by_name(name).is_some() ||
            self.find_user_by_public_key(pub_key).is_some() {
-           
             Err(Error::DuplicateUser(pub_key.to_string(), name.to_string()))
         } else {
             let mut new_project = self.clone();
@@ -96,8 +95,6 @@ impl Project {
 
     /// Removes a user from the project
     /// Returns a new project with the user removed
-    ///
-    /// Impure.
     // TODO: make public once command is added
     fn remove_user(&self, name: &str) -> Result<Project, Error> {
         let mut new_project = self.clone();
@@ -131,22 +128,16 @@ impl Project {
         ));
 
         // Check if duplicate
-        let mut exists = false;
         for s in &self.sequences {
             if s.name == name
             || s.directory_name == directory_name {
-                exists = true;
-                break;
+                return Err(Error::DuplicateSequence(name.to_string()));
             }
         }
 
-        if exists {
-            Err(Error::DuplicateSequence(name.to_string()))
-        } else {
-            let mut new_project = self.clone();
-            new_project.sequences.push(sequence);
-            Ok(new_project)
-        }
+        let mut new_project = self.clone();
+        new_project.sequences.push(sequence);
+        Ok(new_project)
     }
 
     /// Changes a user's permissions
