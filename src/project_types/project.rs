@@ -18,7 +18,7 @@ impl Project {
     /// Creates an empty project with the given admin user
     pub fn empty(admin_pub_key: &str) -> Result<Project, Error> {
 
-        let mut admin = try!(User::new("admin".as_ref(), &admin_pub_key));
+        let mut admin = try!(User::new("admin", &admin_pub_key));
         let admin_permission = try!(Permission::new(PermissionEnum::GrantPerm, None::<String>));
         let edit_proj_permission = try!(Permission::new(PermissionEnum::EditProj, None::<String>));
         admin.add_permission(admin_permission);
