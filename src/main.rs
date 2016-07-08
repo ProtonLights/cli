@@ -86,12 +86,8 @@ fn run_new_user(args: Args) -> Result<(), Error> {
 
 fn run_id_user(args: Args) -> Result<(), Error> {
 	let private_key = args.arg_private_key.unwrap();
-	try!(proton_cli::id_user(&private_key)
-		.map(|user| {
-			println!("{:?}", user);
-			Ok(())
-		})
-	)
+	let user = try!(proton_cli::id_user(&private_key));
+	Ok(println!("{:?}", user))
 }
 
 fn run_new_sequence(args: Args) -> Result<(), Error> {
