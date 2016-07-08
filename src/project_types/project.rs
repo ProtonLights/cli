@@ -1,8 +1,6 @@
 
-use project_types::{Sequence, User};
+use project_types::{Sequence, User, Permission, PermissionEnum};
 use error::Error;
-use Permission;
-use PermissionEnum;
 
 
 /// Structure to represent a Proton Project.

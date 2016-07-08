@@ -3,8 +3,7 @@ use std::io::Cursor;
 use openssl::crypto::rsa::RSA as openssl_RSA;
 
 use error::Error;
-use Permission;
-use PermissionEnum;
+use project_types::{Permission, PermissionEnum};
 
 
 #[derive(Clone, Debug, Eq, RustcEncodable, RustcDecodable)]

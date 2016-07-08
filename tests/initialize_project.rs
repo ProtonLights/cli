@@ -10,9 +10,9 @@ use std::path::Path;
 
 use git2::Repository;
 
-use proton_cli::project_types::{Project, User};
+use proton_cli::project_types::{Project, User, Permission, PermissionEnum};
 use proton_cli::initialize_project;
-use proton_cli::{utils, Permission, PermissionEnum};
+use proton_cli::utils;
 
 use common::rsa_keys::{self, TestKey};
 use common::setup;

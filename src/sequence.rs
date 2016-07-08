@@ -10,7 +10,7 @@ use regex::Regex;
 use error::Error;
 use utils;
 use user;
-use permissions::{Permission, PermissionEnum};
+use project_types::{Permission, PermissionEnum};
 
 /// Creates a new user for the project in the current directory.
 /// Assumes the current directory contains a Protonfile.json file.

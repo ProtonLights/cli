@@ -6,7 +6,7 @@ use std::path::Path;
 
 use common::setup;
 use common::rsa_keys::TestKey;
-use proton_cli::PermissionEnum;
+use proton_cli::project_types::PermissionEnum;
 
 
 #[test]

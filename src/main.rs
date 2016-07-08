@@ -8,7 +8,7 @@ use std::path::Path;
 use docopt::Docopt;
 
 use proton_cli::error::Error;
-use proton_cli::PermissionEnum;
+use proton_cli::project_types::PermissionEnum;
 use proton_cli::utils;
 
 

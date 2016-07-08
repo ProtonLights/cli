@@ -8,8 +8,7 @@ use openssl::crypto::hash::Type as openssl_HashType;
 use git2::Signature;
 
 use error::Error;
-use project_types::User;
-use permissions::{Permission, PermissionEnum};
+use project_types::{User, Permission, PermissionEnum};
 use utils;
 
 
