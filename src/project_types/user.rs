@@ -37,9 +37,9 @@ impl User {
     /// Checks if the given public key is valid
     pub fn validate_public_key(pub_key: &str) -> Result<(), Error> {
         let mut pub_key_readable = Cursor::new(pub_key.to_string());
-        try!(openssl_RSA::public_key_from_pem(&mut pub_key_readable)
-            .map(|_| Ok(()))
-            .map_err(|_| Error::InvalidPublicKey(pub_key.to_string())))
+        openssl_RSA::public_key_from_pem(&mut pub_key_readable)
+            .map(|_| ())
+            .map_err(|_| Error::InvalidPublicKey(pub_key.to_string()))
     }
 
     /// Adds the given permission to the user's list of permissions
