@@ -7,8 +7,7 @@ use utils;
 
 #[derive(Clone, Debug, Eq, PartialEq, RustcEncodable, RustcDecodable)]
 pub enum PermissionEnum {
-    GrantPerm,
-    EditProj,
+    Administrate,
     EditSeq,
     EditSeqSec,
 }
@@ -38,10 +37,7 @@ impl Permission {
     fn validate_permission(permission: &PermissionEnum, target: &Option<String>) -> Result<(), Error> {
         
         let valid = match permission {
-            &PermissionEnum::GrantPerm => {
-                target == &None::<String>
-            },
-            &PermissionEnum::EditProj => {
+            &PermissionEnum::Administrate => {
                 target == &None::<String>
             },
             &PermissionEnum::EditSeq => {

@@ -72,10 +72,10 @@ impl User {
         false
     }
 
-    /// Determines whether the user has the GrantPerm permission
+    /// Determines whether the user has the Administrate permission
     pub fn is_admin(&self) -> bool {
         for p in &self.permissions {
-            if p.which == PermissionEnum::GrantPerm {
+            if p.which == PermissionEnum::Administrate {
                 return true;
             }
         }

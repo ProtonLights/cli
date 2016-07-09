@@ -10,8 +10,7 @@ use utils;
 
 pub fn get_permissions() -> Vec<String> {
     vec![
-        "GrantPerm".to_string(),
-        "EditProj".to_string(),
+        "Administrate".to_string(),
         "EditSeq".to_string(),
         "EditSeqSec".to_string()
     ]

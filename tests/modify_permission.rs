@@ -12,7 +12,7 @@ use proton_cli::project_types::PermissionEnum;
 #[test]
 #[allow(unused_variables)]
 // root reference must be kept to keep temp directory in scope, but is never used
-fn works_with_grantperm() {
+fn works_with_administrate() {
     let root = setup::setup_init_cd();
     let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
 
@@ -25,35 +25,10 @@ fn works_with_grantperm() {
         TestKey::GoodKeyPub);
 
     // Try to add permission to user
-    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::GrantPerm, None);
+    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::Administrate, None);
 
     // Now try to remove the permission
-    try_set_permission(&root_private_key_path, false, "Test User", PermissionEnum::GrantPerm, None);
-
-    // Make sure changes were saved
-    common::assert_repo_no_modified_files(&root.path());
-}
-
-#[test]
-#[allow(unused_variables)]
-// root reference must be kept to keep temp directory in scope, but is never used
-fn works_with_editproj() {
-    let root = setup::setup_init_cd();
-    let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
-
-    // Create user
-    setup::try_new_user(
-        root_private_key_path.as_path(),
-        root.path(),
-        "Test User",
-        "a.pub",
-        TestKey::GoodKeyPub);
-
-    // Try to add permission to user
-    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
-
-    // Now try to remove the permission
-    try_set_permission(&root_private_key_path, false, "Test User", PermissionEnum::EditProj, None);
+    try_set_permission(&root_private_key_path, false, "Test User", PermissionEnum::Administrate, None);
 
     // Make sure changes were saved
     common::assert_repo_no_modified_files(&root.path());
@@ -202,7 +177,7 @@ fn fails_with_bad_path_to_private_key() {
         "a.pub",
         TestKey::GoodKeyPub);
 
-    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
+    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::Administrate, None);
 }
 
 #[test]
@@ -211,17 +186,17 @@ fn works_trading_admin_power() {
     let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
     let admin2_private_key_path = common::make_key_file(root.path(), "b.pem", TestKey::GoodKeyPem);
 
-    // Setup new user with GrantPerm permission
+    // Setup new user with Administrate permission
     setup::try_new_user(
         &root_private_key_path.as_path(),
         root.path(),
         "Admin2",
         "b.pub",
         TestKey::GoodKeyPub);
-    try_set_permission(&root_private_key_path, true, "Admin2", PermissionEnum::GrantPerm, None);
+    try_set_permission(&root_private_key_path, true, "Admin2", PermissionEnum::Administrate, None);
 
-    // Now have that new user take away the first's GrantPerm permission
-    try_set_permission(&admin2_private_key_path, false, "root", PermissionEnum::GrantPerm, None);
+    // Now have that new user take away the first's Administrate permission
+    try_set_permission(&admin2_private_key_path, false, "root", PermissionEnum::Administrate, None);
 
     // Make sure changes were saved
     common::assert_repo_no_modified_files(&root.path());
@@ -241,7 +216,7 @@ fn fails_with_unused_private_key() {
         "a.pub",
         TestKey::GoodKeyPub);
 
-    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
+    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::Administrate, None);
 }
 
 #[test]
@@ -250,7 +225,7 @@ fn fails_with_nonexistent_username() {
     let root = setup::setup_init_cd();
     let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
 
-    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::EditProj, None);
+    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::Administrate, None);
 
 }
 
@@ -269,7 +244,7 @@ fn fails_with_unauthorized_authority() {
         TestKey::GoodKeyPub);
     let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKeyPem);
 
-    try_set_permission(&private_key_path, true, "root", PermissionEnum::EditProj, None);
+    try_set_permission(&private_key_path, true, "root", PermissionEnum::Administrate, None);
 }
 
 /// Tries to modify a user's permission

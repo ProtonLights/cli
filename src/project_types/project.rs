@@ -17,10 +17,8 @@ impl Project {
     pub fn empty(root_pub_key: &str) -> Result<Project, Error> {
 
         let mut root = try!(User::new("root", &root_pub_key));
-        let root_permission = try!(Permission::new(PermissionEnum::GrantPerm, None::<String>));
-        let edit_proj_permission = try!(Permission::new(PermissionEnum::EditProj, None::<String>));
+        let root_permission = try!(Permission::new(PermissionEnum::Administrate, None::<String>));
         root.add_permission(root_permission);
-        root.add_permission(edit_proj_permission);
 
         Ok(Project {
             name: "New Project".to_owned(),

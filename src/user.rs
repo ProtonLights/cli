@@ -8,7 +8,7 @@ use openssl::crypto::hash::Type as openssl_HashType;
 use git2::Signature;
 
 use error::Error;
-use project_types::{User, Permission, PermissionEnum};
+use project_types::User;
 use utils;
 
 
@@ -26,11 +26,7 @@ pub fn new_user<P: AsRef<Path>>(
 ) -> Result<(), Error> {
 
     // See if admin has permission to add user
-    let admin_user = try!(id_user(admin_key_path));
-    let perm = try!(Permission::new(PermissionEnum::EditProj, None::<String>));
-    if !admin_user.has_permission(&perm) {
-        return Err(Error::UnauthorizedAction);
-    }
+    try!(utils::validate_admin(&admin_key_path));
 
     // Add user
     let project = try!(utils::read_protonfile(None::<P>));
