@@ -23,9 +23,9 @@ pub fn setup_init_cd() -> TempDir {
     
     {
         let root = root_dir.path();
-        let admin_pub_key = rsa_keys::get_test_key(TestKey::AdminKeyPub);
+        let root_pub_key = rsa_keys::get_test_key(TestKey::RootKeyPub);
 
-        let _ = proton_cli::initialize_project(root, &admin_pub_key)
+        let _ = proton_cli::initialize_project(root, &root_pub_key)
             .expect("Error initializing project");
 
         // Move into temp directory (new_user assumes it is run in project directory)

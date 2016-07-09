@@ -14,8 +14,8 @@ use common::rsa_keys::TestKey;
 #[test]
 fn works_with_valid_path_and_name() {
     let root = setup::setup_init_cd();
-    let admin_key_path = common::make_key_file(&root.path(), "admin.pem", TestKey::AdminKeyPem);
-    setup::try_make_sequence(&admin_key_path.as_path(), "New_Sequence", "Dissonance.ogg");
+    let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
+    setup::try_make_sequence(&root_key_path.as_path(), "New_Sequence", "Dissonance.ogg");
 
     // Make sure the calculated music duration is correct
     // and check that the sequence folder is named correctly
@@ -46,8 +46,8 @@ fn works_with_valid_path_and_name() {
 #[should_panic(expected = "entity not found")]
 fn fails_with_nonexistent_private_key() {
     let root = setup::setup_init_cd();
-    let admin_key_path = Path::new("nonexistent");
-    setup::try_make_sequence(&admin_key_path, "New_Sequence", "Dissonance.ogg");
+    let root_key_path = Path::new("nonexistent");
+    setup::try_make_sequence(&root_key_path, "New_Sequence", "Dissonance.ogg");
 }
 
 #[test]
@@ -62,10 +62,10 @@ fn fails_with_no_user_private_key() {
 #[should_panic(expected = "Unauthorized action")]
 fn fails_with_no_admin_private_key() {
     let root = setup::setup_init_cd();
-    let admin_key_path = common::make_key_file(&root.path(), "admin.pem", TestKey::AdminKeyPem);
+    let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
     let key_path = common::make_key_file(&root.path(), "a.pem", TestKey::GoodKeyPem);
 
-    setup::try_new_user(&admin_key_path, &root.path(), "Test user", "a.pub", TestKey::GoodKeyPub);
+    setup::try_new_user(&root_key_path, &root.path(), "Test user", "a.pub", TestKey::GoodKeyPub);
     setup::try_make_sequence(&key_path, "New_Sequence", "Dissonance.ogg");
 }
 
@@ -73,8 +73,8 @@ fn fails_with_no_admin_private_key() {
 #[should_panic(expected = "SSL error")]
 fn fails_with_invalid_private_key() {
     let root = setup::setup_init_cd();
-    let admin_key_path = common::make_key_file(&root.path(), "admin.pem", TestKey::GoodKeyPub);
-    setup::try_make_sequence(&admin_key_path, "New_Sequence", "Dissonance.ogg");
+    let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::GoodKeyPub);
+    setup::try_make_sequence(&root_key_path, "New_Sequence", "Dissonance.ogg");
 }
 
 #[test]
@@ -83,8 +83,8 @@ fn fails_with_invalid_private_key() {
 #[should_panic(expected = "Unsupported file type")]
 fn fails_with_invalid_file_extension() {
     let root = setup::setup_init_cd();
-    let admin_key_path = common::make_key_file(&root.path(), "admin.pem", TestKey::AdminKeyPem);
-    setup::try_make_sequence(&admin_key_path.as_path(), "New_Sequence", "Dissonance.mp3");
+    let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
+    setup::try_make_sequence(&root_key_path.as_path(), "New_Sequence", "Dissonance.mp3");
 }
 
 #[test]
@@ -93,13 +93,13 @@ fn fails_with_duplicate_sequence_name() {
     let root = setup::setup_init_cd();
 
     let name = "New_Sequence";
-    let admin_key_path = common::make_key_file(&root.path(), "admin.pem", TestKey::AdminKeyPem);
+    let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
 
-    setup::try_make_sequence(&admin_key_path.as_path(), &name, "Dissonance.ogg");
+    setup::try_make_sequence(&root_key_path.as_path(), &name, "Dissonance.ogg");
 
     let music_file_path = common::get_music_file_path("GlorytotheBells.ogg");
 
-    match proton_cli::new_sequence(&admin_key_path.as_path(), &name, &music_file_path.as_path()) {
+    match proton_cli::new_sequence(&root_key_path.as_path(), &name, &music_file_path.as_path()) {
         Ok(_) => (),
         Err(e) => {
             // Make sure the second music file wasn't copied
@@ -116,8 +116,8 @@ fn fails_with_duplicate_sequence_name() {
 #[should_panic(expected = "Sequence name had invalid characters")]
 fn fails_with_invalid_sequence_name() {
     let root = setup::setup_init_cd();
-    let admin_key_path = common::make_key_file(&root.path(), "admin.pem", TestKey::AdminKeyPem);
-    setup::try_make_sequence(&admin_key_path.as_path(), "New Sequence", "Dissonance.ogg");
+    let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
+    setup::try_make_sequence(&root_key_path.as_path(), "New Sequence", "Dissonance.ogg");
 }
 
 #[test]
@@ -126,7 +126,7 @@ fn fails_with_invalid_sequence_name() {
 #[should_panic(expected = "Music file not found")]
 fn fails_with_nonexistent_music_file_path() {
     let root = setup::setup_init_cd();
-    let admin_key_path = common::make_key_file(&root.path(), "admin.pem", TestKey::AdminKeyPem);
-    setup::try_make_sequence(&admin_key_path.as_path(), "New_Sequence", "nonexistent.ogg");
+    let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
+    setup::try_make_sequence(&root_key_path.as_path(), "New_Sequence", "nonexistent.ogg");
 }
 

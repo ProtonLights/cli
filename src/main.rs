@@ -16,7 +16,7 @@ const USAGE: &'static str = "
 Command-line interface for Proton
 
 Usage:
-  ./proton init <folder> <public-key>
+  ./proton init <folder> <root-public-key>
   ./proton new-user <admin-key> <name> <public-key>
   ./proton new-sequence <admin-key> <name> <music-file>
   ./proton id-user <private-key>
@@ -31,6 +31,7 @@ Options:
 #[derive(Debug, RustcDecodable)]
 struct Args {
 	arg_folder: Option<String>,
+	arg_root_public_key: Option<String>,
 	arg_public_key: Option<String>,
 	arg_private_key: Option<String>,
 	arg_admin_key: Option<String>,
@@ -69,10 +70,10 @@ fn run_init(args: Args) -> Result<(), Error> {
 	let root = args.arg_folder.unwrap();
 	let root_path = Path::new(&root);
 
-	let admin_pub_key_path = args.arg_public_key.unwrap();
-	let admin_pub_key = try!(utils::file_as_string(&admin_pub_key_path));
+	let root_pub_key_path = args.arg_root_public_key.unwrap();
+	let root_pub_key = try!(utils::file_as_string(&root_pub_key_path));
 	
-	proton_cli::initialize_project(&root_path, &admin_pub_key)
+	proton_cli::initialize_project(&root_path, &root_pub_key)
 }
 
 fn run_new_user(args: Args) -> Result<(), Error> {

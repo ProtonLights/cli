@@ -13,18 +13,18 @@ pub struct Project {
 }
 
 impl Project {
-    /// Creates an empty project with the given admin user
-    pub fn empty(admin_pub_key: &str) -> Result<Project, Error> {
+    /// Creates an empty project with the given root user
+    pub fn empty(root_pub_key: &str) -> Result<Project, Error> {
 
-        let mut admin = try!(User::new("admin", &admin_pub_key));
-        let admin_permission = try!(Permission::new(PermissionEnum::GrantPerm, None::<String>));
+        let mut root = try!(User::new("root", &root_pub_key));
+        let root_permission = try!(Permission::new(PermissionEnum::GrantPerm, None::<String>));
         let edit_proj_permission = try!(Permission::new(PermissionEnum::EditProj, None::<String>));
-        admin.add_permission(admin_permission);
-        admin.add_permission(edit_proj_permission);
+        root.add_permission(root_permission);
+        root.add_permission(edit_proj_permission);
 
         Ok(Project {
             name: "New Project".to_owned(),
-            users: vec![admin],
+            users: vec![root],
             sequences: Vec::new(),
         })
     }
