@@ -30,11 +30,6 @@ pub fn set_permission(
         return Err(Error::UnauthorizedAction);
     }
 
-    // Don't let users change their own permissions; that's what the admin account is for
-    if auth_user.name == target_username {
-        return Err(Error::UnauthorizedAction);
-    }
-
     // Validate and create permission
     let perm = try!(Permission::new(permission, target));
 

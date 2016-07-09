@@ -228,15 +228,6 @@ fn works_trading_admin_power() {
 }
 
 #[test]
-#[should_panic(expected = "Unauthorized action")]
-fn fails_modifying_own_permissions() {
-    let root = setup::setup_init_cd();
-    let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
-    
-    try_set_permission(&root_private_key_path, false, "root", PermissionEnum::GrantPerm, None);
-}
-
-#[test]
 #[should_panic(expectd = "Auth user not found")]
 fn fails_with_unused_private_key() {
     let root = setup::setup_init_cd();
@@ -276,7 +267,7 @@ fn fails_with_unauthorized_authority() {
         "Test User",
         "a.pub",
         TestKey::GoodKeyPub);
-    let private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::GoodKeyPem);
+    let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKeyPem);
 
     try_set_permission(&private_key_path, true, "root", PermissionEnum::EditProj, None);
 }
