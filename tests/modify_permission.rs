@@ -9,6 +9,33 @@ use common::rsa_keys::TestKey;
 use proton_cli::project_types::PermissionEnum;
 
 
+/// Tries to modify a user's permission
+/// Panics on error
+///
+/// Impure.
+fn try_set_permission<P: AsRef<Path>>(
+    auth_private_key_path: P,
+    add: bool,
+    target_username: &str,
+    permission: PermissionEnum,
+    target: Option<String>,
+) {
+    let auth_user = proton_cli::id_user(&auth_private_key_path)
+        .expect("Auth user not found");
+
+    match proton_cli::set_permission(
+        &auth_user,
+        add,
+        &target_username,
+        permission.clone(),
+        target.clone()
+    ) {
+        Ok(_) => (),
+        Err(e) => panic!("{}", e.to_string()),
+    };
+
+}
+
 #[test]
 #[allow(unused_variables)]
 // root reference must be kept to keep temp directory in scope, but is never used
@@ -112,6 +139,28 @@ fn works_with_editseqsec() {
 }
 
 #[test]
+fn works_trading_admin_power() {
+    let root = setup::setup_init_cd();
+    let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
+    let admin2_private_key_path = common::make_key_file(root.path(), "b.pem", TestKey::GoodKeyPem);
+
+    // Setup new user with Administrate permission
+    setup::try_new_user(
+        &root_private_key_path.as_path(),
+        root.path(),
+        "Admin2",
+        "b.pub",
+        TestKey::GoodKeyPub);
+    try_set_permission(&root_private_key_path, true, "Admin2", PermissionEnum::Administrate, None);
+
+    // Now have that new user take away the first's Administrate permission
+    try_set_permission(&admin2_private_key_path, false, "root", PermissionEnum::Administrate, None);
+
+    // Make sure changes were saved
+    common::assert_repo_no_modified_files(&root.path());
+}
+
+#[test]
 #[should_panic(expected = "Invalid permission target")]
 fn fails_with_bad_target_editseq() {
     let root = setup::setup_init_cd();
@@ -181,28 +230,6 @@ fn fails_with_bad_path_to_private_key() {
 }
 
 #[test]
-fn works_trading_admin_power() {
-    let root = setup::setup_init_cd();
-    let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
-    let admin2_private_key_path = common::make_key_file(root.path(), "b.pem", TestKey::GoodKeyPem);
-
-    // Setup new user with Administrate permission
-    setup::try_new_user(
-        &root_private_key_path.as_path(),
-        root.path(),
-        "Admin2",
-        "b.pub",
-        TestKey::GoodKeyPub);
-    try_set_permission(&root_private_key_path, true, "Admin2", PermissionEnum::Administrate, None);
-
-    // Now have that new user take away the first's Administrate permission
-    try_set_permission(&admin2_private_key_path, false, "root", PermissionEnum::Administrate, None);
-
-    // Make sure changes were saved
-    common::assert_repo_no_modified_files(&root.path());
-}
-
-#[test]
 #[should_panic(expectd = "Auth user not found")]
 fn fails_with_unused_private_key() {
     let root = setup::setup_init_cd();
@@ -246,31 +273,3 @@ fn fails_with_unauthorized_authority() {
 
     try_set_permission(&private_key_path, true, "root", PermissionEnum::Administrate, None);
 }
-
-/// Tries to modify a user's permission
-/// Panics on error
-///
-/// Impure.
-fn try_set_permission<P: AsRef<Path>>(
-    auth_private_key_path: P,
-    add: bool,
-    target_username: &str,
-    permission: PermissionEnum,
-    target: Option<String>,
-) {
-    let auth_user = proton_cli::id_user(&auth_private_key_path)
-        .expect("Auth user not found");
-
-    match proton_cli::set_permission(
-        &auth_user,
-        add,
-        &target_username,
-        permission.clone(),
-        target.clone()
-    ) {
-        Ok(_) => (),
-        Err(e) => panic!("{}", e.to_string()),
-    };
-
-}
-

@@ -18,20 +18,6 @@ use common::rsa_keys::{self, TestKey};
 use common::setup;
 
 
-#[test]
-fn works_with_an_empty_root() {
-    let root_dir = setup::setup();
-    let root = root_dir.path();
-    try_initialize_project(&root);
-}
-
-#[test]
-fn works_with_an_non_existent_root() {
-    let root_dir = setup::setup();
-    let root = &root_dir.path().join("nonexistent");
-    try_initialize_project(&root);
-}
-
 fn try_initialize_project(root: &Path) {
     let root_pub_key = rsa_keys::get_test_key(TestKey::RootKeyPub);
 
@@ -39,27 +25,6 @@ fn try_initialize_project(root: &Path) {
 
     assert_admin_created(root, &root_pub_key);
     assert_initialized(root, &root_pub_key);
-}
-
-#[test]
-#[should_panic(expected = "Initialization failed")]
-fn fails_with_a_non_empty_directory() {
-    let root_dir = setup::setup();
-
-    let root = root_dir.path();
-    let root_pub_key = rsa_keys::get_test_key(TestKey::RootKeyPub);
-    let _ = File::create(&root.join("unexpected")).expect("Making unexpected file failed");
-    initialize_project(root, &root_pub_key).expect("Initialization failed");
-}
-
-#[test]
-#[should_panic(expect = "Initialization failed")]
-fn fails_with_bad_key() {
-    let root_dir = setup::setup();
-
-    let root = root_dir.path();
-    let root_pub_key = rsa_keys::get_test_key(TestKey::BadPubKeyPub);
-    initialize_project(root, &root_pub_key).expect("Initialization failed");   
 }
 
 fn assert_admin_created<P: AsRef<Path>>(root: P, root_pub_key: &str) {
@@ -93,4 +58,39 @@ fn assert_initialized(root: &Path, root_pub_key: &str) {
     // Assert master is correct
     assert!(0 == commit.parents().count(), "master must have 0 parents");
     assert!(tree.get_name("Protonfile.json").is_some(), "master must have protonfile");
+}
+
+#[test]
+fn works_with_an_empty_root() {
+    let root_dir = setup::setup();
+    let root = root_dir.path();
+    try_initialize_project(&root);
+}
+
+#[test]
+fn works_with_an_non_existent_root() {
+    let root_dir = setup::setup();
+    let root = &root_dir.path().join("nonexistent");
+    try_initialize_project(&root);
+}
+
+#[test]
+#[should_panic(expected = "Initialization failed")]
+fn fails_with_a_non_empty_directory() {
+    let root_dir = setup::setup();
+
+    let root = root_dir.path();
+    let root_pub_key = rsa_keys::get_test_key(TestKey::RootKeyPub);
+    let _ = File::create(&root.join("unexpected")).expect("Making unexpected file failed");
+    initialize_project(root, &root_pub_key).expect("Initialization failed");
+}
+
+#[test]
+#[should_panic(expect = "Initialization failed")]
+fn fails_with_bad_key() {
+    let root_dir = setup::setup();
+
+    let root = root_dir.path();
+    let root_pub_key = rsa_keys::get_test_key(TestKey::BadPubKeyPub);
+    initialize_project(root, &root_pub_key).expect("Initialization failed");   
 }

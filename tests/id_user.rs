@@ -39,6 +39,11 @@ fn try_id_user(
     assert_user_equal(&user, &name, &public_key_str.trim_right());
 }
 
+fn assert_user_equal(user: &User, name: &str, pub_key: &str) {
+    let u = User::new(name, &pub_key).expect("Creating user failed");
+    assert_eq!(user, &u);
+}
+
 #[test]
 fn works_with_valid_keys() {
     let root = setup::setup_init_cd();
@@ -123,9 +128,4 @@ fn fails_with_invalid_private_key() {
         Ok(_) => (),
         Err(e) => panic!(e.to_string()),
     }
-}
-
-fn assert_user_equal(user: &User, name: &str, pub_key: &str) {
-    let u = User::new(name, &pub_key).expect("Creating user failed");
-    assert_eq!(user, &u);
 }
