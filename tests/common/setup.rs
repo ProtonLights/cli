@@ -62,8 +62,23 @@ pub fn try_new_user(
 pub fn try_make_sequence(admin_key_path: &Path, name: &str, music_file: &str) {
     let music_file_path = super::get_music_file_path(music_file);
 
-    let _ = match proton_cli::new_sequence(&admin_key_path, &name, &music_file_path.as_path()) {
+    let _ = match proton_cli::new_sequence(
+        &admin_key_path,
+        &name,
+        &music_file_path.as_path()
+    ) {
         Ok(_) => (),
-        Err(e) => panic!(e.to_string()),
+        Err(e) => panic!("{}", e.to_string()),
     };
+
+    let project = match proton_cli::utils::read_protonfile(None::<&Path>) {
+        Ok(p) => p,
+        Err(e) => panic!("{}", e.to_string()),
+    };
+
+    let found_sequence = project.find_sequence_by_name(name);
+
+    assert!(found_sequence.is_some());
+    assert!(found_sequence.unwrap().num_sections == 1);
+
 }
