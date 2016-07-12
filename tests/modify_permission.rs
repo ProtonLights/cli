@@ -14,6 +14,7 @@ use proton_cli::project_types::PermissionEnum;
 ///
 /// Impure.
 fn try_set_permission<P: AsRef<Path>>(
+    root_path: &Path,
     auth_private_key_path: P,
     add: bool,
     target_username: &str,
@@ -27,12 +28,14 @@ fn try_set_permission<P: AsRef<Path>>(
         &auth_user,
         add,
         &target_username,
-        permission.clone(),
-        target.clone()
+        permission.to_owned(),
+        target.to_owned()
     ) {
         Ok(_) => (),
         Err(e) => panic!("{}", e.to_string()),
     };
+
+    common::assert_repo_no_modified_files(&root_path);
 
 }
 
@@ -52,13 +55,23 @@ fn works_with_administrate() {
         TestKey::GoodKeyPub);
 
     // Try to add permission to user
-    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::Administrate, None);
+    try_set_permission(
+        &root.path(),
+        &root_private_key_path,
+        true,
+        "Test User",
+        PermissionEnum::Administrate,
+        None);
 
     // Now try to remove the permission
-    try_set_permission(&root_private_key_path, false, "Test User", PermissionEnum::Administrate, None);
+    try_set_permission(
+        &root.path(),
+        &root_private_key_path,
+        false,
+        "Test User",
+        PermissionEnum::Administrate,
+        None);
 
-    // Make sure changes were saved
-    common::assert_repo_no_modified_files(&root.path());
 }
 
 #[test]
@@ -81,6 +94,7 @@ fn works_with_editseq() {
 
     // Try to add permission to user
     try_set_permission(
+        &root.path(), 
         &root_private_key_path,
         true,
         "Test User",
@@ -89,14 +103,12 @@ fn works_with_editseq() {
 
     // Now try removing the permission
     try_set_permission(
+        &root.path(), 
         &root_private_key_path,
         false,
         "Test User",
         PermissionEnum::EditSeq,
         Some("test_seq".to_string()));
-
-    // Make sure changes were saved
-    common::assert_repo_no_modified_files(&root.path());
 }
 
 #[test]
@@ -119,6 +131,7 @@ fn works_with_editseqsec() {
 
     // Try to add permission to user
     try_set_permission(
+        &root.path(), 
         &root_private_key_path,
         true,
         "Test User",
@@ -127,19 +140,17 @@ fn works_with_editseqsec() {
 
     // Now try removing the permission
     try_set_permission(
+        &root.path(), 
         &root_private_key_path,
         false,
         "Test User",
         PermissionEnum::EditSeqSec,
         Some("test_seq,1".to_string()));
-
-    // Make sure changes were saved
-    common::assert_repo_no_modified_files(&root.path());
-
 }
 
 #[test]
-fn works_trading_admin_power() {
+#[should_panic(expected = "Unauthorized action")]
+fn fails_removing_root_admin() {
     let root = setup::setup_init_cd();
     let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
     let admin2_private_key_path = common::make_key_file(root.path(), "b.pem", TestKey::GoodKeyPem);
@@ -151,13 +162,23 @@ fn works_trading_admin_power() {
         "Admin2",
         "b.pub",
         TestKey::GoodKeyPub);
-    try_set_permission(&root_private_key_path, true, "Admin2", PermissionEnum::Administrate, None);
+    
+    try_set_permission(
+        &root.path(),
+        &root_private_key_path,
+        true,
+        "Admin2",
+        PermissionEnum::Administrate,
+        None);
 
-    // Now have that new user take away the first's Administrate permission
-    try_set_permission(&admin2_private_key_path, false, "root", PermissionEnum::Administrate, None);
-
-    // Make sure changes were saved
-    common::assert_repo_no_modified_files(&root.path());
+    // Now have that new user take away root's Administrate permission
+    try_set_permission(
+        &root.path(),
+        &admin2_private_key_path,
+        false,
+        "root",
+        PermissionEnum::Administrate,
+        None);
 }
 
 #[test]
@@ -179,6 +200,7 @@ fn fails_with_bad_target_editseq() {
 
     // Try to add permission to user
     try_set_permission(
+        &root.path(), 
         &root_private_key_path,
         true,
         "Test User",
@@ -206,6 +228,7 @@ fn fails_with_bad_target_editseqsec() {
 
     // Try to add permission to user
     try_set_permission(
+        &root.path(), 
         &root_private_key_path,
         true,
         "Test User",
@@ -226,7 +249,13 @@ fn fails_with_bad_path_to_private_key() {
         "a.pub",
         TestKey::GoodKeyPub);
 
-    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::Administrate, None);
+    try_set_permission(
+        &root.path(),
+        &root_private_key_path,
+        true,
+        "Test User",
+        PermissionEnum::Administrate,
+        None);
 }
 
 #[test]
@@ -243,7 +272,13 @@ fn fails_with_unused_private_key() {
         "a.pub",
         TestKey::GoodKeyPub);
 
-    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::Administrate, None);
+    try_set_permission(
+        &root.path(),
+        &root_private_key_path,
+        true,
+        "Test User",
+        PermissionEnum::Administrate,
+        None);
 }
 
 #[test]
@@ -252,7 +287,13 @@ fn fails_with_nonexistent_username() {
     let root = setup::setup_init_cd();
     let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
 
-    try_set_permission(&root_private_key_path, true, "Test User", PermissionEnum::Administrate, None);
+    try_set_permission(
+        &root.path(),
+        &root_private_key_path,
+        true,
+        "Test User",
+        PermissionEnum::Administrate,
+        None);
 
 }
 
@@ -271,5 +312,11 @@ fn fails_with_unauthorized_authority() {
         TestKey::GoodKeyPub);
     let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKeyPem);
 
-    try_set_permission(&private_key_path, true, "root", PermissionEnum::Administrate, None);
+    try_set_permission(
+        &root.path(),
+        &private_key_path,
+        true,
+        "root",
+        PermissionEnum::Administrate,
+        None);
 }

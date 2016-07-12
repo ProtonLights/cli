@@ -88,7 +88,7 @@ fn fails_with_invalid_file_extension() {
 }
 
 #[test]
-#[should_panic(expected = "Duplicate sequence")]
+#[should_panic(expected = "Duplicate sequence detected, music file not copied")]
 fn fails_with_duplicate_sequence_name() {
     let root = setup::setup_init_cd();
 
@@ -101,11 +101,11 @@ fn fails_with_duplicate_sequence_name() {
 
     match proton_cli::new_sequence(&root_key_path.as_path(), &name, &music_file_path.as_path()) {
         Ok(_) => (),
-        Err(e) => {
+        Err(_) => {
             // Make sure the second music file wasn't copied
             let dest_path = Path::new(&root.path()).join("GlorytotheBells.ogg");
             assert!(!dest_path.exists());
-            panic!(e.to_string())
+            panic!("Duplicate sequence detected, music file not copied");
         },
     };
 }

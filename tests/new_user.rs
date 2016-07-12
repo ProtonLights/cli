@@ -66,32 +66,23 @@ fn fails_with_admin_no_privileges() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
 
-    // Create key files
-    let user_key_path = common::make_key_file(&root.path(), "a.pub", TestKey::GoodKeyPub);
+    // Create a new user
+    setup::try_new_user(
+        &root_key_path.as_path(),
+        root.path(),
+        "userA",
+        "a.pub",
+        TestKey::GoodKeyPub);
+
     let user_priv_key_path = common::make_key_file(&root.path(), "a.pem", TestKey::GoodKeyPem);
-    let user2_key_path = common::make_key_file(&root.path(), "b.pub", TestKey::GoodKey2Pub);
-
-    // Add new user to project
-    let _ = match proton_cli::new_user(&root_key_path, &user_key_path, "userA") {
-        Ok(u) => u,
-        Err(e) => panic!("{}", e.to_string()),
-    };
-
-    // Assert that user was added
-    common::assert_user_added(user_key_path.as_path(), "userA");
-
-    // Check that commit was made
-    common::assert_repo_no_modified_files(&root.path());
 
     // Create second user with first user as admin
-    let _ = match proton_cli::new_user(
-        &user_priv_key_path,
-        &user2_key_path,
-        "userB"
-    ) {
-        Ok(u) => u,
-        Err(e) => panic!("{}", e.to_string()),
-    };
+    setup::try_new_user(
+        &user_priv_key_path.as_path(),
+        root.path(),
+        "userB",
+        "b.pub",
+        TestKey::GoodKey2Pub);
 }
 
 #[test]

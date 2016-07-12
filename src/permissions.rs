@@ -8,11 +8,11 @@ use project_types::{User, Permission, PermissionEnum};
 use utils;
 
 
-pub fn get_permissions() -> Vec<String> {
+pub fn get_permissions() -> Vec<&'static str> {
     vec![
-        "Administrate".to_string(),
-        "EditSeq".to_string(),
-        "EditSeqSec".to_string()
+        "Administrate",
+        "EditSeq",
+        "EditSeqSec"
     ]
 }
 
@@ -26,6 +26,11 @@ pub fn set_permission(
 
     // Only admins (those with GrantPerm permission) can change permissions
     if !auth_user.is_admin() {
+        return Err(Error::UnauthorizedAction);
+    }
+
+    // Make sure root isn't losing admin privileges
+    if target_username == "root" && !add && permission == PermissionEnum::Administrate {
         return Err(Error::UnauthorizedAction);
     }
 
