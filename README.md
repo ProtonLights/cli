@@ -3,24 +3,23 @@ Command line interface to manipulate ProtonLights projects.
 
 ## Interface
 
-- `init <folder> <admin-public-key>`: Init empty project
-- `new-user <public> <name>`: Add user from public key
-- `id-user <private>`: Identify user by ssh key (public key in repo)
-- `new-sequence [TODO]`: Init a sequence
+- `init <folder> <root-public-key>`: Init empty project
+- `new-user <admin-key> <name> <public-key>`: Add user from public key
+- `new-sequence <admin-key> <name> <music-file>`: Init a sequence
+- `id-user <private-key>`: Identify user by ssh key (public key in repo)
+- `list-permissions`: Get list of all available permissions
+- `set-permission <admin-key> (add | remove) <name> <permission> [<target>]`: Change user permissions
+- `list-editable [TODO]`: Get list of editable files for a given user
 - `resection-sequence [TODO]`: (Re-)Section a sequence
   - On init, section as section1.
     - Number each section, and don't delete.
     - Use patch to copy changes.
   - Use git --find-renames=100%?
-- `list-editable`: Get list of editable files for a given user
-- `mod-permission <admin-private-key> (add | remove) <name> <permission> [target]`: Change user permissions
 Permissions include:
   - edit sequence
   - edit sequence section
-  - update project metadata
-  - edit user permissions
-  - edit show
-- `list-permissions`: Get list of all available permissions and their targets
+  - project administration
+  - edit show [TODO]
 
 ## Native Dependencies
 
