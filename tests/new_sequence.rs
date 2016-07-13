@@ -43,7 +43,7 @@ fn works_with_valid_path_and_name() {
 #[test]
 #[allow(unused_variables)]
 // root reference must be kept to keep temp directory in scope, but is never used
-#[should_panic(expected = "entity not found")]
+#[should_panic(expected = "No such file or directory")]
 fn fails_with_nonexistent_private_key() {
     let root = setup::setup_init_cd();
     let root_key_path = Path::new("nonexistent");
@@ -51,7 +51,7 @@ fn fails_with_nonexistent_private_key() {
 }
 
 #[test]
-#[should_panic(expected = "User not found")]
+#[should_panic(expected = "UserNotFound")]
 fn fails_with_no_user_private_key() {
     let root = setup::setup_init_cd();
     let key_path = common::make_key_file(&root.path(), "a.pem", TestKey::GoodKeyPem);
@@ -59,7 +59,7 @@ fn fails_with_no_user_private_key() {
 }
 
 #[test]
-#[should_panic(expected = "Unauthorized action")]
+#[should_panic(expected = "UnauthorizedAction")]
 fn fails_with_no_admin_private_key() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
@@ -70,7 +70,7 @@ fn fails_with_no_admin_private_key() {
 }
 
 #[test]
-#[should_panic(expected = "SSL error")]
+#[should_panic(expected = "Ssl(OpenSslErrors")]
 fn fails_with_invalid_private_key() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::GoodKeyPub);
@@ -80,7 +80,7 @@ fn fails_with_invalid_private_key() {
 #[test]
 #[allow(unused_variables)]
 // root reference must be kept to keep temp directory in scope, but is never used
-#[should_panic(expected = "Unsupported file type")]
+#[should_panic(expected = "UnsupportedFileType")]
 fn fails_with_invalid_file_extension() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
@@ -113,7 +113,7 @@ fn fails_with_duplicate_sequence_name() {
 #[test]
 #[allow(unused_variables)]
 // root reference must be kept to keep temp directory in scope, but is never used
-#[should_panic(expected = "Sequence name had invalid characters")]
+#[should_panic(expected = "InvalidSequenceName")]
 fn fails_with_invalid_sequence_name() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
@@ -123,7 +123,7 @@ fn fails_with_invalid_sequence_name() {
 #[test]
 #[allow(unused_variables)]
 // root reference must be kept to keep temp directory in scope, but is never used
-#[should_panic(expected = "Music file not found")]
+#[should_panic(expected = "MusicFileNotFound")]
 fn fails_with_nonexistent_music_file_path() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);

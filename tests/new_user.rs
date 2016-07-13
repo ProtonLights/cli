@@ -24,6 +24,7 @@ fn works_with_new_and_existing_protonfile() {
         "Test User",
         "a.pub",
         TestKey::GoodKeyPub);
+
     setup::try_new_user(
         &root_key_path.as_path(),
         root.path(),
@@ -33,7 +34,7 @@ fn works_with_new_and_existing_protonfile() {
 }
 
 #[test]
-#[should_panic(expected = "entity not found")]
+#[should_panic(expected = "No such file or directory")]
 fn fails_with_nonexistent_root_key_path() {
     let root = setup::setup_init_cd();
     let root_key_path = PathBuf::from("nonexistent");
@@ -47,7 +48,7 @@ fn fails_with_nonexistent_root_key_path() {
 }
 
 #[test]
-#[should_panic(expected = "SSL error")]
+#[should_panic(expected = "Ssl")]
 fn fails_with_invalid_admin_key_format() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPub);
@@ -61,7 +62,7 @@ fn fails_with_invalid_admin_key_format() {
 }
 
 #[test]
-#[should_panic(expected = "Unauthorized action")]
+#[should_panic(expected = "UnauthorizedAction")]
 fn fails_with_admin_no_privileges() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
@@ -86,7 +87,7 @@ fn fails_with_admin_no_privileges() {
 }
 
 #[test]
-#[should_panic(expected = "not found")]
+#[should_panic(expected = "No such file or directory")]
 fn fails_with_a_nonexistent_protonfile() {
     // Don't initialize project (no protonfile created)
     let root_dir = setup::setup();
@@ -108,14 +109,12 @@ fn fails_with_nonexistent_user_key_path() {
     let user_key_path = root.path().join("nonexistent");
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
 
-    match proton_cli::new_user(&root_key_path.as_path(), &user_key_path.as_path(), "Username") {
-        Ok(_) => (),
-        Err(_) => panic!("Error adding user"),
-    };
+    proton_cli::new_user(&root_key_path.as_path(), &user_key_path.as_path(), "Username")
+        .expect("Error adding user");
 }
 
 #[test]
-#[should_panic(expected = "Public key is invalid")]
+#[should_panic(expected = "InvalidPublicKey")]
 fn fails_with_non_pem_key() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
@@ -133,7 +132,7 @@ fn fails_with_non_pem_key() {
 /// Running tests with RUST_TEST_THREADS=1 runs tests
 /// in serial, which avoids occasional false negatives
 #[test]
-#[should_panic(expected = "Duplicate user")]
+#[should_panic(expected = "DuplicateUser")]
 fn fails_with_duplicate_user_key() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
@@ -157,7 +156,7 @@ fn fails_with_duplicate_user_key() {
 /// Running tests with RUST_TEST_THREADS=1 runs tests
 /// in serial, which avoids occasional false negatives
 #[test]
-#[should_panic(expected = "Duplicate user")]
+#[should_panic(expected = "DuplicateUser")]
 fn fails_with_duplicate_user_name() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);

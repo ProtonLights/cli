@@ -47,10 +47,8 @@ pub fn try_new_user(
 
     let user_key_path = super::make_key_file(&root_path, &key_name, key);
 
-    let _ = match proton_cli::new_user(&admin_key_path, &user_key_path.as_path(), &user_name) {
-        Ok(_) => (),
-        Err(e) => panic!("{}", e.to_string()),
-    };
+    let _ = proton_cli::new_user(&admin_key_path, &user_key_path.as_path(), &user_name)
+        .expect("Error creating new user");
 
     super::assert_user_added(user_key_path.as_path(), &user_name);
 
@@ -58,23 +56,14 @@ pub fn try_new_user(
 }
 
 /// Attempts to make a new sequence with the given name and music file
-/// Panics if error thrown
 pub fn try_make_sequence(admin_key_path: &Path, name: &str, music_file: &str) {
     let music_file_path = super::get_music_file_path(music_file);
 
-    let _ = match proton_cli::new_sequence(
-        &admin_key_path,
-        &name,
-        &music_file_path.as_path()
-    ) {
-        Ok(_) => (),
-        Err(e) => panic!("{}", e.to_string()),
-    };
+    let _ = proton_cli::new_sequence(&admin_key_path, &name, &music_file_path.as_path())
+        .expect("Error creating sequence");
 
-    let project = match proton_cli::utils::read_protonfile(None::<&Path>) {
-        Ok(p) => p,
-        Err(e) => panic!("{}", e.to_string()),
-    };
+    let project = proton_cli::utils::read_protonfile(None::<&Path>)
+        .expect("Error reading project from file");
 
     let found_sequence = project.find_sequence_by_name(name);
 

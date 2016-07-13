@@ -24,16 +24,13 @@ fn try_set_permission<P: AsRef<Path>>(
     let auth_user = proton_cli::id_user(&auth_private_key_path)
         .expect("Auth user not found");
 
-    match proton_cli::set_permission(
+    proton_cli::set_permission(
         &auth_user,
         add,
         &target_username,
         permission.to_owned(),
         target.to_owned()
-    ) {
-        Ok(_) => (),
-        Err(e) => panic!("{}", e.to_string()),
-    };
+    ).expect("Error setting permission");
 
     common::assert_repo_no_modified_files(&root_path);
 
@@ -149,7 +146,7 @@ fn works_with_editseqsec() {
 }
 
 #[test]
-#[should_panic(expected = "Unauthorized action")]
+#[should_panic(expected = "UnauthorizedAction")]
 fn fails_removing_root_admin() {
     let root = setup::setup_init_cd();
     let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
@@ -182,7 +179,7 @@ fn fails_removing_root_admin() {
 }
 
 #[test]
-#[should_panic(expected = "Invalid permission target")]
+#[should_panic(expected = "InvalidPermissionTarget")]
 fn fails_with_bad_target_editseq() {
     let root = setup::setup_init_cd();
     let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
@@ -210,7 +207,7 @@ fn fails_with_bad_target_editseq() {
 }
 
 #[test]
-#[should_panic(expected = "Invalid permission target")]
+#[should_panic(expected = "InvalidPermissionTarget")]
 fn fails_with_bad_target_editseqsec() {
     let root = setup::setup_init_cd();
     let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
@@ -237,7 +234,7 @@ fn fails_with_bad_target_editseqsec() {
 }
 
 #[test]
-#[should_panic(expected = "entity not found")]
+#[should_panic(expected = "No such file or directory")]
 fn fails_with_bad_path_to_private_key() {
     let root = setup::setup_init_cd();
     let root_private_key_path = Path::new("undefined.pem");
@@ -259,7 +256,7 @@ fn fails_with_bad_path_to_private_key() {
 }
 
 #[test]
-#[should_panic(expectd = "Auth user not found")]
+#[should_panic(expectd = "UserNotFound")]
 fn fails_with_unused_private_key() {
     let root = setup::setup_init_cd();
     let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::GoodKey2Pem);
@@ -282,7 +279,7 @@ fn fails_with_unused_private_key() {
 }
 
 #[test]
-#[should_panic(expected = "User not found")]
+#[should_panic(expected = "UserNotFound")]
 fn fails_with_nonexistent_username() {
     let root = setup::setup_init_cd();
     let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);
@@ -298,7 +295,7 @@ fn fails_with_nonexistent_username() {
 }
 
 #[test]
-#[should_panic(expected = "Unauthorized action")]
+#[should_panic(expected = "UnauthorizedAction")]
 fn fails_with_unauthorized_authority() {
     let root = setup::setup_init_cd();
     let root_private_key_path = common::make_key_file(root.path(), "root.pem", TestKey::RootKeyPem);

@@ -54,7 +54,7 @@ fn works_with_valid_keys() {
 }
 
 #[test]
-#[should_panic(expected = "IO error occurred")]
+#[should_panic(expected = "No such file or directory")]
 fn fails_with_nonexistent_private_key() {
     let root = setup::setup_init_cd();
     let name = "Test User".to_string();
@@ -72,15 +72,12 @@ fn fails_with_nonexistent_private_key() {
     // Make bad path to private key file
     let private_key_path = root.path().join("nonexistent.pem");
 
-    // Identify user
-    match proton_cli::id_user(&private_key_path.as_path()) {
-        Ok(_) => (),
-        Err(e) => panic!(e.to_string()),
-    }
+    proton_cli::id_user(&private_key_path.as_path())
+        .expect("Error identifying user");
 }
 
 #[test]
-#[should_panic(expected = "User not found")]
+#[should_panic(expected = "UserNotFound")]
 fn fails_with_valid_private_key_no_match() {
     let root = setup::setup_init_cd();
     let name = "Test User".to_string();
@@ -98,15 +95,12 @@ fn fails_with_valid_private_key_no_match() {
     // Make private key for user
     let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::GoodKey2Pem);
 
-    // Identify user
-    match proton_cli::id_user(&private_key_path.as_path()) {
-        Ok(_) => (),
-        Err(e) => panic!(e.to_string()),
-    }
+    proton_cli::id_user(&private_key_path.as_path())
+        .expect("Error identifying user");
 }
 
 #[test]
-#[should_panic(expected = "SSL error occured")]
+#[should_panic(expected = "Ssl")]
 fn fails_with_invalid_private_key() {
     let root = setup::setup_init_cd();
     let name = "Test User".to_string();
@@ -124,8 +118,6 @@ fn fails_with_invalid_private_key() {
     let private_key_path = common::make_key_file(root.path(), "a.pem", TestKey::BadPrivKeyPem);
 
     // Identify user
-    match proton_cli::id_user(&private_key_path.as_path()) {
-        Ok(_) => (),
-        Err(e) => panic!(e.to_string()),
-    }
+    proton_cli::id_user(&private_key_path.as_path())
+        .expect("Error identifying user");
 }
