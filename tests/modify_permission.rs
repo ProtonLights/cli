@@ -33,7 +33,6 @@ fn try_set_permission<P: AsRef<Path>>(
     ).expect("Error setting permission");
 
     common::assert_repo_no_modified_files(&root_path);
-
 }
 
 #[test]

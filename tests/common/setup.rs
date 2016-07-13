@@ -69,5 +69,4 @@ pub fn try_make_sequence(admin_key_path: &Path, name: &str, music_file: &str) {
 
     assert!(found_sequence.is_some());
     assert!(found_sequence.unwrap().num_sections == 1);
-
 }
