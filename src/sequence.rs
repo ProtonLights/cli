@@ -77,6 +77,10 @@ pub fn new_sequence<P: AsRef<Path>>(
         .map(|_| ())
 }
 
+pub fn remove_sequence<P: AsRef<Path>>(admin_key_path: P, name: &str) -> Result<(), Error> {
+    Err(Error::TodoErr)
+}
+
 /// Check that the music file is a valid format
 /// Full list of supported formats can be found at
 /// http://www.rust-sfml.org/doc/rsfml/audio/struct.Music.html
