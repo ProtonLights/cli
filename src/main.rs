@@ -126,6 +126,3 @@ fn run_set_permission(args: Args) -> Result<(), Error> {
 
 	proton_cli::set_permission(&auth_user, added, &username, permission, target)
 }
-
-
-
