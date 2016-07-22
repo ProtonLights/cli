@@ -78,7 +78,39 @@ pub fn new_sequence<P: AsRef<Path>>(
 }
 
 pub fn remove_sequence<P: AsRef<Path>>(admin_key_path: P, name: &str) -> Result<(), Error> {
-    Err(Error::TodoErr)
+    
+    // Check that the admin has sufficient privileges
+    try!(utils::validate_admin(&admin_key_path));
+
+    // Make sure the name is valid (needed since it will be used in a file path)
+    try!(validate_seq_name(name));
+
+    // Make the name of the sequence's directory
+    let mut sequence_dir = String::from("seq_");
+    sequence_dir.push_str(&name);
+    let sequence_dir = sequence_dir;
+
+    // Remove sequence's directory
+    let sequence_dir_path = Path::new(&sequence_dir);
+    if sequence_dir_path.exists() && sequence_dir_path.is_dir() {
+        let _ = fs::remove_dir_all(&sequence_dir_path)
+            .expect("Error removing sequence directory");
+    }
+
+    // Remove sequence from project
+    let project = try!(utils::read_protonfile(None::<P>));
+    let new_project = try!(project.remove_sequence(name));
+
+    // Save project
+    try!(utils::write_protonfile(&new_project, None::<P>));
+
+    // Commit changes
+    let signature = Signature::now("Proton Lights", "proton@teslaworks.net").unwrap();
+    let msg = format!("Removing sequence '{}'", name);
+    let repo_path: Option<P> = None;
+
+    utils::commit_all(repo_path, &signature, &msg)
+        .map(|_| ())
 }
 
 /// Check that the music file is a valid format

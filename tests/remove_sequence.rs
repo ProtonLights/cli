@@ -63,15 +63,21 @@ fn fails_with_nonexistent_admin_key() {
 fn fails_with_unauthorized_admin_key() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
-    let normal_key_path = common::make_key_file(&root.path(), "normal.pem", TestKey::GoodKeyPem);
+    let normal_key_pub_path = common::make_key_file(&root.path(), "normal.pub", TestKey::GoodKeyPub);
+    let normal_key_priv_path = common::make_key_file(&root.path(), "normal.pem", TestKey::GoodKeyPem);
+    let _ = proton_cli::new_user(
+        &root_key_path.as_path(),
+        &normal_key_pub_path.as_path(),
+        "normal_user"
+    ).expect("Error creating user");
 
     setup::try_make_sequence(&root_key_path.as_path(), "asdf", "Dissonance.ogg");
-    proton_cli::remove_sequence(&normal_key_path.as_path(), "asdf")
+    proton_cli::remove_sequence(&normal_key_priv_path.as_path(), "asdf")
         .expect("Error removing sequence");
 }
 
 #[test]
-#[should_panic(expected = "Error removing sequence: Sequence not found")]
+#[should_panic(expected = "Error removing sequence: SequenceNotFound")]
 fn fails_with_nonexistent_sequence_name() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
