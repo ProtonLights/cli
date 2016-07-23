@@ -31,7 +31,7 @@ pub fn new_sequence<P: AsRef<Path>>(
     try!(validate_file_type(&music_file_path));
 
     // Make the name of the sequence's directory
-    let mut sequence_dir = String::from("seq_");
+    let mut sequence_dir = "seq_".to_owned();
     sequence_dir.push_str(&name);
     let sequence_dir = sequence_dir;
 
@@ -86,9 +86,13 @@ pub fn remove_sequence<P: AsRef<Path>>(admin_key_path: P, name: &str) -> Result<
     try!(validate_seq_name(name));
 
     // Make the name of the sequence's directory
-    let mut sequence_dir = String::from("seq_");
+    let mut sequence_dir = "seq_".to_owned();
     sequence_dir.push_str(&name);
     let sequence_dir = sequence_dir;
+
+    // Remove sequence from project
+    let project = try!(utils::read_protonfile(None::<P>));
+    let new_project = try!(project.remove_sequence(name));
 
     // Remove sequence's directory
     let sequence_dir_path = Path::new(&sequence_dir);
@@ -96,10 +100,6 @@ pub fn remove_sequence<P: AsRef<Path>>(admin_key_path: P, name: &str) -> Result<
         let _ = fs::remove_dir_all(&sequence_dir_path)
             .expect("Error removing sequence directory");
     }
-
-    // Remove sequence from project
-    let project = try!(utils::read_protonfile(None::<P>));
-    let new_project = try!(project.remove_sequence(name));
 
     // Save project
     try!(utils::write_protonfile(&new_project, None::<P>));
