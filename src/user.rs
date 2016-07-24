@@ -55,6 +55,11 @@ pub fn remove_user<P: AsRef<Path>>(
     // See if admin has permission to add user
     try!(utils::validate_admin(&admin_key_path));
 
+    // Can't remove root
+    if name == "root" {
+        return Err(Error::UnauthorizedAction);
+    }
+
     // Remove user
     let project = try!(utils::read_protonfile(None::<P>));
     let new_project = try!(project.remove_user(&name));

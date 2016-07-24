@@ -33,6 +33,15 @@ fn works_with_valid_admin_key_and_name() {
 }
 
 #[test]
+#[should_panic(expected = "Error removing user: UnauthorizedAction")]
+fn fails_removing_root() {
+    let root = setup::setup_init_cd();
+    let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
+    
+    proton_cli::remove_user(&root_key_path, &"root").expect("Error removing user");
+}
+
+#[test]
 #[should_panic(expected = "Error removing user: Ssl")]
 fn fails_with_bad_admin_key() {
     let root = setup::setup_init_cd();
