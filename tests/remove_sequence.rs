@@ -31,7 +31,7 @@ fn works_with_valid_key_and_name() {
     sequence_dir_path.push("seq_asdf");
     assert!(!sequence_dir_path.exists());
 
-    common::assert_repo_no_modified_files(&root.path());    
+    common::assert_repo_no_modified_files(&root.path());
 }
 
 #[test]

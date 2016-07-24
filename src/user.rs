@@ -42,6 +42,14 @@ pub fn new_user<P: AsRef<Path>>(
 
     utils::commit_file(&pf_path, repo_path, &signature, &msg)
 }
+
+pub fn remove_user<P: AsRef<Path>>(
+    admin_key_path: P,
+    name: &str
+) -> Result<(), Error> {
+    Err(Error::TodoErr)
+}
+
 /// Identifies a user by their private SSH key by finding the
 /// corresponding public key in the project. This private key
 /// acts like the user's password, and should be protected.
