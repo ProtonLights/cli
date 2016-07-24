@@ -3,7 +3,7 @@ extern crate tempdir;
 
 mod common;
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use common::rsa_keys::TestKey;
 use common::setup;
@@ -72,7 +72,7 @@ fn fails_with_nonexistent_admin_key() {
 fn fails_with_unprivileged_admin_key() {
     let root = setup::setup_init_cd();
     let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
-    let normal_key_path = common::make_key_file(&root.path(), "normal.pub", TestKey::GoodKeyPub);
+    let normal_key_path = common::make_key_file(&root.path(), "normal.pem", TestKey::GoodKeyPem);
     let name = "UserA";
 
     setup::try_new_user(

@@ -51,7 +51,22 @@ pub fn remove_user<P: AsRef<Path>>(
     admin_key_path: P,
     name: &str
 ) -> Result<(), Error> {
-    Err(Error::TodoErr)
+
+    // See if admin has permission to add user
+    try!(utils::validate_admin(&admin_key_path));
+
+    // Remove user
+    let project = try!(utils::read_protonfile(None::<P>));
+    let new_project = try!(project.remove_user(&name));
+    try!(utils::write_protonfile(&new_project, None::<P>));
+
+    // Commit changes
+    let signature = Signature::now("Proton Lights", "proton@teslaworks.net").unwrap();
+    let msg = format!("Removing user {}", name);
+    let pf_path = Path::new("Protonfile.json");
+    let repo_path: Option<P> = None;
+
+    utils::commit_file(&pf_path, repo_path, &signature, &msg)
 }
 
 /// Identifies a user by their private SSH key by finding the
