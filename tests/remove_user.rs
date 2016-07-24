@@ -35,23 +35,68 @@ fn works_with_valid_admin_key_and_name() {
 #[test]
 #[should_panic(expected = "Error removing user: Ssl")]
 fn fails_with_bad_admin_key() {
+    let root = setup::setup_init_cd();
+    let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
+    let root_key_bad_path = common::make_key_file(&root.path(), "root_bad.pub", TestKey::RootKeyPub);
+    let name = "UserA";
 
+    setup::try_new_user(
+        &root_key_path.as_path(),
+        root.path(),
+        &name,
+        "a.pub",
+        TestKey::GoodKeyPub);
+
+    proton_cli::remove_user(&root_key_bad_path, &name).expect("Error removing user");
 }
 
 #[test]
 #[should_panic(expected = "Error removing user: Io")]
 fn fails_with_nonexistent_admin_key() {
+    let root = setup::setup_init_cd();
+    let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
+    let name = "UserA";
 
+    setup::try_new_user(
+        &root_key_path.as_path(),
+        root.path(),
+        &name,
+        "a.pub",
+        TestKey::GoodKeyPub);
+
+    proton_cli::remove_user(&Path::new("nonexistent"), &name).expect("Error removing user");
 }
 
 #[test]
 #[should_panic(expected = "Error removing user: UnauthorizedAction")]
 fn fails_with_unprivileged_admin_key() {
+    let root = setup::setup_init_cd();
+    let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
+    let normal_key_path = common::make_key_file(&root.path(), "normal.pub", TestKey::GoodKeyPub);
+    let name = "UserA";
 
+    setup::try_new_user(
+        &root_key_path.as_path(),
+        root.path(),
+        &name,
+        "a.pub",
+        TestKey::GoodKeyPub);
+
+    proton_cli::remove_user(&normal_key_path, &name).expect("Error removing user");
 }
 
 #[test]
 #[should_panic(expected = "Error removing user: UserNotFound")]
 fn fails_with_unknown_name() {
+    let root = setup::setup_init_cd();
+    let root_key_path = common::make_key_file(&root.path(), "root.pem", TestKey::RootKeyPem);
 
+    setup::try_new_user(
+        &root_key_path.as_path(),
+        root.path(),
+        &"UserA",
+        "a.pub",
+        TestKey::GoodKeyPub);
+
+    proton_cli::remove_user(&root_key_path, &"UserBBB").expect("Error removing user");
 }
