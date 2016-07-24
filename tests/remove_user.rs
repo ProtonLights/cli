@@ -79,7 +79,7 @@ fn fails_with_unprivileged_admin_key() {
         &root_key_path.as_path(),
         root.path(),
         &name,
-        "a.pub",
+        "normal.pub",
         TestKey::GoodKeyPub);
 
     proton_cli::remove_user(&normal_key_path, &name).expect("Error removing user");
