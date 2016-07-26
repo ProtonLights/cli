@@ -56,6 +56,8 @@ pub fn set_permission(
         auth_user.name, change_type, perm, target_username);
 
     utils::commit_all(None::<&Path>, &signature, &msg)
-
 }
 
+pub fn list_user_permissions<P: AsRef<Path>> (user_key_path: P) -> Result<String, Error> {
+    Err(Error::TodoErr)
+}
