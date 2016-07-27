@@ -118,11 +118,10 @@ fn run_remove_sequence(args: Args) -> Result<(), Error> {
 	proton_cli::remove_sequence(&admin_key_path, &name)
 }
 
-#[allow(unused_variables)]
 fn run_list_permissions(args: Args) -> Result<(), Error> {
 	let private_key = args.arg_private_key;
 	if private_key.is_some() {
-		proton_cli::get_permissions(&private_key.unwrap())
+		let _ = proton_cli::get_permissions(&private_key.unwrap())
 			.map(|p| println!("{:?}", p));
 		Ok(())
 	} else {
