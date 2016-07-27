@@ -159,7 +159,7 @@ fn fails_with_invalid_key_path() {
         "a.pub",
         TestKey::GoodKeyPub);
 
-    let permissions = proton_cli::get_permissions(&user_key_path)
+    let _ = proton_cli::get_permissions(&user_key_path)
         .expect("Error getting permissions");
 }
 
@@ -178,6 +178,6 @@ fn fails_with_invalid_key() {
         "aa.pub",
         TestKey::GoodKeyPub);
 
-    let permissions = proton_cli::get_permissions(&user_key_path)
+    let _ = proton_cli::get_permissions(&user_key_path)
         .expect("Error getting permissions");
 }
