@@ -122,10 +122,8 @@ fn run_remove_sequence(args: Args) -> Result<(), Error> {
 fn run_list_permissions(args: Args) -> Result<(), Error> {
 	let private_key = args.arg_private_key;
 	if private_key.is_some() {
-		let permissions = proton_cli::get_permissions(&private_key.unwrap());
-		for p in &permissions {
-			println!("{:?}", p);
-		}
+		proton_cli::get_permissions(&private_key.unwrap())
+			.map(|p| println!("{:?}", p));
 		Ok(())
 	} else {
 		let permissions = proton_cli::get_permissions_list()
