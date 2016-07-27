@@ -22,7 +22,7 @@ Usage:
   ./proton new-sequence <admin-key> <name> <music-file>
   ./proton remove-sequence <admin-key> <name>
   ./proton id-user <private-key>
-  ./proton list-permissions
+  ./proton list-permissions [<private-key>]
   ./proton set-permission <admin-key> (add | remove) <name> <permission> [<target>]
   ./proton (-h | --help)
 
@@ -120,12 +120,14 @@ fn run_remove_sequence(args: Args) -> Result<(), Error> {
 
 #[allow(unused_variables)]
 fn run_list_permissions(args: Args) -> Result<(), Error> {
-	let permissions = proton_cli::get_permissions_list()
-		.expect("Error retrieving permissions");
-	for p in &permissions {
-		println!("{:?}", p);
+	let private_key = args.arg_private_key;
+	if private_key.is_some() {
+		Err(Error::TodoErr)
+	} else {
+		let permissions = proton_cli::get_permissions_list()
+			.expect("Error retrieving permissions");
+		Ok(println!("{}", permissions.join("\n")))
 	}
-	Ok(())
 }
 
 fn run_set_permission(args: Args) -> Result<(), Error> {

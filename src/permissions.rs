@@ -56,10 +56,9 @@ pub fn get_permissions<P: AsRef<Path>> (user_key_path: P
 }
 
 pub fn get_permissions_list() -> Result<Vec<String>, Error> {
-    vec![
-        "Administrate",
-        "EditSeq",
-        "EditSeqSec"
-    ];
-    Err(Error::TodoErr)
+    Ok(vec![
+        "Administrate".to_owned(),
+        "EditSeq".to_owned(),
+        "EditSeqSec".to_owned()
+    ])
 }
