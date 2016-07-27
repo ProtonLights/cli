@@ -6,6 +6,7 @@ use git2::Signature;
 use error::Error;
 use project_types::{User, Permission, PermissionEnum};
 use utils;
+use user;
 
 
 pub fn set_permission(
@@ -52,7 +53,8 @@ pub fn set_permission(
 
 pub fn get_permissions<P: AsRef<Path>> (user_key_path: P
 ) -> Result<Vec<Permission>, Error> {
-    Err(Error::TodoErr)
+    let user = try!(user::id_user(&user_key_path));
+    Ok(user.permissions)
 }
 
 pub fn get_permissions_list() -> Result<Vec<String>, Error> {
