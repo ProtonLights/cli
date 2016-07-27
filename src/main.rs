@@ -120,8 +120,12 @@ fn run_remove_sequence(args: Args) -> Result<(), Error> {
 
 #[allow(unused_variables)]
 fn run_list_permissions(args: Args) -> Result<(), Error> {
-	let permissions = proton_cli::get_permissions();
-	Ok(println!("{}", permissions.join("\n")))
+	let permissions = proton_cli::get_permissions_list()
+		.expect("Error retrieving permissions");
+	for p in &permissions {
+		println!("{:?}", p);
+	}
+	Ok(())
 }
 
 fn run_set_permission(args: Args) -> Result<(), Error> {

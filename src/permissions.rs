@@ -8,14 +8,6 @@ use project_types::{User, Permission, PermissionEnum};
 use utils;
 
 
-pub fn get_permissions() -> Vec<&'static str> {
-    vec![
-        "Administrate",
-        "EditSeq",
-        "EditSeqSec"
-    ]
-}
-
 pub fn set_permission(
     auth_user: &User,
     add: bool,
@@ -58,6 +50,16 @@ pub fn set_permission(
     utils::commit_all(None::<&Path>, &signature, &msg)
 }
 
-pub fn list_user_permissions<P: AsRef<Path>> (user_key_path: P) -> Result<String, Error> {
+pub fn get_permissions<P: AsRef<Path>> (user_key_path: P
+) -> Result<Vec<Permission>, Error> {
+    Err(Error::TodoErr)
+}
+
+pub fn get_permissions_list() -> Result<Vec<String>, Error> {
+    vec![
+        "Administrate",
+        "EditSeq",
+        "EditSeqSec"
+    ];
     Err(Error::TodoErr)
 }

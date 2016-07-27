@@ -83,5 +83,4 @@ impl Permission {
             Err(Error::InvalidPermissionTarget)
         }
     }
-
 }
