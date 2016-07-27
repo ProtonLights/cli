@@ -53,8 +53,7 @@ pub fn set_permission(
 
 pub fn get_permissions<P: AsRef<Path>> (user_key_path: P
 ) -> Result<Vec<Permission>, Error> {
-    let user = try!(user::id_user(&user_key_path));
-    Ok(user.permissions)
+    user::id_user(&user_key_path).map(|user| user.permissions)
 }
 
 pub fn get_permissions_list() -> Result<Vec<String>, Error> {
