@@ -5,6 +5,7 @@ extern crate docopt;
 
 use std::env;
 use std::path::Path;
+use rustc_serialize::json;
 use docopt::Docopt;
 
 use proton_cli::error::Error;
@@ -22,7 +23,7 @@ Usage:
   ./proton new-sequence <admin-key> <name> <music-file>
   ./proton remove-sequence <admin-key> <name>
   ./proton id-user <private-key>
-  ./proton list-permissions [<private-key>]
+  ./proton list-permissions <private-key>
   ./proton set-permission <admin-key> (add | remove) <name> <permission> [<target>]
   ./proton (-h | --help)
 
@@ -120,15 +121,8 @@ fn run_remove_sequence(args: Args) -> Result<(), Error> {
 
 fn run_list_permissions(args: Args) -> Result<(), Error> {
 	let private_key = args.arg_private_key;
-	if private_key.is_some() {
-		let _ = proton_cli::get_permissions(&private_key.unwrap())
-			.map(|p| println!("{:?}", p));
-		Ok(())
-	} else {
-		let permissions = proton_cli::get_permissions_list()
-			.expect("Error retrieving permissions");
-		Ok(println!("{}", permissions.join("\n")))
-	}
+	proton_cli::get_permissions(&private_key.unwrap())
+		.map(|p| println!("{}", json::as_pretty_json(&p)))
 }
 
 fn run_set_permission(args: Args) -> Result<(), Error> {

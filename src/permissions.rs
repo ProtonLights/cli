@@ -55,11 +55,3 @@ pub fn get_permissions<P: AsRef<Path>> (user_key_path: P
 ) -> Result<Vec<Permission>, Error> {
     user::id_user(&user_key_path).map(|user| user.permissions)
 }
-
-pub fn get_permissions_list() -> Result<Vec<String>, Error> {
-    Ok(vec![
-        "Administrate".to_owned(),
-        "EditSeq".to_owned(),
-        "EditSeqSec".to_owned()
-    ])
-}

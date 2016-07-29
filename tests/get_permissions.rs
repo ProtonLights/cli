@@ -131,20 +131,6 @@ fn works_with_valid_key_all_permissions() {
 }
 
 #[test]
-fn works_with_no_key() {
-    let permissions = proton_cli::get_permissions_list()
-        .expect("Error getting permissions");
-
-    let expected_permissions = vec![
-        "Administrate".to_owned(),
-        "EditSeq".to_owned(),
-        "EditSeqSec".to_owned()
-    ];
-
-    assert_eq!(permissions, expected_permissions);
-}
-
-#[test]
 #[should_panic(expected = "Error getting permissions: Io")]
 fn fails_with_invalid_key_path() {
     let root = setup::setup_init_cd();
