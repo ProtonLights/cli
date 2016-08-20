@@ -1,94 +1,55 @@
-
 use std::path::Path;
+use std::ascii::AsciiExt;
 
 use error::Error;
 use utils;
 
 
 #[derive(Clone, Debug, Eq, PartialEq, RustcEncodable, RustcDecodable)]
-pub enum PermissionEnum {
+pub enum Permission {
     Administrate,
-    EditSeq,
-    EditSeqSec,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, RustcEncodable, RustcDecodable)]
-pub struct Permission {
-    pub which: PermissionEnum,
-    pub target: Option<String>,
+    EditSeq(String),
+    EditSeqSec(String, u32),
 }
 
 impl Permission {
-    /// Creates a new Permission, joining a permission type with a target
-    /// Returns an error if the target is invalid
-    pub fn new(which_enum: PermissionEnum, t: Option<String>) -> Result<Permission, Error> {
-        // Make sure the target is valid for the given permission type
-        try!(Permission::validate_permission(&which_enum, &t));
+    /// Creates a new Permission
+    /// Assumes target options are from Docopt, and are therefore safe to unwrap
+    /// if the permission name is correct
+    pub fn new(
+        perm_name: &str,
+        target_sequence: Option<String>,
+        target_section: Option<u32>
+    ) -> Result<Permission, Error> {
 
-        // Create permission if valid
-        Ok(Permission {
-            which: which_enum,
-            target: t,
-        })
-    }
-
-    /// Validates the target for the given permission type
-    /// Returns error if invalid target
-    fn validate_permission(permission: &PermissionEnum, target: &Option<String>) -> Result<(), Error> {
-        
-        let valid = match permission {
-            &PermissionEnum::Administrate => {
-                target == &None::<String>
-            },
-            &PermissionEnum::EditSeq => {
-                if target.is_none() {
-                    false
+        match perm_name.to_ascii_lowercase().as_ref() {
+            "administrate" => Ok(Permission::Administrate),
+            "editseq" => {
+                let sequence_name = target_sequence.unwrap();
+                let project = try!(utils::read_protonfile(None::<&Path>));
+                if project.find_sequence_by_name(&sequence_name).is_none() {
+                    Err(Error::SequenceNotFound(sequence_name))
                 } else {
-                    let seq_name = target.to_owned().unwrap();
-                    let project = try!(utils::read_protonfile(None::<&Path>));
-                    project.find_sequence_by_name(&seq_name).is_some()
+                    Ok(Permission::EditSeq(sequence_name))
                 }
             },
-            &PermissionEnum::EditSeqSec => {
-                if target.is_none() {
-                    false
+            "editseqsec" => {
+                let sequence_name = target_sequence.unwrap();
+                let section_idx = target_section.unwrap();
+                let project = try!(utils::read_protonfile(None::<&Path>));
+                let sequence_opt = project.find_sequence_by_name(&sequence_name);
+                if sequence_opt.is_none() {
+                    Err(Error::SequenceNotFound(sequence_name))
                 } else {
-                    let target_str = target.to_owned().unwrap();
-                    let targets: Vec<&str> = target_str.split(",").collect();
-                    if targets.len() != 2 {
-                        println!("EditSeqSec target must be of the form \"name,section\"");
-                        false
+                    let sequence = sequence_opt.unwrap().to_owned();
+                    if !sequence.section_in_range(section_idx) {
+                        Err(Error::InvalidSequenceSection(section_idx))
                     } else {
-                        let seq_name = targets[0];
-                        let section_num_str = targets[1];
-                        let section_num = match section_num_str.parse::<u32>() {
-                            Ok(n) => n,
-                            Err(_) => return Err(Error::InvalidPermissionTarget), 
-                        };
-                        let project = try!(utils::read_protonfile(None::<&Path>));
-                        match project.find_sequence_by_name(&seq_name) {
-                            Some(seq) => {
-                                let in_range = section_num > 0 && section_num <= seq.num_sections;
-                                if !in_range {
-                                    println!("EditSeqSec target must be of the form \"name,section\"");
-                                }
-                                in_range
-                            },
-                            None => {
-                                println!("EditSeqSec target must be of the form \"name,section\"");
-                                false
-                            },
-                        }
-
+                        Ok(Permission::EditSeqSec(sequence_name, section_idx))
                     }
                 }
             },
-        };
-
-        if valid {
-            Ok(())
-        } else {
-            Err(Error::InvalidPermissionTarget)
+            _ => Err(Error::InvalidPermissionName(perm_name.to_owned()))
         }
     }
 }

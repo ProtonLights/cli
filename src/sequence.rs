@@ -4,10 +4,12 @@ use std::path::{Path, PathBuf};
 use std::fs;
 
 use git2::Signature;
-use sfml::audio::Music;
 use regex::Regex;
+use sfml::audio::Music;
 
 use error::Error;
+use project_types::Permission;
+use user;
 use utils;
 
 
@@ -77,6 +79,8 @@ pub fn new_sequence<P: AsRef<Path>>(
         .map(|_| ())
 }
 
+/// Removes the sequence with the given name from the project
+/// and deletes its files
 pub fn remove_sequence<P: AsRef<Path>>(admin_key_path: P, name: &str) -> Result<(), Error> {
     
     // Check that the admin has sufficient privileges
@@ -113,6 +117,39 @@ pub fn remove_sequence<P: AsRef<Path>>(admin_key_path: P, name: &str) -> Result<
         .map(|_| ())
 }
 
+/// Resections an existing sequence with the given name
+/// Returns a new sequence with the changes
+pub fn resection_sequence<P: AsRef<Path>>(
+    admin_key_path: P,
+    name: &str,
+    num_sections: u32
+) -> Result<(), Error> {
+    // Check that the admin has sufficient privileges
+    let admin_user = try!(user::id_user(admin_key_path));
+    let perm = try!(Permission::new("EditSeq", Some(name.to_owned()), None::<u32>));
+    if !admin_user.has_permission(&perm) {
+        return Err(Error::UnauthorizedAction);
+    }
+
+    // Make sure the name is valid (needed since it will be used in a file path)
+    try!(validate_seq_name(name));
+
+    // Get project
+    let project = try!(utils::read_protonfile(None::<P>));
+
+    // Resection sequence
+    let new_project = try!(project.resection_sequence(name, num_sections));
+    try!(utils::write_protonfile(&new_project, None::<P>));
+
+    // Commit changes
+    let signature = Signature::now("Proton Lights", "proton@teslaworks.net").unwrap();
+    let msg = format!("Resectioning sequence '{}'", name);
+    let repo_path: Option<P> = None;
+
+    utils::commit_all(repo_path, &signature, &msg)
+        .map(|_| ())
+}
+
 /// Check that the music file is a valid format
 /// Full list of supported formats can be found at
 /// http://www.rust-sfml.org/doc/rsfml/audio/struct.Music.html
@@ -136,7 +173,7 @@ fn validate_file_type<P: AsRef<Path>>(music_file_path: P) -> Result<(), Error> {
 }
 
 /// Makes sure the name has only valid characters in it
-/// A valid character is upper and lower alpha, numbers, and underscores
+/// A valid character is upper and lower alpha, numbers, and underscores`
 fn validate_seq_name(name: &str) -> Result<(), Error> {
 
     let seq_name_regex = Regex::new("^[0-9A-Za-z_]+$").expect("Regex failed to compile");

@@ -1,5 +1,5 @@
 
-use project_types::{Sequence, User, Permission, PermissionEnum};
+use project_types::{Sequence, User, Permission};
 use error::Error;
 
 
@@ -17,7 +17,7 @@ impl Project {
     pub fn empty(root_pub_key: &str) -> Result<Project, Error> {
 
         let mut root = try!(User::new("root", &root_pub_key));
-        let root_permission = try!(Permission::new(PermissionEnum::Administrate, None::<String>));
+        let root_permission = Permission::Administrate;
         root.add_permission(root_permission);
 
         Ok(Project {
@@ -30,76 +30,55 @@ impl Project {
     /// Finds a sequence by its name
     /// Returns the sequence if found, else None
     pub fn find_sequence_by_name(&self, name: &str) -> Option<&Sequence> {
-        for s in &self.sequences {
-            if s.name == name {
-                return Some(s);
-            }
-        }
-
-        None::<&Sequence>
+        self.sequences.iter().find(|seq| seq.name == name)
     }
 
     /// Finds a user with the given public key
     /// Returns the user if found, else None
     fn find_user_by_public_key(&self, pub_key: &str) -> Option<&User> {
-        for u in &self.users {
-            if u.public_key == pub_key {
-                return Some(u);
-            }
-        }
-        None::<&User>
+        self.users.iter().find(|user| user.public_key == pub_key)
     }
 
     /// Finds a user with the given name
     /// Returns the user if found, else None
     // TODO: make private?
     pub fn find_user_by_name(&self, name: &str) -> Option<&User> {
-        for u in &self.users {
-            if u.name == name {
-                return Some(u);
-            }
-        }
-        None::<&User>
+        self.users.iter().find(|user| user.name == name)
     }
 
     /// Finds a user in the users vector
     /// Returns true if found, else false
     pub fn user_exists(&self, user: &User) -> bool {
-        for u in &self.users {
-            if user == u {
-                return true;
-            }
-        }
-        return false;
+        self.users.iter().find(|u| u == &user).is_some()
     }
 
     /// Adds a user to the project
     /// Returns a new project with the user added
     pub fn add_user(&self, name: &str, pub_key: &str) -> Result<Project, Error> {
-        
-        let user = try!(User::new(name, pub_key));
 
+        let mut new_project = self.clone();
+        let user = try!(User::new(name, pub_key));
+        
         if self.find_user_by_name(name).is_some() ||
            self.find_user_by_public_key(pub_key).is_some() {
-            Err(Error::DuplicateUser(pub_key.to_string(), name.to_string()))
+            return Err(Error::DuplicateUser(pub_key.to_owned(), name.to_owned()));
         } else {
-            let mut new_project = self.clone();
             new_project.users.push(user);
-            Ok(new_project)
         }
+
+        Ok(new_project)
     }
 
     /// Removes a user from the project
     /// Returns a new project with the user removed
     pub fn remove_user(&self, name: &str) -> Result<Project, Error> {
         let mut new_project = self.clone();
-        for i in 0..new_project.users.len() {
-            if new_project.users[i].name == name {
+        for (i, user) in self.users.iter().enumerate() {
+            if user.name == name {
                 new_project.users.remove(i);
                 return Ok(new_project);
             }
         }
-
         Err(Error::UserNotFound)
     }
 
@@ -123,11 +102,11 @@ impl Project {
         ));
 
         // Check if duplicate
-        for s in &self.sequences {
-            if s.name == name
-            || s.directory_name == directory_name {
-                return Err(Error::DuplicateSequence(name.to_string()));
-            }
+        let duplicate_sequence = self.sequences
+            .iter()
+            .find(|seq| seq.name == name || seq.directory_name == directory_name);
+        if duplicate_sequence.is_some() {
+            return Err(Error::DuplicateSequence(name.to_owned()));
         }
 
         let mut new_project = self.clone();
@@ -137,13 +116,22 @@ impl Project {
 
     pub fn remove_sequence(&self, name: &str) -> Result<Project, Error> {
         let mut new_project = self.clone();
-        for i in 0..new_project.sequences.len() {
-            if new_project.sequences[i].name == name {
+        for (i, seq) in self.sequences.iter().enumerate() {
+            if seq.name == name {
                 new_project.sequences.remove(i);
                 return Ok(new_project);
             }
         }
-        Err(Error::SequenceNotFound(name.to_string()))
+        Err(Error::SequenceNotFound(name.to_owned()))
+    }
+
+    pub fn resection_sequence(&self, name: &str, num_sections: u32) -> Result<Project, Error> {
+        let mut new_project = self.clone();
+        match new_project.sequences.iter_mut().find(|seq| seq.name == name) {
+            None => return Err(Error::SequenceNotFound(name.to_owned())),
+            Some(sequence) => try!(sequence.resection(num_sections)),
+        }
+        Ok(new_project)
     }
 
     /// Changes a user's permissions
@@ -154,20 +142,16 @@ impl Project {
         add: bool
     ) -> Result<(), Error> {
     
-        for mut u in &mut self.users {
-            if u.name == name {
+        match self.users.iter_mut().find(|u| u.name == name) {
+            None => Err(Error::UserNotFound),
+            Some(user) => {
                 if add {
-                    u.add_permission(perm);
+                    user.add_permission(perm.clone())
                 } else {
-                    u.remove_permission(perm);
+                    user.remove_permission(perm.clone())
                 }
-
-                return Ok(());
+                Ok(())
             }
         }
-
-        Err(Error::UserNotFound)
     }
-
 }
-

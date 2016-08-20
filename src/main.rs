@@ -9,7 +9,6 @@ use rustc_serialize::json;
 use docopt::Docopt;
 
 use proton_cli::error::Error;
-use proton_cli::project_types::PermissionEnum;
 use proton_cli::utils;
 
 
@@ -22,9 +21,12 @@ Usage:
   ./proton remove-user <admin-key> <name>
   ./proton new-sequence <admin-key> <name> <music-file>
   ./proton remove-sequence <admin-key> <name>
+  ./proton resection-sequence <admin-key> <name> <num-sections>
   ./proton id-user <private-key>
   ./proton list-permissions <private-key>
-  ./proton set-permission <admin-key> (add | remove) <name> <permission> [<target>]
+  ./proton set-permission <admin-key> (add | remove) <name> Administrate
+  ./proton set-permission <admin-key> (add | remove) <name> EditSeq <target-sequence>
+  ./proton set-permission <admin-key> (add | remove) <name> EditSeqSec <target-sequence> <target-section>
   ./proton (-h | --help)
 
 Options:
@@ -40,8 +42,9 @@ struct Args {
 	arg_admin_key: Option<String>,
 	arg_name: Option<String>,
 	arg_music_file: Option<String>,
-	arg_permission: Option<PermissionEnum>,
-	arg_target: Option<String>,
+	arg_target_sequence: Option<String>,
+	arg_target_section: Option<u32>,
+	arg_num_sections: Option<u32>,
 }
 
 fn main() {
@@ -58,6 +61,7 @@ fn main() {
 		"id-user" => run_id_user,
 		"new-sequence" => run_new_sequence,
 		"remove-sequence" => run_remove_sequence,
+		"resection-sequence" => run_resection_sequence,
 		"list-permissions" => run_list_permissions,
 		"set-permission" => run_set_permission,
 		_ => panic!("Invalid first argument"),
@@ -119,6 +123,14 @@ fn run_remove_sequence(args: Args) -> Result<(), Error> {
 	proton_cli::remove_sequence(&admin_key_path, &name)
 }
 
+fn run_resection_sequence(args: Args) -> Result<(), Error> {
+	let admin_key = args.arg_admin_key.unwrap();
+	let admin_key_path = Path::new(&admin_key);
+	let name = args.arg_name.unwrap();
+	let num_sections = args.arg_num_sections.unwrap();
+	proton_cli::resection_sequence(&admin_key_path, &name, num_sections)
+}
+
 fn run_list_permissions(args: Args) -> Result<(), Error> {
 	let private_key = args.arg_private_key;
 	proton_cli::get_permissions(&private_key.unwrap())
@@ -131,8 +143,15 @@ fn run_set_permission(args: Args) -> Result<(), Error> {
 
 	let added = env::args().nth(3).unwrap() == "add";
 	let username = args.arg_name.unwrap();
-	let permission = args.arg_permission.unwrap();
-	let target = args.arg_target;
+	let permission_name = env::args().nth(5).unwrap();
+	let target_sequence = args.arg_target_sequence;
+	let target_section = args.arg_target_section;
 
-	proton_cli::set_permission(&auth_user, added, &username, permission, target)
+	proton_cli::set_permission(
+		&auth_user,
+		added,
+		&username,
+		&permission_name,
+		target_sequence,
+		target_section)
 }
