@@ -1,67 +1,55 @@
-
 use error::Error;
-use project_types::SequenceSection;
+use project_types::Layout;
 
-
-#[derive(Clone, Debug, PartialEq, Eq, RustcEncodable, RustcDecodable)]
+#[derive(Debug)]
 pub struct Sequence {
+    pub seqid: u32,
     pub name: String,
-    pub directory_name: String,
-    pub music_file_name: String,
+    pub music_file_name: String, // found in Music/
     pub music_duration_sec: u32,
     pub frame_duration_ms: u32,
-    pub num_sections: u32,
+    pub num_frames: u32,
+    pub layout_id: u32,
 }
 
 impl Sequence {
-    /// Creates a new Sequence, allowing default values
-    /// of 50ms for frame_duration_ms and 1 for num_sections
-    /// Also initializes section file(s)
-    pub fn new(name: &str,
-        seq_directory_name: &str,
+    /// Creates a new Sequence, allowing the default value of 50ms for frame_duration_ms
+    pub fn new(
+        name: &str,
         music_file_name: &str,
         music_duration_sec: u32,
+        seq_duration_ms: u32,
         frame_duration_ms: Option<u32>,
-        num_sections: Option<u32>
+        layout: &Layout
     ) -> Result<Sequence, Error> {
+
         // Defaults
         let frame_dur_ms = frame_duration_ms.unwrap_or(50);
-        let num_sects = num_sections.unwrap_or(1);
+        if frame_dur_ms < 25 {
+            return Err(Error::InvalidFrameDuration(frame_dur_ms));
+        }
+
+        // Calculate num_frames
+        let num_frames_f32: f32 = seq_duration_ms as f32 / frame_dur_ms as f32;
+        let num_frames = num_frames_f32.ceil() as u32;
+
+        // Create temporary seqid (seqid will be set internally by the sequence dao)
+        let seqid = 0;
+
+        // Get layout id
+        let layout_id = layout.layout_id;
 
         // Create sequence
         let sequence = Sequence {
+            seqid: seqid,
             name: name.to_string(),
-            directory_name: seq_directory_name.to_string(),
             music_file_name: music_file_name.to_string(),
             music_duration_sec: music_duration_sec,
             frame_duration_ms: frame_dur_ms,
-            num_sections: num_sects,
+            num_frames: num_frames,
+            layout_id: layout_id
         };
-
-        // Section sequence
-        try!(sequence.resection());
 
         Ok(sequence)
     }
-
-    /// Resection a sequence
-    pub fn resection(&self) -> Result<(), Error> {
-        if self.num_sections == 1 {
-            let num_frames_f32: f32 = (self.music_duration_sec as f32 * 1000_f32) / self.frame_duration_ms as f32;
-            let num_frames = num_frames_f32.ceil() as u32;
-            let num_channels = 1; // TODO: change when add layout
-            let sequence_section = SequenceSection {
-                seq_name: self.name.to_string(),
-                index: 1,
-                num_frames: num_frames,
-                editor: None,
-                data: vec![vec![0; num_frames as usize]; num_channels],
-            };
-            sequence_section.write_to_file(&self.directory_name)
-        } else {
-            Err(Error::TodoErr)
-        }
-    }
-
 }
-
