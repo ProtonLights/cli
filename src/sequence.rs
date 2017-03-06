@@ -1,116 +1,194 @@
 //! This module manages project sequences
 
-use std::path::{Path, PathBuf};
-use std::fs;
+use rustc_serialize::json;
+use std::path::Path;
 
-use git2::Signature;
 use sfml::audio::Music;
-use regex::Regex;
 
 use error::Error;
+use project_types::{Sequence};
+use dao::{ChannelDao, DataDao, LayoutDao, PermissionDao, ProjectDao, SequenceDao, UserDao};
 use utils;
 
-
-/// Creates a new user for the project in the current directory.
-/// Assumes the current directory contains a Protonfile.json file.
-///
-/// Impure.
-pub fn new_sequence<P: AsRef<Path>>(
-    admin_key_path: P,
+/// Creates a new sequence based on proton-vixen-converter data
+pub fn new_vixen_sequence<P: AsRef<Path>, CD: ChannelDao, DD: DataDao, LD: LayoutDao, SD: SequenceDao>(
+    chan_dao: &CD,
+    data_dao: &DD,
+    layout_dao: &LD,
+    seq_dao: &SD,
     name: &str,
-    music_file_path: P
-) -> Result<(), Error> {
-    
-    // Check that the admin has sufficient privileges
-    try!(utils::validate_admin(&admin_key_path));
+    music_file_path: P,
+    seq_duration_ms: u32,
+    frame_duration_ms: u32,
+    data_file_path: P,
+    layout_id: u32
+) -> Result<u32, Error> {
 
-    // Make sure the name is valid (needed since it will be used in a file path)
-    try!(validate_seq_name(name));
+    // Get layout (also checks if it exists)
+    let layout = try!(layout_dao.get_layout(layout_id));
 
     // Make sure the music file is a valid format
     try!(validate_file_type(&music_file_path));
 
-    // Make the name of the sequence's directory
-    let mut sequence_dir = "seq_".to_owned();
-    sequence_dir.push_str(&name);
-    let sequence_dir = sequence_dir;
+    // Get name of music file from path
+    let music_file_name = try!(utils::file_name_from_path(&music_file_path));
 
-    // Try to create the sequence's directory
-    // This also throws an error if the directory already exists and is not empty
-    try!(utils::create_empty_directory(Path::new(&sequence_dir))
-        .map_err(|_| Error::DuplicateSequence(name.to_string())));
+    // Get duration of music file
+    let music_duration_sec = try!(get_music_duration_sec(&music_file_path));
+    
+    // Create sequence
+    let sequence = try!(
+        Sequence::new(
+            name,
+            &music_file_name,
+            music_duration_sec,
+            seq_duration_ms,
+            Some(frame_duration_ms),
+            &layout
+        )
+    );
+
+    // Try to add sequence
+    let seq = try!(seq_dao.new_sequence(&sequence));
+
+    // Get sequence channel ids to match up dmx channels with given data
+    let chan_ids = try!(seq_dao.get_channel_ids(seq.seqid));
+
+    // Read in vixen sequence data
+    let vixen_data_str = try!(utils::file_as_string(data_file_path.as_ref()));
+    let vixen_data: Vec<Vec<u16>> = try!(json::decode(&vixen_data_str).map_err(Error::JsonDecode));
+
+    // Make sure the number of channels matches with the layout
+    if chan_ids.len() != vixen_data.len() {
+        println!("layout: {} vs data: {}", chan_ids.len(), vixen_data.len());
+        return Err(Error::InvalidVixenData("Number of channels not the same as the given layout".to_string()));
+    }
+    
+    // For each channel the sequence created, update its data based on vixen_data
+    for chanid in chan_ids {
+        let channel = try!(chan_dao.get_channel(chanid));
+        let ref chan_data = vixen_data[channel.channel_internal as usize - 1]; // TODO, check out of bounds
+        try!(data_dao.new_data(seq.seqid, chanid, chan_data));
+    }
+
+    Ok(seq.seqid)
+}
+
+/// Creates a new sequence
+pub fn new_sequence<P: AsRef<Path>, DD: DataDao, LD: LayoutDao, SD: SequenceDao>(
+    data_dao: &DD,
+    layout_dao: &LD,
+    seq_dao: &SD,
+    name: &str,
+    music_file_path: P,
+    seq_duration_ms: u32,
+    frame_duration_ms: Option<u32>,
+    layout_id: Option<u32>
+) -> Result<u32, Error> {
+
+    // Get layout (also checks if it exists)
+    let lid = match layout_id {
+        Some(id) => id,
+        None => {
+            let default_layout = try!(layout_dao.get_default_layout());
+            default_layout.layout_id
+        },
+    };
+
+    let layout = try!(layout_dao.get_layout(lid));
+
+    // Make sure the music file is a valid format
+    try!(validate_file_type(&music_file_path));
 
     // Get name of music file from path
     let music_file_name = try!(utils::file_name_from_path(&music_file_path));
 
-    // Try to copy music file into sequence directory
-    let dest_path = try!(copy_music_file(&music_file_path, &sequence_dir));
-
     // Get duration of music file
-    let music_duration_sec = try!(get_music_duration_sec(&dest_path));
+    let music_duration_sec = try!(get_music_duration_sec(&music_file_path));
+    
+    // Create sequence with no data
+    let sequence = try!(
+        Sequence::new(
+            name,
+            &music_file_name,
+            music_duration_sec,
+            seq_duration_ms,
+            frame_duration_ms,
+            &layout
+        )
+    );
 
-    // Add sequence to project
-    let project = try!(utils::read_protonfile(None::<P>));
-    let new_project = match project.add_sequence(
-        name,
-        &sequence_dir,
-        &music_file_name,
-        music_duration_sec
-    ) {
-        Ok(proj) => proj,
-        Err(e) => {
-            // Remove copied music file (clean up)
-            try!(fs::remove_file(&dest_path).map_err(Error::Io));
-            panic!(e.to_string())
-        },
-    };
+    // Try to add sequence
+    let seq = try!(seq_dao.new_sequence(&sequence));
 
-    // Save project
-    try!(utils::write_protonfile(&new_project, None::<P>));
+    // Get list of channel ids in seq, sorted by dmx channel
+    let channel_ids = try!(seq_dao.get_channel_ids(seq.seqid));
 
-    // Commit changes
-    let signature = Signature::now("Proton Lights", "proton@teslaworks.net").unwrap();
-    let msg = format!("Adding new sequence '{}'", name);
-    let repo_path: Option<P> = None;
+    // Try to add empty sequence data
+    let seq_data = vec![0; sequence.num_frames as usize];
+    let _ = try!(data_dao.new_data_default(seq.seqid, channel_ids, seq_data));
 
-    utils::commit_all(repo_path, &signature, &msg)
-        .map(|_| ())
+    Ok(seq.seqid)
 }
 
-pub fn remove_sequence<P: AsRef<Path>>(admin_key_path: P, name: &str) -> Result<(), Error> {
-    
-    // Check that the admin has sufficient privileges
-    try!(utils::validate_admin(&admin_key_path));
+/// Adds a sequence to the project's playlist at the given index
+pub fn insert_sequence<PD: ProjectDao, SD: SequenceDao>(
+    project_dao: &PD,
+    seq_dao: &SD,
+    proj_name: &str,
+    seqid: u32,
+    index: Option<u32>
+) -> Result<(), Error> {
 
-    // Make sure the name is valid (needed since it will be used in a file path)
-    try!(validate_seq_name(name));
+    // Check that seqid exists
+    let _ = try!(seq_dao.get_sequence(seqid));
 
-    // Make the name of the sequence's directory
-    let mut sequence_dir = "seq_".to_owned();
-    sequence_dir.push_str(&name);
-    let sequence_dir = sequence_dir;
+    // Get project
+    let project = try!(project_dao.get_project(proj_name));
 
-    // Remove sequence from project
-    let project = try!(utils::read_protonfile(None::<P>));
-    let new_project = try!(project.remove_sequence(name));
+    // Get offset to insert at (default is end of playlist)
+    let offset = index.unwrap_or(project.playlist.len() as u32);
 
-    // Remove sequence's directory
-    let sequence_dir_path = Path::new(&sequence_dir);
-    if sequence_dir_path.exists() && sequence_dir_path.is_dir() {
-        let _ = fs::remove_dir_all(&sequence_dir_path)
-            .expect("Error removing sequence directory");
-    }
+    // Add sequence to project's playlist
+    let new_project = try!(project.insert_sequence(seqid, offset));
+    project_dao.update_project(new_project)
+}
 
-    // Save project
-    try!(utils::write_protonfile(&new_project, None::<P>));
+/// Removes a sequence from a project
+pub fn remove_sequence<PD: ProjectDao>(
+    project_dao: &PD,
+    proj_name: &str,
+    seqid: u32
+) -> Result<(), Error> {
 
-    // Commit changes
-    let signature = Signature::now("Proton Lights", "proton@teslaworks.net").unwrap();
-    let msg = format!("Removing sequence '{}'", name);
-    let repo_path: Option<P> = None;
+    // Remove sequence from project's playlist
+    let project = try!(project_dao.get_project(proj_name));
+    let new_project = try!(project.remove_sequence(seqid));
+    project_dao.update_project(new_project)
 
-    utils::commit_all(repo_path, &signature, &msg)
-        .map(|_| ())
+    // TODO: Remove sequence's music file if not used elsewhere in playlist
+
+}
+
+/// Deletes sequence from storage
+#[allow(unused_variables)]
+pub fn delete_sequence<P: AsRef<Path>, PD: PermissionDao, UD: UserDao, SD: SequenceDao> (
+    perm_dao: &PD,
+    user_dao: &UD,
+    seq_dao: &SD,
+    admin_key_path: P,
+    seqid: u32
+) -> Result<(), Error> {
+
+    // Check admin permission
+    // Check that sequence exists
+    // Try to delete sequence
+    Err(Error::TodoErr)
+}
+
+/// Fetches and returns a sequence
+pub fn get_sequence<SD: SequenceDao>(seq_dao: &SD, seqid: u32) -> Result<Sequence, Error> {
+    seq_dao.get_sequence(seqid)
 }
 
 /// Check that the music file is a valid format
@@ -133,41 +211,6 @@ fn validate_file_type<P: AsRef<Path>>(music_file_path: P) -> Result<(), Error> {
         },
         None => Err(Error::UnsupportedFileType("No file extension".to_string())),
     }
-}
-
-/// Makes sure the name has only valid characters in it
-/// A valid character is upper and lower alpha, numbers, and underscores
-fn validate_seq_name(name: &str) -> Result<(), Error> {
-
-    let seq_name_regex = Regex::new("^[0-9A-Za-z_]+$").expect("Regex failed to compile");
-    if seq_name_regex.is_match(name) {
-        Ok(())
-    } else {
-        Err(Error::InvalidSequenceName(name.to_string()))
-    }
-}
-
-/// Copies the file at music_file_path to the current directory
-/// Throw error if file does not exist
-///
-/// Impure.
-fn copy_music_file<P: AsRef<Path>>(music_file_path: P, dest_folder: &str) -> Result<PathBuf, Error> {
-    // Make sure source file exists
-    if !music_file_path.as_ref().exists() {
-        Err(music_file_not_found(music_file_path))
-    } else {
-        let file_name = try!(utils::file_name_from_path(&music_file_path));
-        let dest_path = Path::new(&dest_folder).join(&file_name);
-        fs::copy(&music_file_path, &dest_path)
-            .map_err(Error::Io)
-            .map(|_| PathBuf::from(dest_path))
-    }
-
-}
-
-fn music_file_not_found<P: AsRef<Path>>(path: P) -> Error {
-    let path_as_str = path.as_ref().to_str().expect("Path not valid UTF-8");
-    Error::MusicFileNotFound(path_as_str.to_string())
 }
 
 /// Extracts the duration of a music file

@@ -1,19 +1,22 @@
-extern crate git2;
+extern crate openssl;
+extern crate postgres;
+extern crate regex;
 extern crate rustc_serialize;
 extern crate sfml;
-extern crate regex;
-extern crate openssl;
 
-pub mod utils;
-mod init;
-mod user;
-mod sequence;
-pub mod project_types;
-pub mod error;
+mod layout;
 mod permissions;
+mod project;
+mod sequence;
+mod user;
+pub mod dao;
+pub mod error;
+pub mod project_types;
+pub mod utils;
 
 // Re-exports
-pub use init::*;
-pub use user::*;
-pub use sequence::*;
+pub use layout::*;
 pub use permissions::*;
+pub use project::*;
+pub use sequence::*;
+pub use user::*;
