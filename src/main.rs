@@ -18,29 +18,29 @@ const USAGE: &'static str = "
 Command-line interface for Proton
 
 Usage:
-  ./proton delete-sequence <admin-key> <seqid>
-  ./proton get-layout-id <proj-name>
-  ./proton get-playlist-data <proj-name>
-  ./proton get-project <proj-name>
-  ./proton get-sequence <seqid>
-  ./proton get-user-id <public-key>
-  ./proton insert-sequence <admin-key> <proj-name> <seqid> [<index>]
-  ./proton list-permissions <uid>
-  ./proton new-layout <layout-file>
-  ./proton new-project <name> <layout-id>
-  ./proton new-section <admin-key> <t_start> <t_end> <seqid> <fixid>..
-  ./proton new-sequence <admin-key> <name> <music-file> <seq-duration> <layout-id>
-  ./proton new-user <admin-key> <name>
-  ./proton new-vixen-sequence <admin-key> <name> <music-file> <seq-duration> <frame-duration> <data-file> <layout-id>
-  ./proton patch-layout <admin-key> <layout-id> <patch-file>
-  ./proton remove-sequence <admin-key> <proj-name> <seqid>
-  ./proton remove-user <admin-key> <uid>
-  ./proton set-permission <admin-key> (add | remove) <uid> Administrate
-  ./proton set-permission <admin-key> (add | remove) <uid> EditSequence <target-sequence>
-  ./proton set-permission <admin-key> (add | remove) <uid> EditSection <target-sequence> <target-section>
-  ./proton set-permission <admin-key> (add | remove) <name> EditSeqSec <target-section>
-  ./proton set-sequence-layout <admin-key> <seqid> <layout-id>
-  ./proton (-h | --help)
+  ./proton_cli delete-sequence <admin-key> <seqid>
+  ./proton_cli get-layout-id <proj-name>
+  ./proton_cli get-playlist-data <proj-name>
+  ./proton_cli get-project <proj-name>
+  ./proton_cli get-sequence <seqid>
+  ./proton_cli get-user-id <public-key>
+  ./proton_cli insert-sequence <admin-key> <proj-name> <seqid> [<index>]
+  ./proton_cli list-permissions <uid>
+  ./proton_cli new-layout <layout-file>
+  ./proton_cli new-project <name> <layout-id>
+  ./proton_cli new-section <admin-key> <t_start> <t_end> <seqid> <fixid>..
+  ./proton_cli new-sequence <admin-key> <name> <music-file> <seq-duration> <layout-id>
+  ./proton_cli new-user <admin-key> <name>
+  ./proton_cli new-vixen-sequence <admin-key> <name> <music-file> <seq-duration> <frame-duration> <data-file> <layout-id>
+  ./proton_cli patch-layout <admin-key> <layout-id> <patch-file>
+  ./proton_cli remove-sequence <admin-key> <proj-name> <seqid>
+  ./proton_cli remove-user <admin-key> <uid>
+  ./proton_cli set-permission <admin-key> (add | remove) <uid> Administrate
+  ./proton_cli set-permission <admin-key> (add | remove) <uid> EditSequence <target-sequence>
+  ./proton_cli set-permission <admin-key> (add | remove) <uid> EditSection <target-sequence> <target-section>
+  ./proton_cli set-permission <admin-key> (add | remove) <name> EditSeqSec <target-section>
+  ./proton_cli set-sequence-layout <admin-key> <seqid> <layout-id>
+  ./proton_cli (-h | --help)
 
 Options:
   -h --help     Show this screen
@@ -89,7 +89,7 @@ fn main() {
 	let args: Args = Docopt::new(USAGE)
 		.and_then(|d| d.decode())
 		.unwrap_or_else(|e| e.exit());
-
+	
 	// Below unwrap()'s are safe within Docopt's usage rules
 
 	// Every proton command is mapped to a specific function that should be run
@@ -129,7 +129,10 @@ fn main() {
 			ProtonReturn::SequenceId(sid) => println!("Sequence id: {}", sid),
 			ProtonReturn::Uid(uid) => println!("User id: {}", uid)
 		},
-		Err(e) => println!("{:?}", e.to_string()),
+		Err(e) => {
+			println!("{:?}", e.to_string());
+			std::process::exit(1);
+		}
 	};
 }
 
