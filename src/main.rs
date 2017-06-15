@@ -34,7 +34,7 @@ Usage:
   ./proton_cli new-vixen-sequence <admin-key> <name> <music-file> <seq-duration> <frame-duration> <data-file> <layout-id>
   ./proton_cli patch-layout <admin-key> <layout-id> <patch-file>
   ./proton_cli remove-sequence <admin-key> <proj-name> <seqid>
-  ./proton_cli remove-user <admin-key> <uid>
+  ./proton_cli remove-user <admin-key> <name>
   ./proton_cli set-permission <admin-key> (add | remove) <uid> Administrate
   ./proton_cli set-permission <admin-key> (add | remove) <uid> EditSequence <target-sequence>
   ./proton_cli set-permission <admin-key> (add | remove) <uid> EditSection <target-sequence> <target-section>
@@ -431,8 +431,8 @@ fn run_remove_sequence(args: Args) -> Result<ProtonReturn, Error> {
 
 /// remove-user <admin-key> <uid>
 fn run_remove_user(args: Args) -> Result<ProtonReturn, Error> {
-	let uid = args.arg_uid.unwrap();
-	try!(proton_cli::remove_user(uid));
+	let name = args.arg_name.unwrap();
+	try!(proton_cli::remove_user(&name));
 	Ok(ProtonReturn::NoReturn)
 }
 

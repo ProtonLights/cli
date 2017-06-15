@@ -43,7 +43,7 @@ pub fn new_user<UD: UserDao>(
 /// Removes a user
 #[allow(unused_variables)]
 pub fn remove_user(
-    uid: u32
+    name: &str
 ) -> Result<(), Error> {
 
     Err(Error::TodoErr)
