@@ -10,7 +10,7 @@ use docopt::Docopt;
 
 use proton_cli::error::Error;
 use proton_cli::dao::{self, LayoutDao};
-use proton_cli::project_types::{Project, Sequence, PermissionEnum};
+use proton_cli::project_types::{PermissionEnum, Project, Sequence, User};
 use proton_cli::utils;
 
 
@@ -23,7 +23,7 @@ Usage:
   ./proton_cli get-playlist-data <proj-name>
   ./proton_cli get-project <proj-name>
   ./proton_cli get-sequence <seqid>
-  ./proton_cli get-user-id <public-key>
+  ./proton_cli get-user <public-key>
   ./proton_cli insert-sequence <admin-key> <proj-name> <seqid> [<index>]
   ./proton_cli list-permissions <uid>
   ./proton_cli new-layout <layout-file>
@@ -80,7 +80,7 @@ enum ProtonReturn {
 	PublicKey(String),
 	Sequence(Sequence),
 	SequenceId(u32),
-	Uid(u32),
+	User(User),
 }
 
 // Entry point
@@ -99,7 +99,7 @@ fn main() {
 		"get-playlist-data" => run_get_playlist_data,
 		"get-project" => run_get_project,
 		"get-sequence" => run_get_sequence,
-		"get_user_id" => run_get_user_id,
+		"get-user" => run_get_user,
 		"insert-sequence" => run_insert_sequence,
 		"list-permissions" => run_list_permissions,
 		"new-layout" => run_new_layout,
@@ -127,10 +127,10 @@ fn main() {
 			ProtonReturn::PublicKey(s) => println!("PubKey: {}", s),
 			ProtonReturn::Sequence(seq) => println!("Sequence: {:?}", seq),
 			ProtonReturn::SequenceId(sid) => println!("Sequence id: {}", sid),
-			ProtonReturn::Uid(uid) => println!("User id: {}", uid)
+			ProtonReturn::User(user) => println!("User: {:?}", user)
 		},
 		Err(e) => {
-			println!("{:?}", e.to_string());
+			println!("Error: {:?}", e.to_string());
 			std::process::exit(1);
 		}
 	};
@@ -194,13 +194,13 @@ fn run_get_sequence(args: Args) -> Result<ProtonReturn, Error> {
 	Ok(ProtonReturn::Sequence(sequence))
 }
 
-/// get-user-id <public-key>
-fn run_get_user_id(args: Args) -> Result<ProtonReturn, Error> {
+/// get-user <public-key>
+fn run_get_user(args: Args) -> Result<ProtonReturn, Error> {
 	let public_key = args.arg_public_key.unwrap();
 	let public_key_path = Path::new(&public_key);
 	let user_dao = try!(dao::UserDaoPostgres::new());
-	let uid = try!(proton_cli::get_user_id(user_dao, &public_key_path));
-	Ok(ProtonReturn::Uid(uid))
+	let user = try!(proton_cli::get_user(user_dao, &public_key_path));
+	Ok(ProtonReturn::User(user))
 }
 
 /// insert-sequence <admin-key> <proj-name> <seqid> [<index>]
