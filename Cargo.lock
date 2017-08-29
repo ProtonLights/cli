@@ -7,7 +7,7 @@ dependencies = [
  "postgres 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.22 (registry+https://github.com/rust-lang/crates.io-index)",
- "sfml 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sfml 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tempdir 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -29,11 +29,6 @@ dependencies = [
 
 [[package]]
 name = "bitflags"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "bitflags"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
@@ -49,51 +44,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "csfml-audio-sys"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "csfml-system-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)",
- "sfml-types 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "csfml-graphics-sys"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "csfml-system-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "csfml-window-sys 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)",
- "sfml-types 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "csfml-network-sys"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "csfml-system-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)",
- "sfml-types 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csfml-system-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sfml-build 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "csfml-system-sys"
-version = "0.1.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "libc 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "csfml-window-sys"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "csfml-system-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)",
- "sfml-types 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sfml-build 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -311,21 +274,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "sfml"
-version = "0.11.2"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "bitflags 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "csfml-audio-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "csfml-graphics-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "csfml-network-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "csfml-system-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "csfml-window-sys 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)",
- "sfml-types 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csfml-audio-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csfml-system-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
-name = "sfml-types"
+name = "sfml-build"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
@@ -427,15 +384,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [metadata]
 "checksum aho-corasick 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ca972c2ea5f742bfce5687b9aef75506a764f61d37f8f649047846a9686ddb66"
 "checksum aho-corasick 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "0638fd549427caa90c499814196d1b9e3725eb4d15d7339d6de073a680ed0ca2"
-"checksum bitflags 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4f67931368edf3a9a51d29886d245f1c3db2f1ef0dcc9e35ff70341b78c10d23"
 "checksum bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "aad18937a628ec6abcd26d1489012cc0e18c21798210f491af69ded9b881106d"
 "checksum bufstream 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7b48dbe2ff0e98fa2f03377d204a9637d3c9816cd431bfe05a8abbd0ea11d074"
 "checksum byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c40977b0ee6b9885c9013cd41d9feffdd22deb3bb4dc3a71d901cc7a77de18c8"
-"checksum csfml-audio-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "f03e143b2470cbe317a57c17661f315f9565e4187ea85335ad7839dc57aa6bd0"
-"checksum csfml-graphics-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "72e888a8cc664674eb47271d1042fc2df09a03fd7eb1585d691f0503dce19c55"
-"checksum csfml-network-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bd11432924734b45b6478ee384ad84591274a9f277997771ca2cd57ebf03940e"
-"checksum csfml-system-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "f613309f92bca2549e066286580d0ab69809afba4675c3fc0c7943409c77206d"
-"checksum csfml-window-sys 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f74f961b69749ca7e62ad66b7959ab62f63847826d8cb3a068250fcbd1c3fbcf"
+"checksum csfml-audio-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "121cbef1719edf32a3581ea734dce9ddc652353db09709f322c23299d21824c5"
+"checksum csfml-system-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8e387e2fb463b825be4b551aa77311fa4d93f18c0074d3a7324933743b57d1c5"
 "checksum docopt 0.6.86 (registry+https://github.com/rust-lang/crates.io-index)" = "4a7ef30445607f6fc8720f0a0a2c7442284b629cf0d049286860fae23e71c4d9"
 "checksum fallible-iterator 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "5d48ab1bc11a086628e8cc0cc2c2dc200b884ac05c4b48fb71d6036b6999ff1d"
 "checksum foreign-types 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3e4056b9bd47f8ac5ba12be771f77a0dae796d1bbaaf5fd0b9c2d38b69b8a29d"
@@ -463,8 +416,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum regex-syntax 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "f9ec002c35e86791825ed294b50008eea9ddfc8def4420124fbc6b08db834957"
 "checksum regex-syntax 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2f9191b1f57603095f105d317e375d19b1c9c5c3185ea9633a99a6dcbed04457"
 "checksum rustc-serialize 0.3.22 (registry+https://github.com/rust-lang/crates.io-index)" = "237546c689f20bb44980270c73c3b9edd0891c1be49cc1274406134a66d3957b"
-"checksum sfml 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)" = "796ac61674669d1cbc9a444af283aa622c8bf018692a9ec4dc39ff9445615469"
-"checksum sfml-types 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d81c513af1beb0d4105ac8269dc0f8405d0e1bbf0d589af1b882fb515d7c5758"
+"checksum sfml 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1db0854951bfe7c178376b1bfb71b5a3642874387491d0185f4339ec7fbe4636"
+"checksum sfml-build 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "db75bdc5ae969ea9317fb232b2f4f11e128c459bad8842fed022d722b42bf970"
 "checksum siphasher 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2ffc669b726f2bc9a3bcff66e5e23b56ba6bf70e22a34c3d7b6d0b3450b65b84"
 "checksum strsim 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "67f84c44fbb2f91db7fef94554e6b2ac05909c9c0b0bc23bb98d3a1aebfe7f7c"
 "checksum tempdir 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "87974a6f5c1dfb344d733055601650059a3363de2a6104819293baff662132d6"
