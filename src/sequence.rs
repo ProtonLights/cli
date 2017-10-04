@@ -216,11 +216,11 @@ fn validate_file_type<P: AsRef<Path>>(music_file_path: P) -> Result<(), Error> {
 /// Extracts the duration of a music file
 fn get_music_duration_sec<P: AsRef<Path>>(path: P) -> Result<u32, Error> {
     let path_str = &path.as_ref().to_str().expect("Path is invalid");
-    let music = match Music::new_from_file(&path_str) {
+    let music = match Music::from_file(&path_str) {
         Some(m) => m,
         None => return Err(Error::Rsfml("Error reading file.".to_string())),
     };
-    let duration_time = music.get_duration();
+    let duration_time = music.duration();
     let duration = duration_time.as_seconds() as u32;
     Ok(duration)
 }

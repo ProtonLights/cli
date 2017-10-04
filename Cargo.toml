@@ -11,10 +11,14 @@ license = "MIT"
 [dependencies]
 docopt = "^0.6"
 openssl = "~0.9"
-sfml = "~0.11"
 rustc-serialize = "^0.3"
 regex = "^0.2"
 postgres = {version="~0.14", features = ["with-rustc-serialize"]}
+
+[dependencies.sfml]
+version = "^0.12"
+default-features = false
+features = ["audio"]
 
 [dev-dependencies]
 tempdir = "^0.3"

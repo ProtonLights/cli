@@ -38,6 +38,9 @@ Permissions include:
 - libcsfml-dev
 - postgresql (version 9.5 works for sure)
 
+## Getting started on Windows
+Run windows_setup.bat in the proton project to install all necessary libraries and set the proper PATH variables
+
 ## Setting up the database
 
 Install postgresql  
