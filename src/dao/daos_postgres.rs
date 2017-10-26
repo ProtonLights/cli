@@ -3,7 +3,7 @@ use postgres::{Connection, TlsMode};
 use error::Error;
 
 
-const POSTGRES_CONN_STR: &'static str = "postgresql://proton:1234qwermnbv@localhost/proton_cli";
+const POSTGRES_CONN_STR: &'static str = "postgresql://proton:1234qwermnbv@45.55.203.92/proton_cli";
 
 pub struct DaoPostgres {
     pub conn: Connection
