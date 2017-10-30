@@ -33,3 +33,7 @@ pub use self::daos_postgres::ProjectDaoPostgres;
 pub use self::daos_postgres::SectionDaoPostgres;
 pub use self::daos_postgres::SequenceDaoPostgres;
 pub use self::daos_postgres::UserDaoPostgres;
+
+// Connection configuration
+mod connection_config;
+use self::connection_config::ConnectionConfig;
