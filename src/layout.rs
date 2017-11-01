@@ -5,7 +5,7 @@ use std::path::Path;
 
 use dao::{ChannelDao, FixtureDao, LayoutDao, SequenceDao};
 use error::Error;
-use project_types::{FileLayout, FilePatch};
+use project_types::{FileLayout, FilePatch, Layout};
 use utils;
 
 
@@ -41,8 +41,9 @@ pub fn new_layout<P: AsRef<Path>, CD: ChannelDao, FD: FixtureDao, LD: LayoutDao>
     chan_dao: &CD,
     fix_dao: &FD,
     layout_dao: &LD,
+    layout_name: String,
     layout_path: P,
-) -> Result<u32, Error> {
+) -> Result<Layout, Error> {
 
     // Load layout from file
     let layout_json = try!(utils::file_as_string(layout_path.as_ref()));
@@ -58,10 +59,10 @@ pub fn new_layout<P: AsRef<Path>, CD: ChannelDao, FD: FixtureDao, LD: LayoutDao>
     let fix_ids = fixtures.iter()
         .map(|fixture| fixture.fixid)
         .collect::<Vec<u32>>();
-    let layout = try!(layout_dao.new_layout(&file_layout.layoutName, fix_ids));
+    let layout = try!(layout_dao.new_layout(&layout_name, fix_ids));
 
-    // Return layout id
-    Ok(layout.layout_id)
+    // Return layout
+    Ok(layout)
 }
 
 /// Set a layout's sequence

@@ -10,7 +10,7 @@ use docopt::Docopt;
 
 use proton_cli::error::Error;
 use proton_cli::dao::{self, LayoutDao};
-use proton_cli::project_types::{PermissionEnum, Project, Sequence, User};
+use proton_cli::project_types::{Layout, Project, Sequence, PermissionEnum};
 use proton_cli::utils;
 
 
@@ -26,7 +26,7 @@ Usage:
   ./proton_cli get-user <public-key>
   ./proton_cli insert-sequence <admin-key> <proj-name> <seqid> [<index>]
   ./proton_cli list-permissions <uid>
-  ./proton_cli new-layout <layout-file>
+  ./proton_cli new-layout <layout-name> <layout-file>
   ./proton_cli new-project <name> <layout-id>
   ./proton_cli new-section <admin-key> <t_start> <t_end> <seqid> <fixid>..
   ./proton_cli new-sequence <admin-key> <name> <music-file> <seq-duration> <layout-id>
@@ -55,6 +55,7 @@ struct Args {
 	arg_frame_duration: Option<u32>,
 	arg_index: Option<u32>,
 	arg_layout_id: Option<u32>,
+	arg_layout_name: Option<String>,
 	arg_layout_file: Option<String>,
 	arg_music_file: Option<String>,
 	arg_name: Option<String>,
@@ -74,6 +75,7 @@ struct Args {
 // Generic return type of all functions that are called based on cli commands
 enum ProtonReturn {
 	LayoutId(u32),
+	Layout(Layout),
 	NoReturn,
 	PlaylistData(String),
 	Project(Project),
@@ -120,7 +122,8 @@ fn main() {
 	let result = command(args);
 	match result {
 		Ok(ret) => match ret {
-			ProtonReturn::LayoutId(lid) => println!("Layout id: {}", lid),
+			ProtonReturn::LayoutId(lid) => println!("Layout id: {:?}", lid),
+			ProtonReturn::Layout(layout) => println!("Layout: {:?}", layout),
 			ProtonReturn::NoReturn => println!("Worked!"),
 			ProtonReturn::PlaylistData(data) => println!("PLAYLIST_DATA:::{}", data),
 			ProtonReturn::Project(project) => println!("Project: {:?}", project),
@@ -239,17 +242,19 @@ fn run_list_permissions(args: Args) -> Result<ProtonReturn, Error> {
 
 /// new-layout <layout-file>
 fn run_new_layout(args: Args) -> Result<ProtonReturn, Error> {
+	let layout_name = args.arg_layout_name.unwrap();
 	let layout_file = args.arg_layout_file.unwrap();
 	let layout_file_path = Path::new(&layout_file);
 	let channel_dao = try!(dao::ChannelDaoPostgres::new());
 	let fixture_dao = try!(dao::FixtureDaoPostgres::new());
 	let layout_dao = try!(dao::LayoutDaoPostgres::new());
-	let layout_id = try!(proton_cli::new_layout(
+	let layout = try!(proton_cli::new_layout(
 		&channel_dao,
 		&fixture_dao,
 		&layout_dao,
+		layout_name,
 		&layout_file_path));
-	Ok(ProtonReturn::LayoutId(layout_id))
+	Ok(ProtonReturn::Layout(layout))
 }
 
 /// new-project <name> <layout-id>
