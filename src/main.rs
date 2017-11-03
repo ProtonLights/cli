@@ -10,7 +10,7 @@ use docopt::Docopt;
 
 use proton_cli::error::Error;
 use proton_cli::dao::{self, LayoutDao};
-use proton_cli::project_types::{Project, Sequence, PermissionEnum};
+use proton_cli::project_types::{PermissionEnum, Project, Sequence, User};
 use proton_cli::utils;
 
 
@@ -18,29 +18,29 @@ const USAGE: &'static str = "
 Command-line interface for Proton
 
 Usage:
-  ./proton delete-sequence <admin-key> <seqid>
-  ./proton get-layout-id <proj-name>
-  ./proton get-playlist-data <proj-name>
-  ./proton get-project <proj-name>
-  ./proton get-sequence <seqid>
-  ./proton get-user-id <public-key>
-  ./proton insert-sequence <admin-key> <proj-name> <seqid> [<index>]
-  ./proton list-permissions <uid>
-  ./proton new-layout <layout-file>
-  ./proton new-project <name> <layout-id>
-  ./proton new-section <admin-key> <t_start> <t_end> <seqid> <fixid>..
-  ./proton new-sequence <admin-key> <name> <music-file> <seq-duration> <layout-id>
-  ./proton new-user <admin-key> <name>
-  ./proton new-vixen-sequence <admin-key> <name> <music-file> <seq-duration> <frame-duration> <data-file> <layout-id>
-  ./proton patch-layout <admin-key> <layout-id> <patch-file>
-  ./proton remove-sequence <admin-key> <proj-name> <seqid>
-  ./proton remove-user <admin-key> <uid>
-  ./proton set-permission <admin-key> (add | remove) <uid> Administrate
-  ./proton set-permission <admin-key> (add | remove) <uid> EditSequence <target-sequence>
-  ./proton set-permission <admin-key> (add | remove) <uid> EditSection <target-sequence> <target-section>
-  ./proton set-permission <admin-key> (add | remove) <name> EditSeqSec <target-section>
-  ./proton set-sequence-layout <admin-key> <seqid> <layout-id>
-  ./proton (-h | --help)
+  ./proton_cli delete-sequence <admin-key> <seqid>
+  ./proton_cli get-layout-id <proj-name>
+  ./proton_cli get-playlist-data <proj-name>
+  ./proton_cli get-project <proj-name>
+  ./proton_cli get-sequence <seqid>
+  ./proton_cli get-user <public-key>
+  ./proton_cli insert-sequence <admin-key> <proj-name> <seqid> [<index>]
+  ./proton_cli list-permissions <uid>
+  ./proton_cli new-layout <layout-file>
+  ./proton_cli new-project <name> <layout-id>
+  ./proton_cli new-section <admin-key> <t_start> <t_end> <seqid> <fixid>..
+  ./proton_cli new-sequence <admin-key> <name> <music-file> <seq-duration> <layout-id>
+  ./proton_cli new-user <admin-key> <name>
+  ./proton_cli new-vixen-sequence <admin-key> <name> <music-file> <seq-duration> <frame-duration> <data-file> <layout-id>
+  ./proton_cli patch-layout <admin-key> <layout-id> <patch-file>
+  ./proton_cli remove-sequence <admin-key> <proj-name> <seqid>
+  ./proton_cli remove-user <admin-key> <name>
+  ./proton_cli set-permission <admin-key> (add | remove) <uid> Administrate
+  ./proton_cli set-permission <admin-key> (add | remove) <uid> EditSequence <target-sequence>
+  ./proton_cli set-permission <admin-key> (add | remove) <uid> EditSection <target-sequence> <target-section>
+  ./proton_cli set-permission <admin-key> (add | remove) <name> EditSeqSec <target-section>
+  ./proton_cli set-sequence-layout <admin-key> <seqid> <layout-id>
+  ./proton_cli (-h | --help)
 
 Options:
   -h --help     Show this screen
@@ -80,7 +80,7 @@ enum ProtonReturn {
 	PublicKey(String),
 	Sequence(Sequence),
 	SequenceId(u32),
-	Uid(u32),
+	User(User),
 }
 
 // Entry point
@@ -89,7 +89,7 @@ fn main() {
 	let args: Args = Docopt::new(USAGE)
 		.and_then(|d| d.decode())
 		.unwrap_or_else(|e| e.exit());
-
+	
 	// Below unwrap()'s are safe within Docopt's usage rules
 
 	// Every proton command is mapped to a specific function that should be run
@@ -99,7 +99,7 @@ fn main() {
 		"get-playlist-data" => run_get_playlist_data,
 		"get-project" => run_get_project,
 		"get-sequence" => run_get_sequence,
-		"get_user_id" => run_get_user_id,
+		"get-user" => run_get_user,
 		"insert-sequence" => run_insert_sequence,
 		"list-permissions" => run_list_permissions,
 		"new-layout" => run_new_layout,
@@ -127,9 +127,12 @@ fn main() {
 			ProtonReturn::PublicKey(s) => println!("PubKey: {}", s),
 			ProtonReturn::Sequence(seq) => println!("Sequence: {:?}", seq),
 			ProtonReturn::SequenceId(sid) => println!("Sequence id: {}", sid),
-			ProtonReturn::Uid(uid) => println!("User id: {}", uid)
+			ProtonReturn::User(user) => println!("User: {:?}", user)
 		},
-		Err(e) => println!("{:?}", e.to_string()),
+		Err(e) => {
+			println!("Error: {:?}", e.to_string());
+			std::process::exit(1);
+		}
 	};
 }
 
@@ -191,13 +194,13 @@ fn run_get_sequence(args: Args) -> Result<ProtonReturn, Error> {
 	Ok(ProtonReturn::Sequence(sequence))
 }
 
-/// get-user-id <public-key>
-fn run_get_user_id(args: Args) -> Result<ProtonReturn, Error> {
+/// get-user <public-key>
+fn run_get_user(args: Args) -> Result<ProtonReturn, Error> {
 	let public_key = args.arg_public_key.unwrap();
 	let public_key_path = Path::new(&public_key);
 	let user_dao = try!(dao::UserDaoPostgres::new());
-	let uid = try!(proton_cli::get_user_id(user_dao, &public_key_path));
-	Ok(ProtonReturn::Uid(uid))
+	let user = try!(proton_cli::get_user(user_dao, &public_key_path));
+	Ok(ProtonReturn::User(user))
 }
 
 /// insert-sequence <admin-key> <proj-name> <seqid> [<index>]
@@ -428,8 +431,8 @@ fn run_remove_sequence(args: Args) -> Result<ProtonReturn, Error> {
 
 /// remove-user <admin-key> <uid>
 fn run_remove_user(args: Args) -> Result<ProtonReturn, Error> {
-	let uid = args.arg_uid.unwrap();
-	try!(proton_cli::remove_user(uid));
+	let name = args.arg_name.unwrap();
+	try!(proton_cli::remove_user(&name));
 	Ok(ProtonReturn::NoReturn)
 }
 

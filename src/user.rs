@@ -3,14 +3,15 @@ use std::path::Path;
 
 use dao::{UserDao};
 use error::Error;
+use project_types::User;
 use utils;
 
 
-/// Lookup and return a user's user id from a public key
-pub fn get_user_id<P: AsRef<Path>, UD: UserDao>(
+/// Lookup and return a user from a public key
+pub fn get_user<P: AsRef<Path>, UD: UserDao>(
     user_dao: UD,
     public_key_path: P
-) -> Result<u32, Error> {
+) -> Result<User, Error> {
     
     let public_key_str = try!(utils::file_as_string(public_key_path.as_ref()));
 
@@ -22,7 +23,10 @@ pub fn get_user_id<P: AsRef<Path>, UD: UserDao>(
     // Lookup uid
     let uid = try!(user_dao.get_user_id(&public_key_str));
 
-    Ok(uid)
+    // Get user
+    let user = try!(user_dao.get_user(uid));
+
+    Ok(user)
 }
 
 pub fn new_user<UD: UserDao>(
@@ -43,7 +47,7 @@ pub fn new_user<UD: UserDao>(
 /// Removes a user
 #[allow(unused_variables)]
 pub fn remove_user(
-    uid: u32
+    name: &str
 ) -> Result<(), Error> {
 
     Err(Error::TodoErr)
