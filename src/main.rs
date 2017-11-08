@@ -209,9 +209,7 @@ fn run_insert_sequence<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonRetur
 /// list-permissions <uid>
 fn run_list_permissions<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let uid = args.arg_uid.unwrap();
-	let permissions = try!(
-		proton_cli::get_permissions(&dao, uid)
-	);
+	let permissions = try!(proton_cli::get_permissions(&dao, uid));
 	println!("{}", json::as_pretty_json(&permissions));
 	Ok(ProtonReturn::NoReturn)
 }
