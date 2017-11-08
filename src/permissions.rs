@@ -2,18 +2,22 @@ use std::path::Path;
 
 use error::Error;
 use project_types::Permission;
-use dao::PermissionDao;
+use dao::ProtonDao;
 
 
 /// [INCOMPLETE] Gets the permissions a user has
-pub fn get_permissions<P: AsRef<Path>, PD: PermissionDao> (pdao: PD, uid: u32
+pub fn get_permissions<PD: ProtonDao> (
+    dao: &PD,
+    uid: u32
 ) -> Result<Vec<Permission>, Error> {
-    pdao.get_all_permissions(uid)
+
+    dao.get_all_permissions(uid)
 }
 
 /// [INCOMPLETE] Sets a user's permission
 #[allow(unused_variables)]
-pub fn set_permission<P: AsRef<Path>> (
+pub fn set_permission<P: AsRef<Path>, PD: ProtonDao> (
+    dao: &PD,
     admin_key_path: P,
     add: bool,
     target_uid: u32,

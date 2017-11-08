@@ -1,9 +1,9 @@
 use project_types::{self, Permission};
-use dao::{PermissionDao, PermissionDaoPostgres};
+use dao::{PermissionDao, DaoPostgres};
 use error::Error;
 
 
-impl PermissionDao for PermissionDaoPostgres {
+impl PermissionDao for DaoPostgres {
 
     fn add_initial_permission(&self, root_uid: u32) -> Result<(), Error> {
         let statement = "INSERT INTO permissions (uid, seqid, secid, permission) VALUES ($1, $2, $3, $4)";

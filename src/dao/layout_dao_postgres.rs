@@ -1,9 +1,9 @@
 use project_types::Layout;
 use error::Error;
-use dao::{LayoutDao, LayoutDaoPostgres};
+use dao::{LayoutDao, DaoPostgres};
 
 
-impl LayoutDao for LayoutDaoPostgres {
+impl LayoutDao for DaoPostgres {
 
     fn new_layout(&self, name: &str, fixtures: Vec<u32>) -> Result<Layout, Error> {
         let statement = "INSERT INTO layouts (name,fixtures) VALUES ($1,$2)";

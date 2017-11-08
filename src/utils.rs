@@ -6,7 +6,7 @@ use openssl::rsa;
 use openssl::pkey;
 use rustc_serialize::json;
 
-use dao::{PermissionDao, UserDao};
+use dao::ProtonDao;
 use project_types::PermissionEnum;
 use error::Error;
 
@@ -47,17 +47,16 @@ pub fn validate_rsa_pub_key(pub_key: &str) -> bool {
 /// Checks if the user with a public key at the given path has
 /// one of the given valid permissions
 /// Returns this user if found and has permission, else error
-pub fn check_valid_permission<P: AsRef<Path>, PD: PermissionDao, UD: UserDao>(
-    perm_dao: &PD,
-    user_dao: &UD,
+pub fn check_valid_permission<P: AsRef<Path>, PD: ProtonDao>(
+    dao: &PD,
     public_key_path: P,
     valid_permissions: &Vec<PermissionEnum>
 ) -> Result<u32, Error> {
     
     if valid_permissions.len() > 0 {
         let public_key = try!(file_as_string(public_key_path));
-        let uid = try!(user_dao.get_user_id(&public_key));
-        let permissions = try!(perm_dao.get_all_permissions(uid));
+        let uid = try!(dao.get_user_id(&public_key));
+        let permissions = try!(dao.get_all_permissions(uid));
         for permission in permissions {
             if valid_permissions.contains(&permission.permission) {
                 return Ok(uid);

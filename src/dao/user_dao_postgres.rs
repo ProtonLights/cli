@@ -1,9 +1,9 @@
-use dao::{UserDao, UserDaoPostgres};
+use dao::{UserDao, DaoPostgres};
 use error::Error;
 use project_types::User;
 
 
-impl UserDao for UserDaoPostgres {
+impl UserDao for DaoPostgres {
 
     fn add_initial_user(&self, proj_name: &str, private_key: &str, public_key: &str) -> Result<u32, Error> {
         let root_uname = format!("{}_{}", "root", proj_name);

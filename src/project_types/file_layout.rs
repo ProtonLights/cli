@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use dao::{ChannelDao, FixtureDao};
+use dao::ProtonDao;
 use error::Error;
 use project_types::{Channel, Fixture};
 
@@ -111,10 +111,9 @@ impl FileLayout {
 
     /// Creates new channels and fixtures based on this FileLayout's data. Part of 
     /// this process is grouping the channels into fixtures.
-    pub fn create_new_parts<CD: ChannelDao, FD: FixtureDao>(
+    pub fn create_new_parts<PD: ProtonDao>(
         &self,
-        chan_dao: &CD,
-        fix_dao: &FD
+        dao: &PD,
     ) -> Result<(Vec<Channel>, Vec<Fixture>), Error> {
     
         let mut channels = Vec::new();
@@ -125,7 +124,7 @@ impl FileLayout {
             if c.channelName != "Spare" && c.channelName != "X" {
                 let location = try!(FileLayout::layout_get_i32_tuple(&c.location));
                 let rotation = try!(FileLayout::layout_get_i32_tuple(&c.rotation));
-                let channel = try!(chan_dao.new_channel(
+                let channel = try!(dao.new_channel(
                     &c.channelName,
                     c.num_primary,
                     c.num_secondary,
@@ -148,7 +147,7 @@ impl FileLayout {
         let mut fixtures = Vec::new();
         for (fix_name, fix_chan_ids) in &fixture_names {
             // TODO: Calculate center and width/height of fixture
-            let fixture = try!(fix_dao.new_fixture(
+            let fixture = try!(dao.new_fixture(
                 fix_name,
                 (0,0,0),
                 (0,0,0),

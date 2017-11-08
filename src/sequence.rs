@@ -7,15 +7,12 @@ use sfml::audio::Music;
 
 use error::Error;
 use project_types::{Sequence};
-use dao::{ChannelDao, DataDao, LayoutDao, PermissionDao, ProjectDao, SequenceDao, UserDao};
+use dao::ProtonDao;
 use utils;
 
 /// Creates a new sequence based on proton-vixen-converter data
-pub fn new_vixen_sequence<P: AsRef<Path>, CD: ChannelDao, DD: DataDao, LD: LayoutDao, SD: SequenceDao>(
-    chan_dao: &CD,
-    data_dao: &DD,
-    layout_dao: &LD,
-    seq_dao: &SD,
+pub fn new_vixen_sequence<P: AsRef<Path>, PD: ProtonDao>(
+    dao: &PD,
     name: &str,
     music_file_path: P,
     seq_duration_ms: u32,
@@ -25,7 +22,7 @@ pub fn new_vixen_sequence<P: AsRef<Path>, CD: ChannelDao, DD: DataDao, LD: Layou
 ) -> Result<u32, Error> {
 
     // Get layout (also checks if it exists)
-    let layout = try!(layout_dao.get_layout(layout_id));
+    let layout = try!(dao.get_layout(layout_id));
 
     // Make sure the music file is a valid format
     try!(validate_file_type(&music_file_path));
@@ -49,10 +46,10 @@ pub fn new_vixen_sequence<P: AsRef<Path>, CD: ChannelDao, DD: DataDao, LD: Layou
     );
 
     // Try to add sequence
-    let seq = try!(seq_dao.new_sequence(&sequence));
+    let seq = try!(dao.new_sequence(&sequence));
 
     // Get sequence channel ids to match up dmx channels with given data
-    let chan_ids = try!(seq_dao.get_channel_ids(seq.seqid));
+    let chan_ids = try!(dao.get_channel_ids(seq.seqid));
 
     // Read in vixen sequence data
     let vixen_data_str = try!(utils::file_as_string(data_file_path.as_ref()));
@@ -66,19 +63,17 @@ pub fn new_vixen_sequence<P: AsRef<Path>, CD: ChannelDao, DD: DataDao, LD: Layou
     
     // For each channel the sequence created, update its data based on vixen_data
     for chanid in chan_ids {
-        let channel = try!(chan_dao.get_channel(chanid));
+        let channel = try!(dao.get_channel(chanid));
         let ref chan_data = vixen_data[channel.channel_internal as usize - 1]; // TODO, check out of bounds
-        try!(data_dao.new_data(seq.seqid, chanid, chan_data));
+        try!(dao.new_data(seq.seqid, chanid, chan_data));
     }
 
     Ok(seq.seqid)
 }
 
 /// Creates a new sequence
-pub fn new_sequence<P: AsRef<Path>, DD: DataDao, LD: LayoutDao, SD: SequenceDao>(
-    data_dao: &DD,
-    layout_dao: &LD,
-    seq_dao: &SD,
+pub fn new_sequence<P: AsRef<Path>, PD: ProtonDao>(
+    dao: &PD,
     name: &str,
     music_file_path: P,
     seq_duration_ms: u32,
@@ -90,12 +85,12 @@ pub fn new_sequence<P: AsRef<Path>, DD: DataDao, LD: LayoutDao, SD: SequenceDao>
     let lid = match layout_id {
         Some(id) => id,
         None => {
-            let default_layout = try!(layout_dao.get_default_layout());
+            let default_layout = try!(dao.get_default_layout());
             default_layout.layout_id
         },
     };
 
-    let layout = try!(layout_dao.get_layout(lid));
+    let layout = try!(dao.get_layout(lid));
 
     // Make sure the music file is a valid format
     try!(validate_file_type(&music_file_path));
@@ -119,52 +114,51 @@ pub fn new_sequence<P: AsRef<Path>, DD: DataDao, LD: LayoutDao, SD: SequenceDao>
     );
 
     // Try to add sequence
-    let seq = try!(seq_dao.new_sequence(&sequence));
+    let seq = try!(dao.new_sequence(&sequence));
 
     // Get list of channel ids in seq, sorted by dmx channel
-    let channel_ids = try!(seq_dao.get_channel_ids(seq.seqid));
+    let channel_ids = try!(dao.get_channel_ids(seq.seqid));
 
     // Try to add empty sequence data
     let seq_data = vec![0; sequence.num_frames as usize];
-    let _ = try!(data_dao.new_data_default(seq.seqid, channel_ids, seq_data));
+    let _ = try!(dao.new_data_default(seq.seqid, channel_ids, seq_data));
 
     Ok(seq.seqid)
 }
 
 /// Adds a sequence to the project's playlist at the given index
-pub fn insert_sequence<PD: ProjectDao, SD: SequenceDao>(
-    project_dao: &PD,
-    seq_dao: &SD,
+pub fn insert_sequence<PD: ProtonDao> (
+    dao: &PD,
     proj_name: &str,
     seqid: u32,
     index: Option<u32>
 ) -> Result<(), Error> {
 
     // Check that seqid exists
-    let _ = try!(seq_dao.get_sequence(seqid));
+    let _ = try!(dao.get_sequence(seqid));
 
     // Get project
-    let project = try!(project_dao.get_project(proj_name));
+    let project = try!(dao.get_project(proj_name));
 
     // Get offset to insert at (default is end of playlist)
     let offset = index.unwrap_or(project.playlist.len() as u32);
 
     // Add sequence to project's playlist
     let new_project = try!(project.insert_sequence(seqid, offset));
-    project_dao.update_project(new_project)
+    dao.update_project(new_project)
 }
 
 /// Removes a sequence from a project
-pub fn remove_sequence<PD: ProjectDao>(
-    project_dao: &PD,
+pub fn remove_sequence<PD: ProtonDao> (
+    dao: &PD,
     proj_name: &str,
     seqid: u32
 ) -> Result<(), Error> {
 
     // Remove sequence from project's playlist
-    let project = try!(project_dao.get_project(proj_name));
+    let project = try!(dao.get_project(proj_name));
     let new_project = try!(project.remove_sequence(seqid));
-    project_dao.update_project(new_project)
+    dao.update_project(new_project)
 
     // TODO: Remove sequence's music file if not used elsewhere in playlist
 
@@ -172,10 +166,8 @@ pub fn remove_sequence<PD: ProjectDao>(
 
 /// Deletes sequence from storage
 #[allow(unused_variables)]
-pub fn delete_sequence<P: AsRef<Path>, PD: PermissionDao, UD: UserDao, SD: SequenceDao> (
-    perm_dao: &PD,
-    user_dao: &UD,
-    seq_dao: &SD,
+pub fn delete_sequence<P: AsRef<Path>, PD: ProtonDao> (
+    dao: &PD,
     admin_key_path: P,
     seqid: u32
 ) -> Result<(), Error> {
@@ -187,8 +179,8 @@ pub fn delete_sequence<P: AsRef<Path>, PD: PermissionDao, UD: UserDao, SD: Seque
 }
 
 /// Fetches and returns a sequence
-pub fn get_sequence<SD: SequenceDao>(seq_dao: &SD, seqid: u32) -> Result<Sequence, Error> {
-    seq_dao.get_sequence(seqid)
+pub fn get_sequence<PD: ProtonDao>(dao: &PD, seqid: u32) -> Result<Sequence, Error> {
+    dao.get_sequence(seqid)
 }
 
 /// Check that the music file is a valid format

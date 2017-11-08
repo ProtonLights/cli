@@ -1,9 +1,9 @@
-use dao::{SequenceDao, SequenceDaoPostgres};
+use dao::{SequenceDao, DaoPostgres};
 use error::Error;
 use project_types::Sequence;
 
 
-impl SequenceDao for SequenceDaoPostgres {
+impl SequenceDao for DaoPostgres {
 
     fn get_channel_ids(&self, seqid: u32) -> Result<Vec<u32>, Error> {
         let query = "SELECT chanid FROM \
