@@ -1,15 +1,15 @@
 //! This module manages project users
 use std::path::Path;
 
-use dao::{UserDao};
+use dao::{ProtonDao};
 use error::Error;
 use project_types::User;
 use utils;
 
 
 /// Lookup and return a user from a public key
-pub fn get_user<P: AsRef<Path>, UD: UserDao>(
-    user_dao: UD,
+pub fn get_user<P: AsRef<Path>, PD: ProtonDao> (
+    dao: &PD,
     public_key_path: P
 ) -> Result<User, Error> {
     
@@ -21,16 +21,16 @@ pub fn get_user<P: AsRef<Path>, UD: UserDao>(
     }
 
     // Lookup uid
-    let uid = try!(user_dao.get_user_id(&public_key_str));
+    let uid = try!(dao.get_user_id(&public_key_str));
 
     // Get user
-    let user = try!(user_dao.get_user(uid));
+    let user = try!(dao.get_user(uid));
 
     Ok(user)
 }
 
-pub fn new_user<UD: UserDao>(
-    user_dao: UD,
+pub fn new_user<PD: ProtonDao> (
+    dao: &PD,
     name: &str
 ) -> Result<String, Error> {
 
@@ -38,7 +38,7 @@ pub fn new_user<UD: UserDao>(
     let (user_pub_key, user_private_key) = try!(utils::create_pub_priv_keys());
 
     // Add user
-    let _ = try!(user_dao.add_user(name, &user_private_key, &user_pub_key));
+    let _ = try!(dao.add_user(name, &user_private_key, &user_pub_key));
 
     // Return public key
     Ok(user_pub_key)
@@ -46,7 +46,8 @@ pub fn new_user<UD: UserDao>(
 
 /// Removes a user
 #[allow(unused_variables)]
-pub fn remove_user(
+pub fn remove_user<PD: ProtonDao> (
+    dao: &PD,
     name: &str
 ) -> Result<(), Error> {
 

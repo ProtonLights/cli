@@ -1,8 +1,8 @@
 use project_types::Fixture;
 use error::Error;
-use dao::{FixtureDao, FixtureDaoPostgres};
+use dao::{FixtureDao, DaoPostgres};
 
-impl FixtureDao for FixtureDaoPostgres {
+impl FixtureDao for DaoPostgres {
 
     fn new_fixture(
         &self, 

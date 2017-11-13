@@ -2,6 +2,8 @@
 // DAO traits/interfaces
 mod daos;
 
+pub use self::daos::ProtonDao;
+
 pub use self::daos::ChannelDao;
 pub use self::daos::DataDao;
 pub use self::daos::FixtureDao;
@@ -14,6 +16,13 @@ pub use self::daos::UserDao;
 
 // Postgres implementations
 mod daos_postgres;
+pub use self::daos_postgres::DaoPostgres;
+
+// Connection configuration
+mod connection_config;
+use self::connection_config::ConnectionConfig;
+
+// Load postgres implementations to show that ProtonDao is satisfied
 mod channel_dao_postgres;
 mod data_dao_postgres;
 mod fixture_dao_postgres;
@@ -24,16 +33,5 @@ mod section_dao_postgres;
 mod sequence_dao_postgres;
 mod user_dao_postgres;
 
-pub use self::daos_postgres::ChannelDaoPostgres;
-pub use self::daos_postgres::DataDaoPostgres;
-pub use self::daos_postgres::FixtureDaoPostgres;
-pub use self::daos_postgres::LayoutDaoPostgres;
-pub use self::daos_postgres::PermissionDaoPostgres;
-pub use self::daos_postgres::ProjectDaoPostgres;
-pub use self::daos_postgres::SectionDaoPostgres;
-pub use self::daos_postgres::SequenceDaoPostgres;
-pub use self::daos_postgres::UserDaoPostgres;
-
-// Connection configuration
-mod connection_config;
-use self::connection_config::ConnectionConfig;
+// Make DaoPostgres conform to the ProtonDao interface (follow all Daos)
+impl ProtonDao for DaoPostgres {}

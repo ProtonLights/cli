@@ -1,8 +1,8 @@
-use dao::{DataDao, DataDaoPostgres};
+use dao::{DataDao, DaoPostgres};
 use error::Error;
 
 
-impl DataDao for DataDaoPostgres {
+impl DataDao for DaoPostgres {
 
     fn new_data_default(
         &self,

@@ -1,8 +1,8 @@
 use project_types::Project;
 use error::Error;
-use dao::{ProjectDao, ProjectDaoPostgres};
+use dao::{ProjectDao, DaoPostgres};
 
-impl ProjectDao for ProjectDaoPostgres {
+impl ProjectDao for DaoPostgres {
     fn new_project(&self, name: &str, layout_id: u32) -> Result<Project, Error> {
         let statement = "INSERT INTO projects (name,playlist,layoutid) VALUES ($1,$2,$3)";
         let playlist: Vec<i32> = Vec::new();

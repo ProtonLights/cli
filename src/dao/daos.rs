@@ -2,6 +2,18 @@ use error::Error;
 use project_types::{Channel, Fixture, Layout, Permission, Project, Section, Sequence, User};
 
 
+// Aggregate trait type containing all of the daos
+pub trait ProtonDao:
+    ChannelDao
+    + DataDao
+    + FixtureDao
+    + LayoutDao
+    + PermissionDao
+    + ProjectDao
+    + SectionDao
+    + SequenceDao
+    + UserDao {}
+
 /// Handles metadata related to channels
 pub trait ChannelDao {
     /// Add a channel

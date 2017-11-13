@@ -9,7 +9,7 @@ use rustc_serialize::json;
 use docopt::Docopt;
 
 use proton_cli::error::Error;
-use proton_cli::dao::{self, LayoutDao};
+use proton_cli::dao::{DaoPostgres, ProtonDao};
 use proton_cli::project_types::{PermissionEnum, Project, Sequence, User};
 use proton_cli::utils;
 
@@ -92,8 +92,15 @@ fn main() {
 	
 	// Below unwrap()'s are safe within Docopt's usage rules
 
+	// Create data access object for data retrieval from database, file, etc.
+	// Use only Postgres for now
+	let psql_dao = match DaoPostgres::new() {
+		Ok(d) => d,
+		Err(e) => panic!("Failed to retrieve DAO: {}", e)
+	};
+
 	// Every proton command is mapped to a specific function that should be run
-	let command: fn(Args) -> Result<ProtonReturn, Error> = match env::args().nth(1).unwrap().as_ref() {
+	let command: fn(Args, DaoPostgres) -> Result<ProtonReturn, Error> = match env::args().nth(1).unwrap().as_ref() {
 		"delete-sequence" => run_delete_sequence,
 		"get-layout-id" => run_get_layout_id,
 		"get-playlist-data" => run_get_playlist_data,
@@ -117,7 +124,7 @@ fn main() {
 	};
 
 	// Run the appropriate command and handle its return
-	let result = command(args);
+	let result = command(args, psql_dao);
 	match result {
 		Ok(ret) => match ret {
 			ProtonReturn::LayoutId(lid) => println!("Layout id: {}", lid),
@@ -136,148 +143,101 @@ fn main() {
 	};
 }
 
-fn run_delete_sequence(args: Args) -> Result<ProtonReturn, Error> {
+fn run_delete_sequence<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let admin_key = args.arg_admin_key.unwrap();
 	let admin_key_path = Path::new(&admin_key);
 	let seqid = args.arg_seqid.unwrap();
-	let user_dao = try!(dao::UserDaoPostgres::new());
-	let perm_dao = try!(dao::PermissionDaoPostgres::new());
-	let sequence_dao = try!(dao::SequenceDaoPostgres::new());
-
 	
-	try!(proton_cli::delete_sequence(
-		&user_dao,
-		&perm_dao,
-		&sequence_dao,
-		&admin_key_path,
-		seqid));
+	try!(proton_cli::delete_sequence(&dao, &admin_key_path, seqid));
 	Ok(ProtonReturn::NoReturn)
 }
 
 /// get-layout-id <proj-name>
-fn run_get_layout_id(args: Args) -> Result<ProtonReturn, Error> {
+fn run_get_layout_id<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let proj_name = args.arg_proj_name.unwrap();
-	let proj_dao = try!(dao::ProjectDaoPostgres::new());
-	let layout_id = try!(proton_cli::get_layout_id(&proj_dao, &proj_name));
+	let layout_id = try!(proton_cli::get_layout_id(&dao, &proj_name));
 	Ok(ProtonReturn::LayoutId(layout_id))
 }
 
 /// get-playlist-data <proj-name>
-fn run_get_playlist_data(args: Args) -> Result<ProtonReturn, Error> {
+fn run_get_playlist_data<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let proj_name = args.arg_proj_name.unwrap();
-	let channel_dao = try!(dao::ChannelDaoPostgres::new());
-	let data_dao = try!(dao::DataDaoPostgres::new());
-	let proj_dao = try!(dao::ProjectDaoPostgres::new());
-	let seq_dao = try!(dao::SequenceDaoPostgres::new());
-	let data = try!(proton_cli::get_playlist_data(
-		&channel_dao,
-		&data_dao,
-		&proj_dao,
-		&seq_dao,
-		&proj_name));
+	let data = try!(proton_cli::get_playlist_data(&dao, &proj_name));
 	Ok(ProtonReturn::PlaylistData(data))
 }
 
 /// get-project <proj-name>
-fn run_get_project(args: Args) -> Result<ProtonReturn, Error> {
+fn run_get_project<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let proj_name = args.arg_proj_name.unwrap();
-	let proj_dao = try!(dao::ProjectDaoPostgres::new());
-	let project = try!(proton_cli::get_project(&proj_dao, &proj_name));
+	let project = try!(proton_cli::get_project(&dao, &proj_name));
 	Ok(ProtonReturn::Project(project))
 }
 
 /// get-sequence <seqid>
-fn run_get_sequence(args: Args) -> Result<ProtonReturn, Error> {
+fn run_get_sequence<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let seqid = args.arg_seqid.unwrap();
-	let seq_dao = try!(dao::SequenceDaoPostgres::new());
-	let sequence = try!(proton_cli::get_sequence(&seq_dao, seqid));
+	let sequence = try!(proton_cli::get_sequence(&dao, seqid));
 	Ok(ProtonReturn::Sequence(sequence))
 }
 
 /// get-user <public-key>
-fn run_get_user(args: Args) -> Result<ProtonReturn, Error> {
+fn run_get_user<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let public_key = args.arg_public_key.unwrap();
 	let public_key_path = Path::new(&public_key);
-	let user_dao = try!(dao::UserDaoPostgres::new());
-	let user = try!(proton_cli::get_user(user_dao, &public_key_path));
+	let user = try!(proton_cli::get_user(&dao, &public_key_path));
 	Ok(ProtonReturn::User(user))
 }
 
 /// insert-sequence <admin-key> <proj-name> <seqid> [<index>]
-fn run_insert_sequence(args: Args) -> Result<ProtonReturn, Error> {
+fn run_insert_sequence<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let admin_key = args.arg_admin_key.unwrap();
 	let admin_key_path = Path::new(&admin_key);
 	let proj_name = args.arg_proj_name.unwrap();
 	let seqid = args.arg_seqid.unwrap();
 	let index = args.arg_index;
 
-	let perm_dao = try!(dao::PermissionDaoPostgres::new());
-	let project_dao = try!(dao::ProjectDaoPostgres::new());
-	let seq_dao = try!(dao::SequenceDaoPostgres::new());
-	let user_dao = try!(dao::UserDaoPostgres::new());
-
 	let valid_permissions = vec![PermissionEnum::Administrate];
-    let _ = try!(utils::check_valid_permission(
-        &perm_dao,
-        &user_dao,
-        admin_key_path,
-        &valid_permissions));
+	let _ = try!(utils::check_valid_permission(
+		&dao,
+		admin_key_path,
+		&valid_permissions));
 	
-	try!(proton_cli::insert_sequence(&project_dao, &seq_dao, &proj_name, seqid, index));
+	try!(proton_cli::insert_sequence(&dao, &proj_name, seqid, index));
 	Ok(ProtonReturn::NoReturn)
 }
 
 /// list-permissions <uid>
-fn run_list_permissions(args: Args) -> Result<ProtonReturn, Error> {
+fn run_list_permissions<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let uid = args.arg_uid.unwrap();
-	let perm_dao = try!(dao::PermissionDaoPostgres::new());
-	let permissions = try!(
-		proton_cli::get_permissions::<String, dao::PermissionDaoPostgres>(perm_dao, uid));
+	let permissions = try!(proton_cli::get_permissions(&dao, uid));
 	println!("{}", json::as_pretty_json(&permissions));
 	Ok(ProtonReturn::NoReturn)
 }
 
 /// new-layout <layout-file>
-fn run_new_layout(args: Args) -> Result<ProtonReturn, Error> {
+fn run_new_layout<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let layout_file = args.arg_layout_file.unwrap();
 	let layout_file_path = Path::new(&layout_file);
-	let channel_dao = try!(dao::ChannelDaoPostgres::new());
-	let fixture_dao = try!(dao::FixtureDaoPostgres::new());
-	let layout_dao = try!(dao::LayoutDaoPostgres::new());
-	let layout_id = try!(proton_cli::new_layout(
-		&channel_dao,
-		&fixture_dao,
-		&layout_dao,
-		&layout_file_path));
+	let layout_id = try!(proton_cli::new_layout(&dao, &layout_file_path));
 	Ok(ProtonReturn::LayoutId(layout_id))
 }
 
 /// new-project <name> <layout-id>
-fn run_new_project(args: Args) -> Result<ProtonReturn, Error> {
+fn run_new_project<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let name = args.arg_name.unwrap();
 	let layout_id = args.arg_layout_id.unwrap();
-	let layout_dao = try!(dao::LayoutDaoPostgres::new());
-	let perm_dao = try!(dao::PermissionDaoPostgres::new());
-	let project_dao = try!(dao::ProjectDaoPostgres::new());
-	let user_dao = try!(dao::UserDaoPostgres::new());
-	let root_pub_key = try!(proton_cli::new_project(
-		&layout_dao,
-		&perm_dao,
-		&project_dao,
-		&user_dao,
-		&name,
-		layout_id));
+	let root_pub_key = try!(proton_cli::new_project(&dao, &name, layout_id));
 	Ok(ProtonReturn::PublicKey(root_pub_key))
 }
 
 /// new-section <admin-key> <t_start> <t_end> <seqid> <fixid>..
 #[allow(unused_variables)]
-fn run_new_section(args: Args) -> Result<ProtonReturn, Error> {
+fn run_new_section<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	Err(Error::TodoErr)
 }
 
 /// new-sequence <admin-key> <name> <music-file> <seq-duration> <layout-id>
-fn run_new_sequence(args: Args) -> Result<ProtonReturn, Error> {
+fn run_new_sequence<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let admin_key = args.arg_admin_key.unwrap();
 	let admin_key_path = Path::new(&admin_key);
 	let name = args.arg_name.unwrap();
@@ -285,24 +245,16 @@ fn run_new_sequence(args: Args) -> Result<ProtonReturn, Error> {
 	let music_file_path = Path::new(&music_file);
 	let seq_duration = args.arg_seq_duration.unwrap();
 	let layout_id = args.arg_layout_id;
-	let data_dao = try!(dao::DataDaoPostgres::new());
-	let layout_dao = try!(dao::LayoutDaoPostgres::new());
-	let perm_dao = try!(dao::PermissionDaoPostgres::new());
-	let sequence_dao = try!(dao::SequenceDaoPostgres::new());
-	let user_dao = try!(dao::UserDaoPostgres::new());
 
 	// Check that the admin has sufficient privileges
-    let valid_permissions = vec![PermissionEnum::Administrate];
-    let _ = try!(utils::check_valid_permission(
-        &perm_dao,
-        &user_dao,
-        admin_key_path,
-        &valid_permissions));
+	let valid_permissions = vec![PermissionEnum::Administrate];
+	let _ = try!(utils::check_valid_permission(
+		&dao,
+		admin_key_path,
+		&valid_permissions));
 
 	let seqid = try!(proton_cli::new_sequence(
-		&data_dao,
-		&layout_dao,
-		&sequence_dao,
+		&dao,
 		&name,
 		&music_file_path,
 		seq_duration,
@@ -312,27 +264,24 @@ fn run_new_sequence(args: Args) -> Result<ProtonReturn, Error> {
 }
 
 /// new-user <admin-key> <name>
-fn run_new_user(args: Args) -> Result<ProtonReturn, Error> {
+fn run_new_user<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let admin_key = args.arg_admin_key.unwrap();
 	let admin_key_path = Path::new(&admin_key);
 	let name = args.arg_name.unwrap();
-	let user_dao = try!(dao::UserDaoPostgres::new());
-	let perm_dao = try!(dao::PermissionDaoPostgres::new());
 
 	// See if admin has permission to add user
-    let valid_permissions = vec![PermissionEnum::Administrate];
-    let _ = try!(utils::check_valid_permission(
-        &perm_dao,
-        &user_dao,
-        admin_key_path,
-        &valid_permissions));
+	let valid_permissions = vec![PermissionEnum::Administrate];
+	let _ = try!(utils::check_valid_permission(
+		&dao,
+		admin_key_path,
+		&valid_permissions));
 
-	let public_key = try!(proton_cli::new_user(user_dao, &name));
+	let public_key = try!(proton_cli::new_user(&dao, &name));
 	Ok(ProtonReturn::PublicKey(public_key))
 }
 
 /// new-vixen-sequence <admin-key> <name> <music-file> <seq-duration> <frame-duration> <data-file> <layout-id>
-fn run_new_vixen_sequence(args: Args) -> Result<ProtonReturn, Error> {
+fn run_new_vixen_sequence<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let admin_key = args.arg_admin_key.unwrap();
 	let admin_key_path = Path::new(&admin_key);
 	let name = args.arg_name.unwrap();
@@ -345,31 +294,20 @@ fn run_new_vixen_sequence(args: Args) -> Result<ProtonReturn, Error> {
 	let layout_id = match args.arg_layout_id {
 		Some(lid) => lid,
 		None => {
-			let layout_dao = try!(dao::LayoutDaoPostgres::new());
-			let default_layout = try!(layout_dao.get_default_layout());
+			let default_layout = try!(dao.get_default_layout());
 			default_layout.layout_id
 		},
 	};
-	let channel_dao = try!(dao::ChannelDaoPostgres::new());
-	let data_dao = try!(dao::DataDaoPostgres::new());
-	let layout_dao = try!(dao::LayoutDaoPostgres::new());
-	let perm_dao = try!(dao::PermissionDaoPostgres::new());
-	let sequence_dao = try!(dao::SequenceDaoPostgres::new());
-	let user_dao = try!(dao::UserDaoPostgres::new());
 
 	// Check that the admin has sufficient privileges
-    let valid_permissions = vec![PermissionEnum::Administrate];
-    let _ = try!(utils::check_valid_permission(
-        &perm_dao,
-        &user_dao,
-        admin_key_path,
-        &valid_permissions));
+	let valid_permissions = vec![PermissionEnum::Administrate];
+	let _ = try!(utils::check_valid_permission(
+		&dao,
+		admin_key_path,
+		&valid_permissions));
 
 	let seqid = try!(proton_cli::new_vixen_sequence(
-		&channel_dao,
-		&data_dao,
-		&layout_dao,
-		&sequence_dao,
+		&dao,
 		&name,
 		&music_file_path,
 		seq_duration,
@@ -380,59 +318,50 @@ fn run_new_vixen_sequence(args: Args) -> Result<ProtonReturn, Error> {
 }
 
 /// patch-layout <admin-key> <layout-id> <patch-file>
-fn run_patch_layout(args: Args) -> Result<ProtonReturn, Error> {
+fn run_patch_layout<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let admin_key = args.arg_admin_key.unwrap();
 	let admin_key_path = Path::new(&admin_key);
 	let layout_id = args.arg_layout_id.unwrap();
 	let patch_file = args.arg_patch_file.unwrap();
 	let patch_file_path = Path::new(&patch_file);
 
-	let layout_dao = try!(dao::LayoutDaoPostgres::new());
-	let perm_dao = try!(dao::PermissionDaoPostgres::new());
-	let user_dao = try!(dao::UserDaoPostgres::new());
-
 	// Check that the admin has sufficient privileges
-    let valid_permissions = vec![PermissionEnum::Administrate];
-    let _ = try!(utils::check_valid_permission(
-        &perm_dao,
-        &user_dao,
-        admin_key_path,
-        &valid_permissions));
+	let valid_permissions = vec![PermissionEnum::Administrate];
+	let _ = try!(utils::check_valid_permission(
+		&dao,
+		admin_key_path,
+		&valid_permissions));
 
 	try!(proton_cli::patch_layout(
-		&layout_dao,
+		&dao,
 		layout_id,
 		&patch_file_path));
 	
-	Ok(ProtonReturn::NoReturn)	
+	Ok(ProtonReturn::NoReturn)
 }
 
 /// remove-sequence <admin-key> <proj-name> <seqid>
-fn run_remove_sequence(args: Args) -> Result<ProtonReturn, Error> {
+fn run_remove_sequence<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let admin_key = args.arg_admin_key.unwrap();
 	let admin_key_path = Path::new(&admin_key);
 	let proj_name = args.arg_proj_name.unwrap();
 	let seqid = args.arg_seqid.unwrap();
-	let perm_dao = try!(dao::PermissionDaoPostgres::new());
-	let project_dao = try!(dao::ProjectDaoPostgres::new());
-	let user_dao = try!(dao::UserDaoPostgres::new());
 
 	// Check that the admin has sufficient privileges
-    let valid_permissions = vec![PermissionEnum::Administrate, PermissionEnum::EditSequence(seqid)];
-    let _ = try!(utils::check_valid_permission(
-        &perm_dao,
-        &user_dao,
-        admin_key_path,
-        &valid_permissions));
-    
-	try!(proton_cli::remove_sequence(&project_dao, &proj_name, seqid));
+	let valid_permissions = vec![PermissionEnum::Administrate, PermissionEnum::EditSequence(seqid)];
+	let _ = try!(utils::check_valid_permission(
+		&dao,
+		admin_key_path,
+		&valid_permissions));
+
+	try!(proton_cli::remove_sequence(&dao, &proj_name, seqid));
 	Ok(ProtonReturn::NoReturn)
 }
 
 /// remove-user <admin-key> <uid>
-fn run_remove_user(args: Args) -> Result<ProtonReturn, Error> {
+fn run_remove_user<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let name = args.arg_name.unwrap();
-	try!(proton_cli::remove_user(&name));
+	try!(proton_cli::remove_user(&dao, &name));
 	Ok(ProtonReturn::NoReturn)
 }
 
@@ -440,7 +369,7 @@ fn run_remove_user(args: Args) -> Result<ProtonReturn, Error> {
 /// set-permission <admin-key> (add | remove) <uid> EditSequence <target-sequence>
 /// set-permission <admin-key> (add | remove) <uid> EditSection <target-sequence> <target-section>
 /// set-permission <admin-key> (add | remove) <name> EditSeqSec <target-section>
-fn run_set_permission(args: Args) -> Result<ProtonReturn, Error> {
+fn run_set_permission<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let admin_key = args.arg_admin_key.unwrap();
 	let admin_key_path = Path::new(&admin_key);
 	let added = env::args().nth(3).unwrap() == "add";
@@ -450,6 +379,7 @@ fn run_set_permission(args: Args) -> Result<ProtonReturn, Error> {
 	let target_section = args.arg_target_section;
 
 	try!(proton_cli::set_permission(
+		&dao,
 		&admin_key_path,
 		added,
 		uid,
@@ -460,27 +390,21 @@ fn run_set_permission(args: Args) -> Result<ProtonReturn, Error> {
 }
 
 /// set-sequence-layout <admin-key> <seqid> <layout-id>
-fn run_set_sequence_layout(args: Args) -> Result<ProtonReturn, Error> {
+fn run_set_sequence_layout<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let admin_key = args.arg_admin_key.unwrap();
 	let admin_key_path = Path::new(&admin_key);
 	let seqid = args.arg_seqid.unwrap();
 	let layout_id = args.arg_layout_id.unwrap();
-	let layout_dao = try!(dao::LayoutDaoPostgres::new());
-	let perm_dao = try!(dao::PermissionDaoPostgres::new());
-	let seq_dao = try!(dao::SequenceDaoPostgres::new());
-	let user_dao = try!(dao::UserDaoPostgres::new());
 
 	// Check that the admin has sufficient privileges
-    let valid_permissions = vec![PermissionEnum::Administrate];
-    let _ = try!(utils::check_valid_permission(
-        &perm_dao,
-        &user_dao,
-        admin_key_path,
-        &valid_permissions));
+	let valid_permissions = vec![PermissionEnum::Administrate];
+	let _ = try!(utils::check_valid_permission(
+		&dao,
+		admin_key_path,
+		&valid_permissions));
 
 	try!(proton_cli::set_sequence_layout(
-		&layout_dao,
-		&seq_dao,
+		&dao,
 		layout_id,
 		seqid));
 	Ok(ProtonReturn::NoReturn)

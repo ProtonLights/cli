@@ -1,9 +1,9 @@
-use dao::{ChannelDao, ChannelDaoPostgres};
+use dao::{ChannelDao, DaoPostgres};
 use error::Error;
 use project_types::Channel;
 
 
-impl ChannelDao for ChannelDaoPostgres {
+impl ChannelDao for DaoPostgres {
     /// Fetch a Channel with the given channel id
     fn get_channel(&self, chanid: u32) -> Result<Channel, Error> {
         let query = "SELECT name,primary_num,secondary_num,color,channel_internal,channel_dmx, \
