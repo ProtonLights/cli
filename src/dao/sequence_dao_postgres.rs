@@ -8,7 +8,7 @@ impl SequenceDao for DaoPostgres {
     fn get_channel_ids(&self, seqid: u32) -> Result<Vec<u32>, Error> {
         let query = "SELECT chanid FROM \
             (SELECT unnest(channels) AS cid FROM sequences s \
-            INNER JOIN layouts l ON l.layoutid = s.layout_id \
+            INNER JOIN layouts l ON l.layoutid = s.layoutid \
             INNER JOIN fixtures f ON f.fixid = ANY(l.fixtures) \
             WHERE s.seqid = $1) chan_ids \
         INNER JOIN channels c ON c.chanid = chan_ids.cid \
@@ -26,7 +26,7 @@ impl SequenceDao for DaoPostgres {
     }
 
     fn get_sequence(&self, seqid: u32) -> Result<Sequence, Error> {
-        let query = "SELECT name,music_file_name,music_dur_sec,frame_dur_ms,num_frames,layout_id \
+        let query = "SELECT name,music_file_name,music_dur_sec,frame_dur_ms,num_frames,layoutid \
         FROM sequences WHERE seqid = $1";
         let results = try!(
             self.conn.query(query, &[&(seqid as i32)])
@@ -56,7 +56,7 @@ impl SequenceDao for DaoPostgres {
     }
 
     fn get_last_sequence(&self, name: &str) -> Result<Sequence, Error> {
-        let query = "SELECT seqid,music_file_name,music_dur_sec,frame_dur_ms,num_frames,layout_id \
+        let query = "SELECT seqid,music_file_name,music_dur_sec,frame_dur_ms,num_frames,layoutid \
         FROM sequences WHERE name = $1 ORDER BY seqid DESC";
         let results = try!(
             self.conn.query(query, &[&name.to_owned()])
@@ -85,7 +85,7 @@ impl SequenceDao for DaoPostgres {
 
     fn new_sequence(&self, sequence: &Sequence) -> Result<Sequence, Error> {
         let statement = "INSERT INTO sequences (name,music_file_name,music_dur_sec,\
-            frame_dur_ms,num_frames,layout_id) VALUES ($1,$2,$3,$4,$5,$6)";
+            frame_dur_ms,num_frames,layoutid) VALUES ($1,$2,$3,$4,$5,$6)";
         let music_dur = sequence.music_duration_sec as i32;
         let frame_dur = sequence.frame_duration_ms as i32;
         let num_frames = sequence.num_frames as i32;
@@ -115,7 +115,7 @@ impl SequenceDao for DaoPostgres {
     }
 
     fn set_layout(&self, seqid: u32, layout_id: u32) -> Result<(), Error> {
-        let statement = "UPDATE sequences SET layout_id = $1 WHERE seqid = $2";
+        let statement = "UPDATE sequences SET layoutid = $1 WHERE seqid = $2";
         let _ = try!(
             self.conn.execute(
                 statement,

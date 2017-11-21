@@ -60,11 +60,15 @@ impl FileLayout {
         if self.layoutName.len() > 64 {
             return Err(Error::InvalidLayout(String::from("Layout name cannot be longer than 64 characters")))
         }
-        if !self.layoutName.chars().all(char::is_alphanumeric) {
-            return Err(Error::InvalidLayout(String::from("Layout name has to be alphanumeric: ") + &self.layoutName))   
+        if !self.layoutName.chars().all(|c| char::is_alphanumeric(c) || c == ' ') {
+            return Err(Error::InvalidLayout(String::from("Layout name has to contain alphanumerics or \" \": ") + &self.layoutName))
         }
 
         for channel in &self.channels {
+            // Skip empty channels (things moved for 2017 show)
+            if channel.channelName.trim() == "" {
+                continue;
+            }
 
             // Make sure internal channel > 0 (indexed same as DMX)
             if channel.internalChannel < 1 {
@@ -86,24 +90,24 @@ impl FileLayout {
             if channel.channelName.len() > 40 {
                 return Err(Error::InvalidLayout(String::from("Channel name cannot be longer than 40 characters")));
             }
-            if !channel.channelName.chars().all(|c| c.is_alphanumeric() || c == ' ') {
-                return Err(Error::InvalidLayout(String::from("Channel name has to be alphanumeric: ") + &channel.channelName));
+            if !channel.channelName.chars().all(|c| c.is_alphanumeric() || " -/_".contains(c)) {
+                return Err(Error::InvalidLayout(String::from("Channel name can only contain alphanumerics or \"- /_\" : ") + &channel.channelName))
             }
 
             // Validate name not too long and only alphanumerics or spaces
             if channel.fixtureName.len() > 40 {
                 return Err(Error::InvalidLayout(String::from("Fixture name cannot be longer than 40 characters")))
             }
-            if !channel.fixtureName.chars().all(|c| c.is_alphanumeric() || c == ' ') {
-                return Err(Error::InvalidLayout(String::from("Fixture name has to be alphanumeric: ") + &channel.fixtureName))   
+            if !channel.fixtureName.chars().all(|c| c.is_alphanumeric() || " -/_".contains(c)) {
+                return Err(Error::InvalidLayout(String::from("Fixture name can only contain alphanumerics or \"- /_\" : ") + &channel.fixtureName))
             }
 
             // Validate color not too long and only alphanumerics or spaces
             if channel.color.len() > 16 {
                 return Err(Error::InvalidLayout(String::from("Color cannot be longer than 16 characters")))
             }
-            if !channel.color.chars().all(|c| c.is_alphanumeric() || c == ' ') {
-                return Err(Error::InvalidLayout(String::from("Color has to be alphanumeric")))   
+            if !channel.color.chars().all(|c| c.is_alphanumeric() || " -/_".contains(c)) {
+                return Err(Error::InvalidLayout(String::from("Color can only contain alphanumerics or \"- /_\"")))
             }
         }
         Ok(())
