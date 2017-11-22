@@ -1,6 +1,6 @@
 use dao::{SequenceDao, DaoPostgres};
 use error::Error;
-use project_types::Sequence;
+use project_types::{Sequence, SequenceData};
 
 
 impl SequenceDao for DaoPostgres {
@@ -81,6 +81,50 @@ impl SequenceDao for DaoPostgres {
             num_frames: num_frames as u32,
             layout_id: layout_id as u32
         })
+    }
+
+    fn get_sequence_data(&self, proj_name: &str, seqid: u32) -> Result<SequenceData, Error> {
+        // First, get sequence
+        let sequence = self.get_sequence(seqid)?;
+
+        // Now get data
+        let query = "SELECT channel_dmx, data FROM v_playlist_data
+        WHERE proj_name = $1 AND seqid = $2
+        ORDER BY channel_dmx ASC";
+        
+        let results = try!(
+            self.conn.query(query, &[&proj_name.to_owned(), &(seqid as i32)])
+            .map_err(Error::Postgres));
+
+        if results.len() == 0 {
+            return Err(Error::SequenceDataNotFound(seqid));
+        }
+
+        // Create vector for sequence data
+        // Up to 512 channels per universe, plus one because DMX starts at 1
+        let mut raw_data = vec![vec![0; sequence.num_frames as usize]; 513];
+
+        // Take data column and map to u16 for each channel,
+        // putting resulting vec in the correct DMX slot
+        for result in results.iter() {
+            let channel_dmx: i32 = result.get(0);
+            let data: Vec<i32> = result.get(1);
+            let data_u16 = data.iter()
+                .map(|frame_val| *frame_val as u16)
+                .collect::<Vec<u16>>();
+
+            raw_data[channel_dmx as usize] = data_u16;
+        }
+
+        let sequence_data = SequenceData {
+            name: sequence.name,
+            frame_dur_ms: sequence.frame_duration_ms,
+            music_file: sequence.music_file_name,
+            num_frames: sequence.num_frames,
+            data: raw_data
+        };
+
+        Ok(sequence_data)
     }
 
     fn new_sequence(&self, sequence: &Sequence) -> Result<Sequence, Error> {

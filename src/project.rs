@@ -1,8 +1,12 @@
 use rustc_serialize::json;
+use std::env;
+use std::fs::File;
+use std::io::Write;
+use std::path::PathBuf;
 
 use dao::ProtonDao;
 use error::Error;
-use project_types::{Project, SequenceData};
+use project_types::Project;
 use utils;
 
 
@@ -58,64 +62,43 @@ pub fn get_layout_id<PD: ProtonDao>(
     Ok(project.layout_id)
 }
 
-/// Gets all sequence data in the project's playlist
+/// Gets all sequence data in the project's playlist and writes to file.
+/// Returns the path to the data file
 pub fn get_playlist_data<PD: ProtonDao> (
     dao: &PD,
     proj_name: &str
-) -> Result<String, Error> {
+) -> Result<PathBuf, Error> {
 
     // Check that project exists
     let project = try!(dao.get_project(proj_name));
+
+    // Get file ready for writing
+    let mut file_path = env::current_dir().expect("Couldn't get current directory");
+    file_path.push("tmp_get_playlist_data.json");
+
+    let mut data_file = try!(File::create(&file_path).map_err(Error::Io));
 
     let mut playlist_data = Vec::with_capacity(project.playlist.len());
 
     // Go through each sequence in the playlist
     for seqid in project.playlist.iter() {
 
-        print!("Getting sequence {}...", seqid);
+        print!("Getting sequence data...");
 
-        // Get sequence
-        let sequence = try!(dao.get_sequence(seqid.to_owned()));
+        let seq_data = dao.get_sequence_data(proj_name, seqid.to_owned())?;
 
-        println!("Sequence '{}' retrieved", &sequence.name);
-        print!("Getting channel ids...");
-
-        // Get the sequence's channel ids
-        let chan_ids = try!(dao.get_channel_ids(seqid.to_owned()));
-
-        if chan_ids.len() < 1 {
-            // TODO: make error
-            println!("No channels found");
-            panic!("No channels found");
-        }
-
-        println!("Channel ids loaded.");
-        print!("Getting data...");
-
-        // Create vector for sequence data
-        // Up to 512 channels per universe, plus one because DMX starts at 1
-        let mut seq_data = vec![vec![0; sequence.num_frames as usize]; 513];
-
-        // Get each channel's data and put it in the correct vector slot
-        for chanid in chan_ids {
-            let channel = try!(dao.get_channel(chanid));
-            let chan_data = try!(dao.get_data(seqid.to_owned(), chanid.to_owned()));
-            seq_data[channel.channel_dmx as usize] = chan_data;
-        }
-
-        let sequence_data = SequenceData {
-            name: sequence.name,
-            frame_dur_ms: sequence.frame_duration_ms,
-            music_file: sequence.music_file_name,
-            num_frames: sequence.num_frames,
-            data: seq_data
-        };
-
-        playlist_data.push(sequence_data);
+        playlist_data.push(seq_data);
 
         println!("done");
     }
 
     print!("Encoding playlist data..");
-    json::encode(&playlist_data).map_err(Error::JsonEncode)
+    let json_data = try!(json::encode(&playlist_data).map_err(Error::JsonEncode));
+    println!("done");
+
+    print!("Writing data to file...");
+    try!(data_file.write_all(json_data.as_bytes()).map_err(Error::Io));
+    println!("done");
+
+    Ok(file_path)
 }
