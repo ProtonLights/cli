@@ -1,5 +1,5 @@
 use error::Error;
-use project_types::{Channel, Fixture, Layout, Permission, Project, Section, Sequence, SequenceData, User};
+use project_types::{Channel, Fixture, Layout, Permission, Project, Section, Sequence, User};
 
 
 // Aggregate trait type containing all of the daos
@@ -143,9 +143,6 @@ pub trait SequenceDao {
 
     /// Retrieves and returns the last sequence added with the given name
     fn get_last_sequence(&self, name: &str) -> Result<Sequence, Error>;
-
-    /// Gets the raw channel data for the given sequence within the given project
-    fn get_sequence_data(&self, proj_name: &str, seqid: u32) -> Result<SequenceData, Error>;
 
     /// Creates a new sequence
     fn new_sequence(&self, sequence: &Sequence) -> Result<Sequence, Error>;

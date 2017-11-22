@@ -129,7 +129,7 @@ fn main() {
 		Ok(ret) => match ret {
 			ProtonReturn::LayoutId(lid) => println!("Layout id: {}", lid),
 			ProtonReturn::NoReturn => println!("Worked!"),
-			ProtonReturn::PlaylistData(file_path) => println!("PLAYLIST_DATA:::{}", file_path),
+			ProtonReturn::PlaylistData(data) => println!("PLAYLIST_DATA:::{}", data),
 			ProtonReturn::Project(project) => println!("Project: {:?}", project),
 			ProtonReturn::PublicKey(s) => println!("PubKey: {}", s),
 			ProtonReturn::Sequence(seq) => println!("Sequence: {:?}", seq),
@@ -162,11 +162,8 @@ fn run_get_layout_id<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn,
 /// get-playlist-data <proj-name>
 fn run_get_playlist_data<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let proj_name = args.arg_proj_name.unwrap();
-	let data_file_path = try!(proton_cli::get_playlist_data(&dao, &proj_name));
-	let file_path_str = data_file_path.to_str().expect("File path not UTF-8");
-
-	// Return path to file
-	Ok(ProtonReturn::PlaylistData(String::from(file_path_str)))
+	let data = try!(proton_cli::get_playlist_data(&dao, &proj_name));
+	Ok(ProtonReturn::PlaylistData(data))
 }
 
 /// get-project <proj-name>
