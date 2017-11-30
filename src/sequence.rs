@@ -165,17 +165,8 @@ pub fn remove_sequence<PD: ProtonDao> (
 }
 
 /// Deletes sequence from storage
-#[allow(unused_variables)]
-pub fn delete_sequence<P: AsRef<Path>, PD: ProtonDao> (
-    dao: &PD,
-    admin_key_path: P,
-    seqid: u32
-) -> Result<(), Error> {
-
-    // Check admin permission
-    // Check that sequence exists
-    // Try to delete sequence
-    Err(Error::TodoErr)
+pub fn delete_sequence<PD: ProtonDao>(dao: &PD, seq_name: &str) -> Result<(), Error> {
+    dao.delete_sequence(seq_name)
 }
 
 /// Fetches and returns a sequence

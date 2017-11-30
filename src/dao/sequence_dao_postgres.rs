@@ -5,6 +5,15 @@ use project_types::{Sequence, SequenceData};
 
 impl SequenceDao for DaoPostgres {
 
+    fn delete_sequence(&self, seq_name: &str) -> Result<(), Error> {
+        let statement = "DELETE FROM sequences WHERE name = $1";
+        match self.conn.execute(statement, &[&seq_name]) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(Error::Postgres(e))
+        }
+    }
+
+
     fn get_channel_ids(&self, seqid: u32) -> Result<Vec<u32>, Error> {
         let query = "SELECT chanid FROM \
             (SELECT unnest(channels) AS cid FROM sequences s \

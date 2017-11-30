@@ -138,6 +138,9 @@ pub trait SectionDao {
 
 /// Handles metadata related to sequences
 pub trait SequenceDao {
+    /// Deletes a sequence
+    fn delete_sequence(&self, seq_name: &str) -> Result<(), Error>;
+
     /// Retrieves and returns a sequence
     fn get_sequence(&self, seqid: u32) -> Result<Sequence, Error>;
 

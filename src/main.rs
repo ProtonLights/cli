@@ -18,7 +18,7 @@ const USAGE: &'static str = "
 Command-line interface for Proton
 
 Usage:
-  ./proton_cli delete-sequence <admin-key> <seqid>
+  ./proton_cli delete-sequence <admin-key> <seq-name>
   ./proton_cli get-layout-id <proj-name>
   ./proton_cli get-playlist-data <proj-name>
   ./proton_cli get-project <proj-name>
@@ -63,6 +63,7 @@ struct Args {
 	arg_public_key: Option<String>,
 	arg_root_public_key: Option<String>,
 	arg_seqid: Option<u32>,
+	arg_seq_name: Option<String>,
 	arg_seq_duration: Option<u32>,
 	arg_t_start: Option<u32>,
 	arg_t_end: Option<u32>,
@@ -146,9 +147,16 @@ fn main() {
 fn run_delete_sequence<PD: ProtonDao>(args: Args, dao: PD) -> Result<ProtonReturn, Error> {
 	let admin_key = args.arg_admin_key.unwrap();
 	let admin_key_path = Path::new(&admin_key);
-	let seqid = args.arg_seqid.unwrap();
+	let seq_name = args.arg_seq_name.unwrap();
+
+	// Test permissions
+	let valid_permissions = vec![PermissionEnum::Administrate];
+	let _ = try!(utils::check_valid_permission(
+		&dao,
+		admin_key_path,
+		&valid_permissions));
 	
-	try!(proton_cli::delete_sequence(&dao, &admin_key_path, seqid));
+	try!(proton_cli::delete_sequence(&dao, &seq_name));
 	Ok(ProtonReturn::NoReturn)
 }
 
